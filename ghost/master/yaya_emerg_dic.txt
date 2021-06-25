@@ -17,3 +17,7 @@ OnBoot
 	SHIORI3FW.PushAdditionalReturn('ErrorDescription',GETERRORLOG()[0])
 }
 
+OnFirstBoot
+{
+	OnBoot
+}
