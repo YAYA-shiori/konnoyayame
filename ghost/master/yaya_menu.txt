@@ -38,8 +38,6 @@ OpenMenu
 		AYATEMPLATE.MenuItem("ƒXƒ^ƒ“ƒv‚ð‰Ÿ‚·","Menu_STAMP")
 	}
 	--
-	AYATEMPLATE.MenuItem("‚Ä‚·‚Æ","TestBase64Image1")
-	--
 	AYATEMPLATE.MenuItem("‚È‚ñ‚Å‚à‚È‚¢","Menu_CANCEL",150)
 }
 
