@@ -11,3 +11,7 @@ sstp.allowunspecifiedsend,1
 icon,icon.ico
 
 shiori,yaya.dll
+
+craftman,seibihan
+craftmanw,®”õ”Ç
+craftmanurl,http://ms.shillest.net/yayame.xhtml
