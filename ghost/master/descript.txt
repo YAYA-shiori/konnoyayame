@@ -1,0 +1,13 @@
+charset,Shift_JIS
+
+name,はろーYAYAわーるど
+type,ghost
+
+sakura.name,紺野ややめ
+kero.name,マック朗
+
+sstp.allowunspecifiedsend,1
+
+icon,icon.ico
+
+shiori,yaya.dll

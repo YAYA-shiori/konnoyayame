@@ -1,0 +1,4 @@
+charset, Shift_JIS
+type,ghost
+name,‚Í‚ë[YAYAƒ[ƒ‹ƒh
+directory,konnoyayame
