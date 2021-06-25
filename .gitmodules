@@ -1,0 +1,3 @@
+[submodule "ghost/master/system"]
+	path = ghost/master/system
+	url = https://github.com/ponapalt/yaya-dic.git
