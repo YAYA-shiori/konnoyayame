@@ -12,9 +12,6 @@
 OnBoot
 {
 	"\0\s[0]\1\s[-1]\0ívñΩìIÉGÉâÅ[î≠ê∂"
-	
-	SHIORI3FW.PushAdditionalReturn('ErrorLevel','critical')
-	SHIORI3FW.PushAdditionalReturn('ErrorDescription',GETERRORLOG()[0])
 }
 
 OnFirstBoot
