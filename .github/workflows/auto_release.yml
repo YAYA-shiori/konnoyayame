@@ -1,0 +1,40 @@
+on:
+  push
+
+name: auto release
+
+jobs:
+  build:
+    name: auto release
+    runs-on: ubuntu-latest
+    steps:
+      - name: install dependencies
+        run: sudo apt-get install p7zip
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: build nar
+        run: |
+          rm -rf .gitignore .gitmodules delete.txt .github .git
+          7z a -tzip "yayame.nar" -mx=9 -mmt -mm=LZMA -md=1536m -mfb=273 -mtc=off -r "."
+      - name: create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.run_id }}
+          release_name: auto build
+          body: |
+            auto build
+          draft: false
+          prerelease: false
+      - name: upload nar
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./yayame.nar
+          asset_name: yayame.nar
+          asset_content_type: application/zip
