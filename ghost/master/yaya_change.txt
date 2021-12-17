@@ -1,90 +1,90 @@
 //******************************************************************************
-// YAYA�@�S�[�X�g�e���v���[�g
-// �؂�ւ��g�[�N����
+// YAYA　ゴーストテンプレート
+// 切り替えトーク辞書
 //******************************************************************************
 
 //******************************************************************************
-// �S�[�X�g�؂�ւ� 
+// ゴースト切り替え 
 //******************************************************************************
 /*
-�֐��͈ȉ��̌`�ŋL�ڂ��܂��B
-[�C�x���g] + [�S�[�X�g��]
-�C�x���g�́A�ȉ��̂��̂�����܂��B
-�C�x���g�ɂ���Ă͊Y������֐����������OnClose��OnBoot�ɂȂ�܂��B
-�S�[�X�g���́A�擪�� _���t���܂��B
-�Y������S�[�X�g���������Ƃ��́A�S�[�X�g���̕����́uOther�v�ƂȂ�܂��B
+関数は以下の形で記載します。
+[イベント] + [ゴースト名]
+イベントは、以下のものがあります。
+イベントによっては該当する関数が無ければOnCloseやOnBootになります。
+ゴースト名は、先頭に _が付きます。
+該当するゴースト名が無いときは、ゴースト名の部分は「Other」となります。
 
-���O�̒���"��'�A���邢��+-/*�A���p�󔒂ȂǁA
-�V�X�e���Ŏg���Ă��镶��������ꍇ�́A���ׂ�_�ɕϊ�����܂��B
-��Fthe "MobileMaster" -> OnGhostChanging_the__MobileMaster_
+名前の中に"や'、あるいは+-/*、半角空白など、
+システムで使われている文字が来る場合は、すべて_に変換されます。
+例：the "MobileMaster" -> OnGhostChanging_the__MobileMaster_
 
-OnGhostChanging		���̃S�[�X�g�֐؂�ւ����悤�Ƃ����Ƃ��B�������OnClose���Ă΂�܂��B
-OnGhostChanged		���̃S�[�X�g����؂�ւ�����Ƃ��B�������OnBoot���Ă΂�܂��B
-OnGhostCalling		���̃S�[�X�g���Ăяo�����Ƃ����Ƃ�
-OnGhostCalled			���̃S�[�X�g����Ăяo���ꂽ�Ƃ��B�������OnBoot���Ă΂�܂��B
-OnGhostCallComplete	���̃S�[�X�g���Ăяo���āA�Ăяo���ꂽ�S�[�X�g�̋N�������������Ƃ��AOnOtherGhostBooted�̑����
+OnGhostChanging		他のゴーストへ切り替えしようとしたとき。無ければOnCloseが呼ばれます。
+OnGhostChanged		他のゴーストから切り替わったとき。無ければOnBootが呼ばれます。
+OnGhostCalling		他のゴーストを呼び出そうとしたとき
+OnGhostCalled			他のゴーストから呼び出されたとき。無ければOnBootが呼ばれます。
+OnGhostCallComplete	他のゴーストを呼び出して、呼び出されたゴーストの起動が完了したとき、OnOtherGhostBootedの代わりに
 
-OnOtherGhostBooted	���̃S�[�X�g���Ăяo����āA�Ăяo���ꂽ�S�[�X�g�̋N�������������Ƃ�
-OnOtherGhostClosed	���̃S�[�X�g���I�������Ƃ�
-OnOtherGhostChanged	���̃S�[�X�g�����̃S�[�X�g�� �؂�ւ���āA�؂�ւ���̃S�[�X�g�̋N�������������Ƃ�
+OnOtherGhostBooted	他のゴーストが呼び出されて、呼び出されたゴーストの起動が完了したとき
+OnOtherGhostClosed	他のゴーストが終了したとき
+OnOtherGhostChanged	他のゴーストが他のゴーストに 切り替わって、切り替わり先のゴーストの起動が完了したとき
 */
 
 
-//Emily�֐؂�ւ�
+//Emilyへ切り替え
 OnGhostChanging_Emily
 {
-	"\0\s[0]�G�~������ɐ؂�ւ��ł��B\w5\1����H�ׂĂ邩�ȁB"
+	"\0\s[0]エミリさんに切り替えです。\w5\1お芋食べてるかな。"
 }
 
-//Emily����؂�ւ�
+//Emilyから切り替り
 OnGhostChanged_Emily
 {
-	"\0\s[0]�G�~�����񂩂��サ�Ă��܂����B\w5\1��낵���ȁB"
+	"\0\s[0]エミリさんから交代してきました。\w5\1よろしくな。"
 }
 
 
-//���̑��̃S�[�X�g�֐؂�ւ�
+//その他のゴーストへ切り替え
 OnGhostChangingOther
 {
-	"\0\s[1]�Ӂ[��A�s�����Ⴄ�񂾂ˁB\w8\1�܂��߂��ė��邳�B\w8\0\n\n�j�̂ނ���~���đ҂��Ă�ˁB\w8\1\s[11]\n\n�҂Ă���I\e"
-	"\0\s[1]���A�s�����Ⴄ�́d\w5�d\w5�H\w8\1������A����O����ꂽ�񂶂�Ȃ����H\w8\0\s[4]\n\n�d\w5�d\w5����A�ǂ���������B\e"
-	"\0\s[7]�Ձ[�B\w8\1�{��ȁB\w8\0\n\n���킫�����킫�[�B\w8\1\n\n�d\w5�d\w5����A���񑩂����ǂ��B\w8\0\s[5]\n\n%(username)�A�j���Ȃ������񂾁B\w8\1\n\n�����킾�B\e"
-	"\0\s[5]%(reference[0])����ɂ��݂₰�B\w8\1�d\w5�d\w5�҂āA�Ȃ񂾂��̉������ȗΐF�̕��̂́B\w8\0\n\n����ׂ��B\w8\1\s[11]\n\n�a�󂷂�ȁI�|�e�g�}�b�V���[�Ȃ񂼂ǂ��Ŏ�ɓ��ꂽ�I\e"
-	"\0\s[5]�������Ȃ��A%(username)�B\w9\n�킽���̎���%(reference[0])�ł��׋����B\w8\1����A�P�ɂ��O�ɖO������������Ȃ����H\w8\0\s[2]\n\n���[��d\w5�d\w5�d\w5\e"
+	"\0\s[1]ふーん、行っちゃうんだね。\w8\1また戻って来るさ。\w8\0\n\n針のむしろ敷いて待ってるね。\w8\1\s[11]\n\n待てこら！\e"
+	"\0\s[1]い、行っちゃうの‥\w5‥\w5？\w8\1呆れられ、いや飽きられたんじゃないか？\w8\0\s[4]\n\n‥\w5‥\w5それ、どっちもいや。\e"
+	"\0\s[7]ぷー。\w8\1怒るな。\w8\0\n\nうわきだうわきー。\w8\1\n\n‥\w5‥\w5いや、お約束だけどさ。\w8\0\s[5]\n\n%(username)、泳げなかったんだ。\w8\1\n\nうきわだ。\e"
+	"\0\s[5]%(reference[0])さんにおみやげ。\w8\1‥\w5‥\w5待て、なんだその怪しげな緑色の物体は。\w8\0\n\nお芋潰し。\w8\1\s[11]\n\n和訳すんな！ポテトマッシャーなんぞどこで手に入れた！\e"
+	"\0\s[5]すごいなぁ、%(username)。\w9\nわたしの次は%(reference[0])でお勉強か。\w8\1いや、単にお前に飽きただけじゃないか？\w8\0\s[2]\n\nがーん‥\w5‥\w5‥\w5\e"
 }
 
-//���̑��̃S�[�X�g����؂�ւ�
+//その他のゴーストから切り替り
 OnGhostChangedOther
 {
-	"\0\s[2]���A%(username)�B\w8\1�������B\w8\0\s[5]\n\n������Ƒ҂��ĂĂˁA�j�̂ނ���~������B\w8\1\n\n�d\w5�d\w5���S�n�������Ăǂ�����񂾂�B\e"
+	"\0\s[2]あ、%(username)。\w8\1おっす。\w8\0\s[5]\n\nちょっと待っててね、針のむしろ敷くから。\w8\1\n\n‥\w5‥\w5居心地悪くしてどうするんだよ。\e"
 
-	"\0\s[5]�ǂ����A�T���v���ł��B\w8\1�d\w5�d\w5�Ȃ񂩃g���E�}�ł�����̂��B\w8\0\n\n������B�T���v��������B\w8\1\n\n�d\w5�d\w5���O�ȁB\e"
+	"\0\s[5]どうも、サンプルです。\w8\1‥\w5‥\w5なんかトラウマでもあるのか。\w8\0\n\n無いよ。サンプルだから。\w8\1\n\n‥\w5‥\w5お前な。\e"
 
-	"\0\s[-1]\1\s[10]�������B\w9\n���߂͐Q�Ă邼�B\w8\0\s[1]�d\w5�d\w5%(username)�̓���������B\w8\1\n\n�ǂ��C�t�����ȁB\w9\n�d\w5�d\w5�Ă�����%(username)�A���C�����Ă邩�H\w8\0\s[4]\n\n�d\w5�d\w5����͎���ł���B\e"
+	"\0\s[-1]\1\s[10]おっす。\w9\nややめは寝てるぞ。\w8\0\s[1]‥\w5‥\w5%(username)の匂いがする。\w8\1\n\n良く気付いたな。\w9\n‥\w5‥\w5ていうか%(username)、風呂入ってるか？\w8\0\s[4]\n\n‥\w5‥\w5それは失礼でしょ。\e"
 
-	"\0\s[5]%(username)�A���A��Ȃ����B\w9\n���͂�ɂ���H�����C�ɂ���H����Ƃ�����Ղ�H\w8\1�d\w5�d\w5���̂������x�^�ȏ�ɁA�Ō�̂͂Ȃ񂾁B\w8\0\s[1]\n\n���b�v���̂����A�d\w5�d\w5\w8\1\n\n�d\w5�d\w5���������B\e"
+	"\0\s[5]%(username)、お帰りなさい。\w9\nごはんにする？お風呂にする？それともさんぷる？\w8\1‥\w5‥\w5ものすごくベタな上に、最後のはなんだ。\w8\0\s[1]\n\nラップ調のご挨拶‥\w5‥\w5\w8\1\n\n‥\w5‥\w5そうかい。\e"
 
-	"\0\s[0]���A%username�A�ǂ����B\w5\1\s[10]���킳�ł́A%(reference[0])����"
+	"\0\s[0]あ、%username、どうも。\w5\1\s[10]うわさでは、%(reference[0])って"
 	--
-	"%WW2officer�̐^�̎p"
-	"���Ȃ����܂�%mh�Ńo�C�g���Ă�"
-	"�N���[���l��"
-	"%me�������Ղ�ς�%vehicle�ɏ����%mp��p�j���Ă�"
+	"%WW2officerの真の姿"
+	"こないだまで%mhでバイトしてた"
+	"クローン人間"
+	"%meをたっぷり積んだ%vehicleに乗って%mpを徘徊してた"
 	--
-	"�炵�����B\0\w5\n\n�ցA�ւ��d\w5�d\w5�d"
+	"らしいぞ。\0\w5\n\nへ、へえ‥\w5‥\w5‥"
 	--
-	"�n���G�}��"
-	"�ق̂ڂ̂��Ă�"
-	"������Ђǂ�"
+	"地獄絵図だ"
+	"ほのぼのしてる"
+	"それもひどい"
 	--
-	"�ˁd\w5�d\w5�d\e"
+	"ね‥\w5‥\w5‥\e"
 }
 
  
 //******************************************************************************
-//���̉��͐؂�ւ��g�[�N�����p
-//�ʏ�͂�����K�v�͂���܂��񂪁A�K�v�ɉ����ēK�X�ύX���Ă��������B
-//AYATEMPLATE.�ł͂��܂�֐��� _tmpl_util.dic �ɂ���܂��B
+//この下は切り替えトーク処理用
+//通常はいじる必要はありませんが、必要に応じて適宜変更してください。
+//AYATEMPLATE.ではじまる関数は _tmpl_util.dic にあります。
 //******************************************************************************
 
 OnGhostChanging

@@ -1,17 +1,17 @@
 //------------------------------------------------------------------------------
-//ƒVƒXƒeƒ€«‘
+//ã‚·ã‚¹ãƒ†ãƒ è¾æ›¸
 //------------------------------------------------------------------------------
-dic, yaya_config.txt		// YAYA:İ’è«‘B•K‚¸Å‰‚Éw’è‚·‚é‚±‚ÆB
+dic, yaya_config.txt		// YAYA:è¨­å®šè¾æ›¸ã€‚å¿…ãšæœ€åˆã«æŒ‡å®šã™ã‚‹ã“ã¨ã€‚
 
 dic, system/yaya_shiori3.dic, UTF-8
 dic, system/yaya_optional.dic, UTF-8
 //dic, system/yaya_compatible.dic, UTF-8
 
 //------------------------------------------------------------------------------
-//ÀsƒƒO
-//ÀsƒƒO‚ğayame.log‚É‹L˜^‚µ‚Ü‚·BŠJ”­‚É‚Í‹L˜^‚µ‚Ä‚¨‚¢‚½‚Ù‚¤‚ª—Ç‚¢‚Å‚·B
+//å®Ÿè¡Œãƒ­ã‚°
+//å®Ÿè¡Œãƒ­ã‚°ã‚’ayame.logã«è¨˜éŒ²ã—ã¾ã™ã€‚é–‹ç™ºæ™‚ã«ã¯è¨˜éŒ²ã—ã¦ãŠã„ãŸã»ã†ãŒè‰¯ã„ã§ã™ã€‚
 //------------------------------------------------------------------------------
 // log, ayame.log	
-ignoreiolog, ID: OnSecondChange //OnSecondChange–³‹
-ignoreiolog, ID: OnMouse        //OnMouseŒn–³‹
+ignoreiolog, ID: OnSecondChange //OnSecondChangeç„¡è¦–
+ignoreiolog, ID: OnMouse        //OnMouseç³»ç„¡è¦–
 

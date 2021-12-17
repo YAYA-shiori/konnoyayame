@@ -1,11 +1,11 @@
-charset,Shift_JIS
+charset,UTF-8
 
-//�V�F���ꎮ�̃��C�Z���X�͈ȉ��̂悤�ɂȂ�܂��B
+//シェル一式のライセンスは以下のようになります。
 //http://creativecommons.org/licenses/by-nc-nd/2.1/jp/
 
 craftman,SATO M
 craftmanurl,http://sgmh.sakura.ne.jp/tcg/
-craftmanw,�T�g�E�@�l
+craftmanw,サトウ　Ｍ
 
 name,Master
 type,shell

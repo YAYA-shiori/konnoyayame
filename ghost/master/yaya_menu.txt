@@ -1,182 +1,182 @@
 //******************************************************************************
-// YAYA�@�S�[�X�g�e���v���[�g
-// ���j���[��������
+// YAYA　ゴーストテンプレート
+// メニュー処理辞書
 //******************************************************************************
 
 //******************************************************************************
-//���C�����j���[�̓W�J
+//メインメニューの展開
 //
-//AYATEMPLATE.MenuItem�̎g����
-//1�߂̕����񁁑I�����ɕ\�����镶����
-//2�߂̕����񁁑I�񂾂Ƃ��Ɏ��s�����֐���
-//3�߂̕����񁁉��s����ʁ@50%���݁@�ȗ������100%�i��\n�j
+//AYATEMPLATE.MenuItemの使い方
+//1つめの文字列＝選択肢に表示する文字列
+//2つめの文字列＝選んだときに実行される関数名
+//3つめの文字列＝改行する量　50%刻み　省略すると100%（＝\n）
 //******************************************************************************
 
 //------------------------------------------------------------------------------
-//���C�����j���[�W�J
+//メインメニュー展開
 //------------------------------------------------------------------------------
 OpenMenu
 {
-	"\0\s[5]�͂��A�Ȃ�ł��傤���H"
-	"\0\s[5]%username�A�Ȃ�ł����H"
-	"\0\s[0]��d�d�ǂ������́H"
+	"\0\s[5]はい、なんでしょうか？"
+	"\0\s[5]%username、なんですか？"
+	"\0\s[0]ん‥‥どうしたの？"
 	--
-	AYATEMPLATE.MenuItem("�Ȃ񂩘b����","Menu_AITALK",200)
+	AYATEMPLATE.MenuItem("なんか話して","Menu_AITALK",200)
 	--
 	if ( STRLEN(AYATEMPLATE.LastTalk) > 0 ) {
-		AYATEMPLATE.MenuItem("�������̘b�́H","Menu_LASTTALK")
+		AYATEMPLATE.MenuItem("さっきの話は？","Menu_LASTTALK")
 	}
 	--
-	AYATEMPLATE.MenuItem("����ׂ�p�x��ς���","Menu_TALKINTERVAL")
+	AYATEMPLATE.MenuItem("しゃべり頻度を変えて","Menu_TALKINTERVAL")
 	--
-	AYATEMPLATE.MenuItem("���̃S�[�X�g�Ƙb��","Menu_GHOSTCOMSTART")
+	AYATEMPLATE.MenuItem("他のゴーストと話す","Menu_GHOSTCOMSTART")
 	--
-	AYATEMPLATE.MenuItem("���߂ɘb��������","Menu_COMMUNICATEOPEN")
+	AYATEMPLATE.MenuItem("ややめに話しかける","Menu_COMMUNICATEOPEN")
 	--
-	//�X�^���v���`�F�b�N
+	//スタンプ帳チェック
 	if AYATEMPLATE.IsPluginExist('379E0DA0-131C-11DD-E1AC-90009E101CFE') {
-		AYATEMPLATE.MenuItem("�X�^���v������","Menu_STAMP")
+		AYATEMPLATE.MenuItem("スタンプを押す","Menu_STAMP")
 	}
 	--
-	AYATEMPLATE.MenuItem("�Ȃ�ł��Ȃ�","Menu_CANCEL",150)
+	AYATEMPLATE.MenuItem("なんでもない","Menu_CANCEL",150)
 }
 
 //------------------------------------------------------------------------------
-//���j���[�I���^�C���A�E�g
+//メニュー選択タイムアウト
 //------------------------------------------------------------------------------
 OnChoiceTimeout
 {
-	"\0\s[7]�����ƑI��ł����������I\e"
-	"\0\s[4]�Ձ[�B\w8\1�������ނ񂶂�Ȃ��B\e"
-	"\0\s[4]��莞�Ԃ��߂���ƁB\w8\1�L�����Z�������񂾂�ȁH\w8\0\n\n�������܂��B\w8\1\s[11]\n\n���I�H\w8\0\n\n�}�b�N�N���B\w8\1\n\n����\�\�\�\�\�\�\�b�I�I\e"
+	"\0\s[7]ちゃんと選んでくださいっ！\e"
+	"\0\s[4]ぷー。\w8\1落ち込むんじゃない。\e"
+	"\0\s[4]一定時間が過ぎると。\w8\1キャンセルされるんだよな？\w8\0\n\n自爆します。\w8\1\s[11]\n\nえ！？\w8\0\n\nマック朗が。\w8\1\n\nいや―――――――ッ！！\e"
 }
 
 
 //******************************************************************************
-//�e���ڂ̏������e
+//各項目の処理内容
 //******************************************************************************
 
-//---- �����b����
+//---- 何か話して
 Menu_AITALK
 {
-	//---- �����I��AI�g�[�N�J�n���w��
+	//---- 明示的にAIトーク開始を指示
 	OnAiTalk
 }
 
-//---- �������̘b��
+//---- さっきの話は
 Menu_LASTTALK
 {
 	AYATEMPLATE.LastTalk
 }
 
-//---- �g�[�N�p�x�̒���
+//---- トーク頻度の調整
 Menu_TALKINTERVAL
 {
-	"\0\s[0]�ǂ̂��炢�������̂��ȁH"
+	"\0\s[0]どのくらいがいいのかな？"
 	--
-	AYATEMPLATE.MenuItem("���邳�����炢","Menu_TALKMAX",200)
+	AYATEMPLATE.MenuItem("うるさいくらい","Menu_TALKMAX",200)
 	--
-	AYATEMPLATE.MenuItem("�ӂ�","Menu_TALKNORMAL")
+	AYATEMPLATE.MenuItem("ふつう","Menu_TALKNORMAL")
 	--
-	AYATEMPLATE.MenuItem("�Â�","Menu_TALKPOOR")
+	AYATEMPLATE.MenuItem("静か","Menu_TALKPOOR")
 	--
-	AYATEMPLATE.MenuItem("�ق��Ă�","Menu_TALKNONE")
+	AYATEMPLATE.MenuItem("黙ってて","Menu_TALKNONE")
 	--
-	AYATEMPLATE.MenuItem("�߂�","OpenMenu",150)
+	AYATEMPLATE.MenuItem("戻る","OpenMenu",150)
 }
 
-//---- ���ɂ��Đ���
+//---- 文について説明
 Menu_ABOUTAYA
 {
-	"\0\s[0]�킽�������́A�ėpDLL�u���v�̐i���ŁA�uYAYA�v�Ő��삳��Ă�񂾂�ˁH\w8\1�����Ȃ�B���̒ʂ肾�B\w9\n�b���ꕗ�̓ǂ݂₷���X�N���v�g�ŁASHIORI��SAORI����邱�Ƃ��o����񂾁B\w8\0\s[5]\n\n�ŏ��͖󕪂���Ȃ���������Ȃ����ǁA���߂Ί��ނقǖʔ����Ȃ��B\w8\s[4]\n�����B\w8\1\n\n�����B\e"
+	"\0\s[0]わたしたちは、汎用DLL「文」の進化版、「YAYA」で制作されてるんだよね？\w8\1聞くなよ。その通りだ。\w9\nＣ言語風の読みやすいスクリプトで、SHIORIやSAORIを作ることが出来るんだ。\w8\0\s[5]\n\n最初は訳分かんないかもしれないけど、噛めば噛むほど面白くなるよ。\w8\s[4]\n多分。\w8\1\n\nおい。\e"
 }
 
-//---- ���߂ɘb��������
+//---- ややめに話しかける
 Menu_COMMUNICATEOPEN
 {
-	"\0\s[5]�͂����B\![open,communicatebox]\e"
+	"\0\s[5]はいっ。\![open,communicatebox]\e"
 }
 
-//---- ���̃S�[�X�g�Ƙb��
+//---- 他のゴーストと話す
 Menu_GHOSTCOMSTART
 {
 	StartCommunicate
 }
 
-//---- �L�����Z�����ꂽ
+//---- キャンセルされた
 Menu_CANCEL
 {
-	"\0\s[4]�d\w6�d\w6�Ձ[�B\e"
+	"\0\s[4]‥\w6‥\w6ぷー。\e"
 }
 
-//---- �g�[�N�p�x
+//---- トーク頻度
 Menu_TALKMAX
 {
-	//---- ���邳���b��(15�b�Ԋu)
+	//---- うるさく話す(15秒間隔)
 	aitalkinterval = 15
-	"\0\s[5]�l�^�؂�����ꂸ���񂪂񒝂�J�n���I\w8\1�d\w5�d\w5�҂āB\e"
+	"\0\s[5]ネタ切れを恐れずがんがん喋る開始っ！\w8\1‥\w5‥\w5待て。\e"
 }
 
 Menu_TALKNORMAL
 {
-	//---- �ӂ��ɘb��(3���Ԋu)
+	//---- ふつうに話す(3分間隔)
 	aitalkinterval = 180
-	"\0\s[6]������ʓI�ɂR���Ԋu���炢�Œ����Ă݂�e�X�g�B\w8\1�e�X�g�̓��[�J���ŁB\w8\0\s[4]\n\n�d\w5�d\w5����͂ǂ��̃��[���H\e"
+	"\0\s[6]ごく一般的に３分間隔くらいで喋ってみるテスト。\w8\1テストはローカルで。\w8\0\s[4]\n\n‥\w5‥\w5それはどこのルール？\e"
 }
 
 Menu_TALKPOOR
 {
-	//---- �Â��ɘb��(5���Ԋu)
+	//---- 静かに話す(5分間隔)
 	aitalkinterval = 300
-	"\0\s[5]�L���܂��B\w8\1���i�������Ă邾��B\e"
+	"\0\s[5]猫被ります。\w8\1普段から被ってるだろ。\e"
 }
 
 Menu_TALKNONE
 {
-	//---- �b���Ȃ�
+	//---- 話さない
 	aitalkinterval = 0
-	"\0\s[4]�d\w5�d\w5�f�X�N�g�b�v�A�N�Z�T���[�Ƃ��Ă̂قƂ�ǂ̋@�\�𕕈󂵂ĒW�X�ƃ�������������Ƃɓ���܂��B\w8\1�Ȃ�[���������B\e"
+	"\0\s[4]‥\w5‥\w5デスクトップアクセサリーとしてのほとんどの機能を封印して淡々とメモリを消費する作業に入ります。\w8\1なんつー言い方だ。\e"
 }
 
-//---- �w�b�h���C��
+//---- ヘッドライン
 Menu_HEADLINECANCEL
 {
-	//---- �L�����Z�����ꂽ
-	"\0\s[5]�́[���B\e"
+	//---- キャンセルされた
+	"\0\s[5]はーい。\e"
 }
 
-//---- �X�^���v��
+//---- スタンプ帳
 Menu_STAMP
 {
-	//������
+	//初期化
 	SHIORI3FW.RegisterTempVar('StampInfo_IsExist','StampInfo_IsNotify','StampInfo_CurrentStampFile','StampInfo_CurrentStampTitle')
 	
 	StampInfo_IsExist = 0
 	StampInfo_IsNotify = 0
 	
-	//�X�^���v�������������Araise��OnStampMenuExec�𔭐������ĉ��ɏ������ڂ�
+	//スタンプ帳情報を取った後、raiseでOnStampMenuExecを発生させて下に処理を移す
 	"\![raiseplugin,379E0DA0-131C-11DD-E1AC-90009E101CFE,OnStampInfoCall]\![raise,OnStampMenuExec]"
 }
 
 OnStampInfo
 {
-	//�X�^���v���邩�ǂ����H
+	//スタンプあるかどうか？
 	StampInfo_IsExist = reference[1]
 	StampInfo_IsNotify = 1
 	StampInfo_CurrentStampFile = ''
 	StampInfo_CurrentStampTitle = ''
 	
-	//�����Ă���ꍇ�́A�ǂ̃X�^���v�������Ă��邩�H
+	//押している場合は、どのスタンプを押しているか？
 	_stamparray = SPLIT(reference[3],CHR(2))
 	
 	StampInfo_Data = _stamparray
 	
 	_n = ARRAYSIZE(_stamparray)
 	for _i = 0 ; _i < _n ; _i++ {
-		_stamp = RE_SPLIT(_stamparray[_i],'[\x1,]') //�o�C�g�l1���J���}���łԂ����؂�F�݊����[�h�΍�
+		_stamp = RE_SPLIT(_stamparray[_i],'[\x1,]') //バイト値1かカンマかでぶった切る：互換モード対策
 		
-		//�ق��Ŏg���ꍇ�͂����̖��O��ς��Ă�
-		if _stamp[0] == '�͂�[YAYA��[���' || _stamp[0] == '�������' {
+		//ほかで使う場合はここの名前を変えてね
+		if _stamp[0] == 'はろーYAYAわーるど' || _stamp[0] == '紺野ややめ' {
 			StampInfo_CurrentStampFile = _stamp[1]
 			StampInfo_CurrentStampTitle = _stamp[2]
 			break
@@ -188,37 +188,37 @@ OnStampMenuExec
 {
 	_stamp_type = ''
 	
-	//������
+	//あった
 	if StampInfo_IsExist {
-		if '����' _in_ StampInfo_CurrentStampTitle { //�}�b�N�N�ɂ�������
-			"\u\s[10]\h\s[2]���������Ă���̂ɁA\w5�܂��ق����́H\w9\w9\u\s[11]�Ȃ炨��̃X�^���v�ɒu���������I\w9\n�ǂ������ꂵ������I\w9\w9\h\s[4]\n\n�Ȃɂ���Ă��\w5�c\w5�c"
+		if 'ややめ' _in_ StampInfo_CurrentStampTitle { //マック朗におきかえ
+			"\u\s[10]\h\s[2]もう押してあるのに、\w5まだほしいの？\w9\w9\u\s[11]ならおれのスタンプに置き換えだ！\w9\nどうだうれしいだろ！\w9\w9\h\s[4]\n\nなにやってるの\w5…\w5…"
 			
-			_stamp_type = '�}�b�N�N'
+			_stamp_type = 'マック朗'
 		}
-		else { //���߂ɒu������
-			"\h\s[0]\u\s[10]��������̃X�^���v�������Ă��邼�H\w9\w9\h\s[5]�Ƃ肠�����킽���̂ɖ߂��ˁ[�B"
+		else { //ややめに置き換え
+			"\h\s[0]\u\s[10]もうおれのスタンプが押してあるぞ？\w9\w9\h\s[5]とりあえずわたしのに戻すねー。"
 			
-			_stamp_type = '����'
+			_stamp_type = 'ややめ'
 		}
 	}
-	//�Ȃ�
+	//ない
 	else {
-		"\0\s[0]�X�^���v�H\w9\w9\n\s[5]�͂��ǂ����`�B\w9\w9\1\s[11]�������������牴�͂��̃X�^���v��I�Ԃ��I\w9\w9\0\s[4]���[���ƁB"
+		"\0\s[0]スタンプ？\w9\w9\n\s[5]はいどうぞ～。\w9\w9\1\s[11]せっかくだから俺はこのスタンプを選ぶぜ！\w9\w9\0\s[4]えーっと。"
 		
-		_stamp_type = '����'
+		_stamp_type = 'ややめ'
 	}
 	--
-	if _stamp_type == '����' {
-		//2�s�ڃt�@�C���A3�s�ڃ^�C�g���A4�s�ڃR�����g
+	if _stamp_type == 'ややめ' {
+		//2行目ファイル、3行目タイトル、4行目コメント
 		"\![raiseplugin,379E0DA0-131C-11DD-E1AC-90009E101CFE,OnStampAdd,/
 		ghost/master/stmp_yym.png,/
-		���߃X�^���v,/
-		������߂��������X�^���v�B���̃W�b�p�[�̎����ƃf�U�C���������B]"
+		ややめスタンプ,/
+		紺野ややめが押したスタンプ。服のジッパーの取っ手とデザインが同じ。]"
 	}
 	else {
 		"\![raiseplugin,379E0DA0-131C-11DD-E1AC-90009E101CFE,OnStampAdd,/
 		ghost/master/stmp_mcr.png,/
-		�}�b�N�N�X�^���v,/
-		�}�b�N�N���������X�^���v�B���ь�B�����ڂɔ����ēł͂Ȃ��c�ƐM�������B]"
+		マック朗スタンプ,/
+		マック朗が押したスタンプ。黒林檎。見た目に反して毒はない…と信じたい。]"
 	}
 }

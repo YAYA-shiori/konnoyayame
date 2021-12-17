@@ -1,4 +1,4 @@
-charset, Shift_JIS
+charset,UTF-8
 type,ghost
-name,‚Í‚ë[YAYAƒ[ƒ‹ƒh
+name,ã¯ã‚ãƒ¼YAYAãƒ¯ãƒ¼ãƒ«ãƒ‰
 directory,konnoyayame

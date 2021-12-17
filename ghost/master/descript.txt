@@ -1,10 +1,10 @@
-charset,Shift_JIS
+charset,UTF-8
 
-name,‚Í‚ë[YAYA‚í[‚é‚Ç
+name,ã¯ã‚ãƒ¼YAYAã‚ãƒ¼ã‚‹ã©
 type,ghost
 
-sakura.name,®–ì‚â‚â‚ß
-kero.name,ƒ}ƒbƒN˜N
+sakura.name,ç´ºé‡ã‚„ã‚„ã‚
+kero.name,ãƒãƒƒã‚¯æœ—
 
 sstp.allowunspecifiedsend,1
 
@@ -13,5 +13,5 @@ icon,icon.ico
 shiori,yaya.dll
 
 craftman,seibihan
-craftmanw,®”õ”Ç
+craftmanw,æ•´å‚™ç­
 craftmanurl,http://ms.shillest.net/yayame.xhtml
