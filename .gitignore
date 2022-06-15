@@ -1,10 +1,6 @@
 /ghost/master/yaya_variable.cfg
-/ghost/master/profile/ghost.dat
-/ghost/master/profile/ghost.dat.bak
-/ghost/master/profile/history.dat
-/ghost/master/profile/var.txt
-/shell/master/profile/shell.dat
-/shell/master/profile/shell.dat.bak
-ghost/master/updates2.dau
-updates2.dau
+/ghost/master/profile/
+/shell/master/profile/
 /ghost/master/messagetxt/*.bak
+updates2.dau
+updates.txt
