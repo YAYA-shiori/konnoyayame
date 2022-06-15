@@ -203,10 +203,13 @@ AYATEMPLATE.ExecuteGhostNameFunc
 	}
 
 	if _argc >= 2 {
-		_script = EVAL(_argv[2])
-		if STRLEN(_script) != 0 {
-			REPLACE(_script,"\-","")
-			return
+		_funcname = _argv[2]
+		if (STRLEN(_funcname) > 0) && ISFUNC(_funcname) {
+			_script = EVAL(_argv[2])
+			if STRLEN(_script) != 0 {
+				REPLACE(_script,"\-","")
+				return
+			}
 		}
 	}
 }
