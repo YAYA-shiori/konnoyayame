@@ -1,2 +1,8 @@
 charset,UTF-8
 ghost/master/messagetxt/engilsh.txt
+ghost/master/messagetxt/classical-chinese.txt
+ghost/master/messagetxt/english.txt
+ghost/master/messagetxt/japanese.txt
+ghost/master/messagetxt/simplified-chinese.txt
+ghost/master/messagetxt/traditional-chinese.txt
+ghost/master/messagetxt/
