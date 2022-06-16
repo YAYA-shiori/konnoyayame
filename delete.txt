@@ -6,3 +6,5 @@ ghost/master/messagetxt/japanese.txt
 ghost/master/messagetxt/simplified-chinese.txt
 ghost/master/messagetxt/traditional-chinese.txt
 ghost/master/messagetxt/
+ghost/master/system/yaya_shiori3.dic
+ghost/master/yaya_config.txt
