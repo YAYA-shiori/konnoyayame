@@ -498,6 +498,7 @@ OnDisplayChange
 	displaybpp    = reference[0]
 	displaywidth  = reference[1]
 	displayheight = reference[2]
+	SHIORI3FW.RegisterTempVar('displaybpp', 'displaywidth', 'displayheight')
 }
 
 //------------------------------------------------------------------------------

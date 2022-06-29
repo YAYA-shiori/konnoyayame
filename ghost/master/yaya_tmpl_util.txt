@@ -261,6 +261,7 @@ On_otherghostname
 	// 現在起動中のゴーストのリストを作成する
 	ghostexlist = reference
 	ghostexcount = ARRAYSIZE(ghostexlist)
+	SHIORI3FW.RegisterTempVar('ghostexlist', 'ghostexcount')
 }
 
 
