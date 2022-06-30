@@ -11,4 +11,5 @@ ghost/master/system/aya_lilith_ex.dic
 ghost/master/system/yaya_compatible.dic
 ghost/master/system/yaya_optional.dic
 ghost/master/system/yaya_shiori3.dic
+ghost/master/system/yaya.txt
 ghost/master/yaya_config.txt
