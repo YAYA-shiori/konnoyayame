@@ -3,12 +3,12 @@
 紺野ややめ
 ----------------
 
-20210625
-YAYA version Tc555-1
+20220911
+YAYA version Tc571-5
 
 original author : umeici
 change by : ukiya
 modernized by : ponapalt and contributors
 
-https://github.com/ponapalt/konnoyayame
+https://github.com/YAYA-shiori/konnoyayame
 

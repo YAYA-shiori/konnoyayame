@@ -42,8 +42,8 @@ On_recommendrootbutton.caption
 //------------------------------------------------------------------------------
 On_sakura.recommendsites_EX : array
 {
-	"里々/整備班カスタム | https://github.com/ponapalt/satoriya-shiori/wiki | "
-	"華和梨              | https://kawari.github.io/                        | "
+	"里々/整備班カスタム | https://github.com/ukatech/satoriya-shiori/wiki | "
+	"華和梨              | https://kawari.github.io/                       | "
 }
 
 //------------------------------------------------------------------------------
@@ -59,7 +59,7 @@ On_kero.recommendbuttoncaption
 //------------------------------------------------------------------------------
 On_kero.recommendsites_EX : array
 {
-	"YAYA                | https://github.com/ponapalt/yaya-shiori/wiki     | "
+	"YAYA                | https://github.com/YAYA-shiori/yaya-shiori/wiki | "
 }
 
 //------------------------------------------------------------------------------
