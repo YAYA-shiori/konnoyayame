@@ -13,7 +13,7 @@ OnFirstBoot
 	username         = "ユーザーさん"
 	teachusername    = 0	// ユーザー名覚え用
 
-	_vanishcount = TOINT(reference[0])
+	_vanishcount = reference[0]
 
 	//---- Vanishカウントを見て、真の初回か否かを判定する
 	if _vanishcount <= 0
