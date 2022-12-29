@@ -13,3 +13,5 @@ ghost/master/system/yaya_optional.dic
 ghost/master/system/yaya_shiori3.dic
 ghost/master/system/yaya.txt
 ghost/master/yaya_config.txt
+ghost/master/stmp_mcr.png
+ghost/master/stmp_yym.png
