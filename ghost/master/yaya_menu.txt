@@ -211,13 +211,13 @@ OnStampMenuExec
 	if _stamp_type == 'ややめ' {
 		//2行目ファイル、3行目タイトル、4行目コメント
 		"\![raiseplugin,379E0DA0-131C-11DD-E1AC-90009E101CFE,OnStampAdd,/
-		ghost/master/stmp_yym.png,/
+		ghost/master/stamp/stmp_yym.png,/
 		ややめスタンプ,/
 		紺野ややめが押したスタンプ。服のジッパーの取っ手とデザインが同じ。]"
 	}
 	else {
 		"\![raiseplugin,379E0DA0-131C-11DD-E1AC-90009E101CFE,OnStampAdd,/
-		ghost/master/stmp_mcr.png,/
+		ghost/master/stamp/stmp_mcr.png,/
 		マック朗スタンプ,/
 		マック朗が押したスタンプ。黒林檎。見た目に反して毒はない…と信じたい。]"
 	}
