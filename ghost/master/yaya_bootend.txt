@@ -13,7 +13,7 @@ OnFirstBoot
 	username         = "ユーザーさん"
 	teachusername    = 0	// ユーザー名覚え用
 
-	_vanishcount = reference[0]
+	_vanishcount = TOINT(reference[0])
 
 	//---- Vanishカウントを見て、真の初回か否かを判定する
 	if _vanishcount <= 0
@@ -41,8 +41,8 @@ OnFirstBoot
 	{
 		//100回以上（やりすぎの例）
 		"\0\s[0]あ、%(username)。\w8\1よお。\w8\0\s[4]\n\nさて、今度はいつ消されるんだろうね。\w8\1\n\nていうか慣れすぎだ、おれら。"
-		"\0\s[0]\n\n‥\w5‥\w5%(reference[0])回も消しておいて、いまさら勘違いだなんてことはないでしょ。\n/
-		%username、飽きっぽいって言われない？\w5"
+		"\0\s[0]\n\n‥\w5‥\w5%(_vanishcount)回も消しておいて、いまさら勘違いだなんてことはないでしょ。\n/
+		%(username)、飽きっぽいって言われない？\w5"
 	}
 	--
 	"\1\n\n‥\w5‥\w5ま、\w9まあ、いいだろ。\0\n\nそうだね。またよろしく。\e"

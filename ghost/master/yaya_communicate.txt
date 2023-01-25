@@ -25,7 +25,8 @@ TalkTo_Emily{
 
 //その他の人に話しかける
 TalkToOther{
-	"\0\s[0]こんにちは、%(res_reference0)さん。\1\s[10]元気でやってるか。"
+	_escaped_name = SHIORI3FW.EscapeAllTags(res_reference0)
+	"\0\s[0]こんにちは、%(_escaped_name)さん。\1\s[10]元気でやってるか。"
 }
 
 TalkToNobody{
@@ -73,8 +74,13 @@ ReplyToUser
 		if teachusername == 1
 		{
 			//---- 直前が「名前覚えて」だったので名前を覚える
-			username = reference[1]
-			"\0\s[0]%(username)、ね。わかりました。\e"
+			if SHIORI3FW.EscapeAllTags(reference[1]) != reference[1] {
+				'\0\s[0]変な記号はやめてほしいな。\e'
+			}
+			else {
+				username = reference[1]
+				"\0\s[0]%(username)、ね。わかりました。\e"
+			}
 			teachusername = 0
 		}
 		else
@@ -134,7 +140,13 @@ ReplyToOther{
 	if "こんにちは" _in_ reference[1] || "こんばんは" _in_ reference[1]
 	{
 		res_reference0=reference[0]	//さらに相手に話しかける
-		"\0\s[0]どうも、%(res_reference0)。\1\s[10]うむ。%(reference[1])\e"
+		_escaped_name = SHIORI3FW.EscapeAllTags(res_reference0)
+		_greeting = ''
+		if 'こんにちは' _in_ reference[1]
+			_greeting = 'こんにちは'
+		else
+			_greeting = 'こんばんは'
+		"\0\s[0]どうも、%(_escaped_name)。\1\s[10]うむ。%(_greeting)。\e"
 	}
 	else
 	{

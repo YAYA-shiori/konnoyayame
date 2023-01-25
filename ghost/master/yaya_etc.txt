@@ -21,7 +21,8 @@ OnShellChanging
 //------------------------------------------------------------------------------
 OnShellChanged
 {
-	"\0\s[7]変身！%(reference[0])！\w8\s[5]\n似合うかな？\w8\1良い感じだな。\e"
+	_escaped_name = SHIORI3FW.EscapeAllTags(reference[0])
+	"\0\s[7]変身！%(_escaped_name)！\w8\s[5]\n似合うかな？\w8\1良い感じだな。\e"
 }
 
 
@@ -59,7 +60,8 @@ OnInstallComplete
 		"プラグイン"
 	}
 	--
-	"「%(reference[1])」、インストール完了ですよー。\n"
+	_escaped_name = SHIORI3FW.EscapeAllTags(reference[1])
+	"「%(_escaped_name)」、インストール完了ですよー。\n"
 	--
 	if basewarenameex == 'SSP' {
 		_id = ''
@@ -85,7 +87,7 @@ OnInstallComplete
 
 OnAYATEMPLATE.InstallChange
 {
-	"\![change,%(reference[0]),lastinstalled]"
+	"\![change,%(AYATEMPLATE.EscapeText(reference[0])),lastinstalled]"
 }
 
 //------------------------------------------------------------------------------
@@ -93,8 +95,9 @@ OnAYATEMPLATE.InstallChange
 //------------------------------------------------------------------------------
 OnInstallFailure
 {
-	"\0\s[4]インストールに失敗しましたー‥\w5‥\w5\n\n理由：%(reference[0])。あーあ。\e"
-	"\0\s[5]こちらは５階、%(reference[0])でございまーす。\w8\1つまりインストールに失敗したんだろ。\e"
+	_escaped_message = SHIORI3FW.EscapeAllTags(reference[0])
+	"\0\s[4]インストールに失敗しましたー‥\w5‥\w5\n\n理由：%(_escaped_message)。あーあ。\e"
+	"\0\s[5]こちらは５階、%(_escaped_message)でございまーす。\w8\1つまりインストールに失敗したんだろ。\e"
 }
 
 //------------------------------------------------------------------------------
@@ -102,8 +105,9 @@ OnInstallFailure
 //------------------------------------------------------------------------------
 OnInstallRefuse
 {
-	"\1\s[10]これは、%(reference[0])用のアーカイブだぞ。\w6\0\s[0]処理中断っ。\e"
-	"\0\s[5]ぴーんぽーんぱーんぷー♪\w9\n%(reference[0])さん、お荷物が届いてまーす。\w8\1つまり%(reference[0])に渡してやってくれ。\e"
+	_escaped_name = SHIORI3FW.EscapeAllTags(reference[0])
+	"\1\s[10]これは、%(_escaped_name)用のアーカイブだぞ。\w6\0\s[0]処理中断っ。\e"
+	"\0\s[5]ぴーんぽーんぱーんぷー♪\w9\n%(_escaped_name)さん、お荷物が届いてまーす。\w8\1つまり%(_escaped_name)に渡してやってくれ。\e"
 }
 
 
@@ -140,8 +144,9 @@ OnVanishCancel
 //------------------------------------------------------------------------------
 OnVanished
 {
+	_escaped_name = SHIORI3FW.EscapeAllTags(reference[0])
 	"\1\s[10]命ある物はいつか滅び、命無きゴーストもいつかは電子の海に消えゆく運命。\w8\0\s[1]どうしたのマック朗、熱暴走？\w8\1\n\nちゃうわ。\e"
-	"\0\s[4]%(reference[0])さんが居なくなっちゃった‥\w5‥\w5\w8\1いつかまた会えるさ。\w8\0\n\n‥\w5‥\w5だよね。\e"
+	"\0\s[4]%(_escaped_name)さんが居なくなっちゃった‥\w5‥\w5\w8\1いつかまた会えるさ。\w8\0\n\n‥\w5‥\w5だよね。\e"
 }
 
 
@@ -162,15 +167,15 @@ OnBIFFBegin
 //------------------------------------------------------------------------------
 OnBIFFComplete
 {
-	if reference[0] == 0
+	if TOINT(reference[0]) == 0
 	{
 		//---- メールは無かった
-		"\1\s[10]メールは無かったな。\w5\0\s[0]ご苦労さま。\n\n\s[1]‥\w5‥\w5%username。寂しい？\e"
+		"\1\s[10]メールは無かったな。\w5\0\s[0]ご苦労さま。\n\n\s[1]‥\w5‥\w5%(username)。寂しい？\e"
 	}
 	else
 	{
 		//---- メールが届いていた
-		"\1\s[10]%(reference[0])通のメールがあったぞ。\w5\0\s[5]%username、さっそく見てみたら？\e"
+		"\1\s[10]%(reference[0])通のメールがあったぞ。\w5\0\s[5]%(username)、さっそく見てみたら？\e"
 	}
 }
 
@@ -192,7 +197,7 @@ OnBIFFFailure
 	elseif reference[0] == "defect"
 	{
 		//---- 設定誤り
-		"\1\s[10]なんか、ぜんぜんダメなんだが。\w5\0\s[4]メールチェックの設定を見なおしてね、%username。\e"
+		"\1\s[10]なんか、ぜんぜんダメなんだが。\w5\0\s[4]メールチェックの設定を見なおしてね、%(username)。\e"
 	}
 	else
 	{
@@ -266,7 +271,8 @@ OnUpdateFailure
 	else
 	{
 		//---- 上記以外の理由で失敗した
-		"\0\s[1]%(reference[0])、だって。\w5\1\s[10]うーん。"
+		_escaped_message = SHIORI3FW.EscapeAllTags(reference[0])
+		"\0\s[1]%(_escaped_message)、だって。\w5\1\s[10]うーん。"
 	}
 	--
 	"\n\n\1というわけで、ネットワーク更新、失敗だ。\e"
@@ -277,7 +283,8 @@ OnUpdateFailure
 //------------------------------------------------------------------------------
 OnUpdate.OnDownloadBegin
 {
-	"\0\s[5]ファイル「%(reference[0])」をダウンロードします。\e"
+	_escaped_name = SHIORI3FW.EscapeAllTags(reference[0])
+	"\0\s[5]ファイル「%(_escaped_name)」をダウンロードします。\e"
 }
 
 //------------------------------------------------------------------------------
@@ -316,7 +323,8 @@ OnUpdate.OnMD5CompareFailure
 //------------------------------------------------------------------------------
 OnHeadlinesenseBegin
 {
-	"\0\s[0]%(reference[0])ヘッドライン取得中。\e"
+	_escaped_name = SHIORI3FW.EscapeAllTags(reference[0])
+	"\0\s[0]%(_escaped_name)ヘッドライン取得中。\e"
 }
 
 //------------------------------------------------------------------------------
@@ -324,25 +332,27 @@ OnHeadlinesenseBegin
 //------------------------------------------------------------------------------
 OnHeadlinesense.OnFind
 {
+	_escaped_name = SHIORI3FW.EscapeAllTags(reference[0])
+	_escaped_body = SHIORI3FW.EscapeAllTags(reference[3])
 	//---- はじめのセリフ
 	if reference[2] == "First" || reference[2] == "First and Last"
 	{
 		//---- 最初のページ
-		"\0\b2\s[0]%(reference[0])のヘッドラインですよっ。"
+		"\0\b2\s[0]%(_escaped_name)のヘッドラインですよっ。"
 	}
 	elseif reference[2] == "Next"
 	{
 		//---- 真ん中あたりのページ
-		"\0\b2\s[0]%(reference[0])ヘッドライン、続き。"
+		"\0\b2\s[0]%(_escaped_name)ヘッドライン、続き。"
 	}
 	elseif reference[2] == "Last"
 	{
 		//---- 最後のページ
-		"\0\b2\s[0]%(reference[0])ヘッドライン、これが最後のページです。"
+		"\0\b2\s[0]%(_escaped_name)ヘッドライン、これが最後のページです。"
 	}
 	--
 	//---- ヘッドライン本体
-	"\n\n%(reference[3])\n\n"
+	"\n\n%(_escaped_body)\n\n"
 	--
 	//---- 選択肢
 	if reference[2] == "First" || reference[2] == "Next"
@@ -368,7 +378,8 @@ OnHeadlinesense.OnFind
 //------------------------------------------------------------------------------
 OnHeadlinesenseComplete
 {
-	"\0\s[0]%(reference[0])、更新はないみたいです。\e"
+	_escaped_name = SHIORI3FW.EscapeAllTags(reference[0])
+	"\0\s[0]%(_escaped_name)、更新はないみたいです。\e"
 }
 
 //------------------------------------------------------------------------------
@@ -428,7 +439,7 @@ OnNarCreating
 //------------------------------------------------------------------------------
 OnNarCreated
 {
-	"\0\s[5]「%(reference[0])」のnarファイル、「%(reference[1])」が爽やかに完成！\w8\1爽やかにって。\e"
+	"\0\s[5]「%(SHIORI3FW.EscapeAllTags(reference[0]))」のnarファイル、「%(SHIORI3FW.EscapeAllTags(reference[1]))」が爽やかに完成！\w8\1爽やかにって。\e"
 }
 
 //******************************************************************************
@@ -441,7 +452,7 @@ OnNarCreated
 //------------------------------------------------------------------------------
 OnSNTPBegin
 {
-	"\0\s[5]時計、合わせまーす。\w8\1%(reference[0])に接続するぞ。\e"
+	"\0\s[5]時計、合わせまーす。\w8\1%(SHIORI3FW.EscapeAllTags(reference[0]))に接続するぞ。\e"
 }
 
 //------------------------------------------------------------------------------
@@ -471,7 +482,7 @@ OnSNTPCompare
 	else
 	{
 		//\6は補正実行タグ。消しちゃだめ
-		"\6\0\n\s[5]%(reference[3])秒のずれを修正したよ。"
+		"\6\0\n\s[5]%(SHIORI3FW.EscapeAllTags(reference[3]))秒のずれを修正したよ。"
 	}
 }
 
@@ -507,7 +518,7 @@ OnDisplayChange
 //------------------------------------------------------------------------------
 OnURLDropping
 {
-	"\0\s[0]%(reference[0])からデータを取得してるよ。\e"
+	"\0\s[0]%(SHIORI3FW.EscapeAllTags(reference[0]))からデータを取得してるよ。\e"
 }
 
 //------------------------------------------------------------------------------

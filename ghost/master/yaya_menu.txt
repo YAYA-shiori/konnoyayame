@@ -18,7 +18,7 @@
 OpenMenu
 {
 	"\0\s[5]はい、なんでしょうか？"
-	"\0\s[5]%username、なんですか？"
+	"\0\s[5]%(username)、なんですか？"
 	"\0\s[0]ん‥‥どうしたの？"
 	--
 	AYATEMPLATE.MenuItem("なんか話して","Menu_AITALK",200)
