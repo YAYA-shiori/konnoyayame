@@ -78,7 +78,7 @@ OnAnchorSelect
 {
 	if RE_SEARCH(reference[0],'^(http|https)://') {
 		if basewarename == 'SSP' {
-			"\C"
+			'\C'
 		}
 		--
 		"\j[%(AYATEMPLATE.EscapeText(reference[0]))]"
@@ -101,7 +101,7 @@ AYATEMPLATE.MenuItem
 	_linefeed = 100
 	_n = _argc
 	if _n >= 3 {
-		if GETTYPE(_argv[_n-1]) == 1 { //整数
+		if GETTYPE(_argv[_n-1]) == 1 {//整数
 			_linefeed = _argv[_n-1]
 			_n -= 1
 		}
@@ -117,7 +117,7 @@ AYATEMPLATE.MenuItem
 		}
 		_linefeed -= 100
 	}
-	
+
 	_lftext
 	--
 	'\![*]\q['
@@ -151,13 +151,13 @@ AYATEMPLATE.EscapeText
 //******************************************************************************
 AYATEMPLATE.LinkMenuConvert
 {
-    _text = ''
-    _data = IARRAY
-    for _i = 0 ; _i < _argc ; _i++ {
-        _data = (RE_SPLIT(_argv[_i],'[ \t]*\|[ \t]*'),'','') //ダミー
-        _text += "%(_data[0])%(CHR(1))%(_data[1])%(CHR(1))%(_data[2])%(CHR(1))%(CHR(2))"
-    }
-    _text;
+	_text = ''
+	_data = IARRAY
+	for _i = 0 ; _i < _argc ; _i++ {
+		_data = (RE_SPLIT(_argv[_i],'[ \t]*\|[ \t]*'),'','')//ダミー
+		_text += "%(_data[0])%(CHR(1))%(_data[1])%(CHR(1))%(_data[2])%(CHR(1))%(CHR(2))"
+	}
+	_text
 }
 
 //******************************************************************************
@@ -193,7 +193,7 @@ AYATEMPLATE.ExecuteGhostNameFunc
 		}
 
 		_funcname = "%(_argv[0])Other"
-			if ISFUNC(_funcname) {
+		if ISFUNC(_funcname) {
 			_script = EVAL(_funcname)
 			if STRLEN(_script) != 0 {
 				_script
@@ -224,9 +224,9 @@ AYATEMPLATE.ExecuteTalkToTalk
 	//まず話しかける相手を決める
 	_ghostname=AYATEMPLATE.GetRandomSakuraName()
 	res_reference0=_ghostname
-	
+
 	DUMPVAR()
-	
+
 	//共通コアを使って関数呼び出し
 	AYATEMPLATE.ExecuteGhostNameFunc('TalkTo',_ghostname,'TalkToNobody')
 }
@@ -276,7 +276,7 @@ AYATEMPLATE.MouseEventExec
 		EVAL(_fname)
 		return
 	}
-	
+
 	_fname = _argv[0] + TOSTR(reference[3])
 	if ISFUNC(_fname) {
 		EVAL(_fname)
@@ -290,20 +290,20 @@ AYATEMPLATE.MouseMoveWheelFunc
 	if _argv[0] {
 		_side += 10
 	}
-	
+
 	if AYATEMPLATE.strokeid[_side] == reference[4] {
 		if (GETTICKCOUNT - TOINT(AYATEMPLATE.stroketimer[_side])) > 1500 {
 			AYATEMPLATE.stroke[_side] = 1
 		}
 		AYATEMPLATE.stroketimer[_side] = GETTICKCOUNT
-		
+
 		_stroke = TOINT(AYATEMPLATE.stroke[_side])
 		_stroke += 1
 		AYATEMPLATE.stroke[_side] = _stroke
-		
+
 		if _stroke >= _argv[1] {
 			if 'talking' !_in_ status {
-				AYATEMPLATE.MouseEventExec(_argv[2]);
+				AYATEMPLATE.MouseEventExec(_argv[2])
 				AYATEMPLATE.stroke[_side] = 1
 			}
 		}
@@ -323,10 +323,10 @@ On_installedplugin : void
 	_n = ARRAYSIZE(reference)
 	AYATEMPLATE.installedplugin_name = IARRAY
 	AYATEMPLATE.installedplugin_id = IARRAY
-	
+
 	for _i = 0 ; _i < _n ; _i++ {
 		_a = RE_SPLIT(reference[_i],'[,\x1]')
-		
+
 		AYATEMPLATE.installedplugin_name ,= _a[0]
 		AYATEMPLATE.installedplugin_id ,= _a[1]
 	}
@@ -338,7 +338,7 @@ AYATEMPLATE.IsPluginExist
 		0
 		return
 	}
-	
+
 	if ASEARCH(_argv[0],AYATEMPLATE.installedplugin_id) >= 0 {
 		1
 		return
