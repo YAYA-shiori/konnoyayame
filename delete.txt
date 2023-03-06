@@ -46,6 +46,7 @@ ghost/master/system/yaya_base/config.dic
 ghost/master/system/yaya_base/optional.dic
 ghost/master/system/yaya_base/shiori3.dic
 ghost/master/system/yaya_base
+ghost/master/system/_loading_order.txt
 ghost/master/system
 
 
