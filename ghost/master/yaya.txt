@@ -28,18 +28,7 @@ charset.extension, UTF-8 // SAORI入出力
 //------------------------------------------------------------------------------
 //以下は紺野ややめのテンプレート
 //------------------------------------------------------------------------------
-dic, yaya_tmpl_util.txt		// テンプレート共通処理
-
-dic, yaya_homeurl.txt		// ネットワーク更新辞書
-dic, yaya_word.txt			// 単語辞書
-dic, yaya_string.txt		// 文字列リソース辞書
-dic, yaya_aitalk.txt		// ランダムトーク辞書
-dic, yaya_bootend.txt		// 起動/終了トーク辞書
-dic, yaya_change.txt		// 切り替えトーク辞書
-dic, yaya_communicate.txt	// コミュニケート辞書
-dic, yaya_mouse.txt			// マウス入力関連辞書
-dic, yaya_menu.txt			// メニュー処理辞書
-dic, yaya_etc.txt			// 種々のイベント辞書
+dicdir, dic/normal
 
 //------------------------------------------------------------------------------
 //セーブファイル暗号化
