@@ -1,0 +1,16 @@
+on:
+  push
+
+name: auto check
+
+jobs:
+  check:
+    name: auto check
+    runs-on: windows-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+      - name: shiori-check
+        uses: Taromati2/yaya-CI-check@v1
+        with:
+          shiori-path: .\ghost\master\shiori\yaya.dll
