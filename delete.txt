@@ -40,3 +40,12 @@ ghost/master/yaya_string.txt
 ghost/master/yaya_tmpl_util.txt
 ghost/master/yaya_word.txt
 etc/tama.txt
+ghost/master/system/yaya_base/_loading_order.txt
+ghost/master/system/yaya_base/compatible.dic
+ghost/master/system/yaya_base/config.dic
+ghost/master/system/yaya_base/optional.dic
+ghost/master/system/yaya_base/shiori3.dic
+ghost/master/system/yaya_base
+ghost/master/system
+
+
