@@ -20,6 +20,6 @@ charset.extension, UTF-8 // SAORI入出力
 
 include, system_config.txt		// YAYA:設定辞書。必ず最初に指定すること。
 
-dic, yaya_emerg_dic.txt
-dic, yaya_homeurl.txt		// ネットワーク更新辞書
+dic, yaya_emerg_dic.dic
+dic, yaya_homeurl.dic		// ネットワーク更新辞書
 
