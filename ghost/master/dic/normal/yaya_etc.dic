@@ -322,7 +322,6 @@ OnHeadlinesenseBegin
 OnHeadlinesense.OnFind
 {
 	_escaped_name = SHIORI3FW.EscapeAllTags(reference[0])
-	_escaped_body = SHIORI3FW.EscapeAllTags(reference[3])
 	//---- はじめのセリフ
 	if reference[2] == "First" || reference[2] == "First and Last"{
 		//---- 最初のページ
@@ -338,7 +337,7 @@ OnHeadlinesense.OnFind
 	}
 	--
 	//---- ヘッドライン本体
-	"\n\n%(_escaped_body)\n\n"
+	"\n\n%(reference[3])\n"
 	--
 	//---- 選択肢
 	if reference[2] == "First" || reference[2] == "Next"{
