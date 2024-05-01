@@ -10,5 +10,5 @@ original author : umeici
 change by : ukiya
 modernized by : ponapalt and contributors
 
-https://github.com/YAYA-shiori/konnoyayame
+https://ms.shillest.net/yayame.xhtml
 
