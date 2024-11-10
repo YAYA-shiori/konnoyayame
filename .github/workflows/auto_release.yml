@@ -69,10 +69,9 @@ jobs:
           tag_name: ${{ github.run_id }}
           name: 自動リリース
           body: |
-            エラーチェックで引っかからなかった時の自動リリースです
+            - エラーチェックで引っかからなかった時の最新版の自動リリースです
+            - 下記のうち **yayame.nar** のみをダウンロードしてください。Source Codeは不要です。
           draft: false
           prerelease: false
-          generate_release_notes: false
-          generate_release_files: false
           files: |
             yayame.nar
