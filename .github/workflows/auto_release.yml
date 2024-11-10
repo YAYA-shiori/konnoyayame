@@ -19,6 +19,8 @@ jobs:
         run: sudo apt-get install p7zip-full
       - name: checkout
         uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: build nar
         run: |
           rm -rf .gitignore .gitmodules delete.txt .github .git
@@ -30,9 +32,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           tag_name: ${{ github.run_id }}
-          release_name: auto build
+          release_name: 自動リリース
           body: |
-            auto build
+            エラーチェックで引っかからなかった時の自動リリースです
           draft: false
           prerelease: false
       - name: upload nar
