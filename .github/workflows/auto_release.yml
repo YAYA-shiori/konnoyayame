@@ -23,7 +23,20 @@ jobs:
           submodules: recursive
       - name: build nar
         run: |
-          rm -rf .gitignore .gitmodules delete.txt .github .git
+          # Remove repository files
+          rm -rf .gitignore .gitmodules delete.txt .github .git LICENSE
+          
+          # Remove specific directories from ghost/master/dic/system
+          rm -rf ghost/master/dic/system/.github
+          rm -rf ghost/master/dic/system/.vscode
+          
+          # Remove specific files from ghost/master/dic/system
+          rm -rf ghost/master/dic/system/.git
+          rm -f ghost/master/dic/system/.gitattributes
+          rm -f ghost/master/dic/system/LICENSE
+          rm -f ghost/master/dic/system/README.md
+          
+          # Create NAR file
           7z a -tzip "yayame.nar" ./*
       - name: create release
         id: create_release
