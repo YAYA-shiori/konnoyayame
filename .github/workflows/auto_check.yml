@@ -1,7 +1,10 @@
-on:
-  push
-
 name: auto check
+
+on:
+  push:
+    branches:
+      - main
+      - master
 
 jobs:
   check:
@@ -9,7 +12,7 @@ jobs:
     runs-on: windows-latest
     steps:
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           submodules: recursive
       - name: shiori-check

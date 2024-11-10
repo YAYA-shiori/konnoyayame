@@ -1,21 +1,28 @@
-on:
-  push
-
 name: auto release
+
+on:
+  workflow_run:
+    workflows: ["auto check"]
+    types:
+      - completed
+    branches:
+      - main
+      - master
 
 jobs:
   build:
     name: auto release
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: install dependencies
-        run: sudo apt-get install p7zip
+        run: sudo apt-get install p7zip-full
       - name: checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: build nar
         run: |
           rm -rf .gitignore .gitmodules delete.txt .github .git
-          7z a -tzip "yayame.nar" -mx=9 -mmt -md=1536m -mfb=273 -mtc=off -r "."
+          7z a -tzip "yayame.nar" ./*
       - name: create release
         id: create_release
         uses: actions/create-release@v1
@@ -29,7 +36,7 @@ jobs:
           draft: false
           prerelease: false
       - name: upload nar
-        id: upload-release-asset
+        id: upload-release-asset 
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
