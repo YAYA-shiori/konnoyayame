@@ -72,5 +72,7 @@ jobs:
             エラーチェックで引っかからなかった時の自動リリースです
           draft: false
           prerelease: false
+          generate_release_notes: false
+          generate_release_files: false
           files: |
             yayame.nar
