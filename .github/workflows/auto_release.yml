@@ -15,7 +15,7 @@ jobs:
       - name: build nar
         run: |
           rm -rf .gitignore .gitmodules delete.txt .github .git
-          7z a -tzip "yayame.nar" -mx=9 -mmt -mm=LZMA -md=1536m -mfb=273 -mtc=off -r "."
+          7z a -tzip "yayame.nar" -mx=9 -mmt -md=1536m -mfb=273 -mtc=off -r "."
       - name: create release
         id: create_release
         uses: actions/create-release@v1
