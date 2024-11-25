@@ -58,8 +58,17 @@ jobs:
           rm -f ghost/master/dic/system/LICENSE
           rm -f ghost/master/dic/system/README.md
           
-          # Create NAR file
-          zip -9 -r -q "yayame.nar" ./*
+          # Create clean directory structure
+          mkdir -p temp_dir
+          cp -r * temp_dir/
+          cd temp_dir
+          
+          # Create NAR file with clean settings
+          zip -X -9 -r -y -D "../yayame.nar" ./* \
+            -x "*.DS_Store" -x "*.git*" -x "*.tmp" -x "Thumbs.db" \
+            -x "desktop.ini" -x "*.bak" -x "~*"
+          cd ..
+          rm -rf temp_dir
       
       - name: Create and upload release
         uses: softprops/action-gh-release@v2
