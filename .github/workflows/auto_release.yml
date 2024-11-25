@@ -16,7 +16,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: install dependencies
-        run: sudo apt-get install p7zip-full
+        run: sudo apt-get install zip
       
       - name: checkout
         uses: actions/checkout@v4
@@ -59,7 +59,7 @@ jobs:
           rm -f ghost/master/dic/system/README.md
           
           # Create NAR file
-          7z a -tzip "yayame.nar" ./*
+          zip -9 -r -q "yayame.nar" ./*
       
       - name: Create and upload release
         uses: softprops/action-gh-release@v2
