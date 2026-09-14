@@ -1,0 +1,20 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+
+[*.{dic,txt}]
+indent_style = tab
+
+[*.ps1]
+indent_style = space
+indent_size = 4
+
+[*.{json,yml,yaml,lua,md}]
+indent_style = space
+indent_size = 2
+
+# These readme files are Shift_JIS; keep their encoding.
+[{readme-aya.txt,readme-yaya.txt}]
+charset = unset

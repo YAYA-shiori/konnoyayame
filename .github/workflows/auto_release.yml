@@ -15,9 +15,6 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: install dependencies
-        run: sudo apt-get install zip
-      
       - name: checkout
         uses: actions/checkout@v4
         with:
@@ -44,31 +41,9 @@ jobs:
           done
       
       - name: build nar
-        run: |
-          # Remove repository files
-          rm -rf .gitignore .gitmodules delete.txt .github .git LICENSE
-          
-          # Remove specific directories from ghost/master/dic/system
-          rm -rf ghost/master/dic/system/.github
-          rm -rf ghost/master/dic/system/.vscode
-          
-          # Remove specific files from ghost/master/dic/system
-          rm -rf ghost/master/dic/system/.git
-          rm -f ghost/master/dic/system/.gitattributes
-          rm -f ghost/master/dic/system/LICENSE
-          rm -f ghost/master/dic/system/README.md
-          
-          # Create clean directory structure
-          mkdir -p build_temp
-          mv * build_temp/ 2>/dev/null || true
-          
-          # Create NAR file with clean settings
-          cd build_temp
-          zip -X -9 -r -y -D "../yayame.nar" ./* \
-            -x "*.DS_Store" -x "*.git*" -x "*.tmp" -x "Thumbs.db" \
-            -x "desktop.ini" -x "*.bak" -x "~*"
-          cd ..
-          rm -rf build_temp
+        # Files to exclude are listed in .narignore
+        shell: pwsh
+        run: ./tools/build-nar.ps1 -OutFile yayame.nar
       
       - name: Create and upload release
         uses: softprops/action-gh-release@v2

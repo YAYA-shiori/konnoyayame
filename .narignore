@@ -1,0 +1,32 @@
+# Files excluded when creating the .nar (gitignore syntax).
+# Used by SSP and tools/build-nar.ps1. .updateignore includes this file.
+# https://ssp.shillest.net/ukadoc/manual/descript_install.html
+
+# git and GitHub
+.git
+.github/
+.gitignore
+.gitmodules
+.gitattributes
+/LICENSE
+/delete.txt
+
+# network update files
+updates2.dau
+updates.txt
+
+# runtime data
+profile/
+yaya_variable.cfg
+
+# development kit (local only)
+/build/
+/tools/bin/
+/tools/*.exe
+/tools/local.json
+/.claude/settings.local.json
+
+# repository files of the yaya-dic submodule
+/ghost/master/dic/system/.vscode/
+/ghost/master/dic/system/LICENSE
+/ghost/master/dic/system/README.md
