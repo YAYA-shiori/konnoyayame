@@ -2,7 +2,7 @@
 
 AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`、`.claude/`、`tools/` など）を作る・直すときの注意です。
 
-このファイルは、キットの配布元である konnoyayame のリポジトリにだけあります。nar、ネットワーク更新、キットの配布物のどれにも入りません（ルートの `.narignore` の `/DEVKIT-MAINTAINING.md`。`tools/devkit.json` の `files` にも載せない）。ゴーストを作るときの指示は `AGENTS.md`、作者向けのキットの使い方は `DEVKIT-GUIDE.md`、konnoyayame に固有の情報は `GHOST.md`、konnoyayame の紹介と、別のゴーストへのキットの導入手順は `README.md` にあります。
+このファイルは、キットの配布元である konnoyayame のリポジトリにだけあります。nar、ネットワーク更新、キットの配布物のどれにも入りません（ルートの `.narignore` の `/DEVKIT-MAINTAINING.md`。`tools/devkit.json` の `files` にも載せない）。ゴーストを作るときの指示は `AGENTS.md`、作者向けのキットの使い方と、別のゴーストへのキットの導入手順は `DEVKIT-GUIDE.md`、konnoyayame に固有の情報は `GHOST.md`、konnoyayame の紹介は `README.md` にあります。
 
 ## キットの範囲
 
@@ -16,14 +16,14 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 
 範囲を決めるときの注意:
 
-- キットのファイルと seed の元ファイルは、YAYA のゴーストならどれにでも入る。**ややめ、マック朗、サーフェス番号、konnoyayame の URL など、特定のゴーストに固有のことを書かない。** 固有のことは各ゴーストの `GHOST.md` に書く（konnoyayame 自身の分はルートの `GHOST.md`）。
+- キットのファイルと seed の元ファイルは、YAYA のゴーストならどれにでも入る。**ややめ、マック朗、サーフェス番号、konnoyayame の URL など、特定のゴーストに固有のことを書かない。** 固有のことは各ゴーストの `GHOST.md` に書く（konnoyayame 自身の分はルートの `GHOST.md`）。ただし、キットの配布元（`source`）としての konnoyayame のリポジトリの URL は、`DEVKIT-GUIDE.md` の導入手順に書いてよい。`source` を変えたら、そこも直す。
 - ゴーストのファイルに行を足さないと動かない仕組みにしない。今は次のようにしている。
   - nar の除外: `tools/devkit.narignore`（`.narignore` から `include:`）
   - git の除外: `tools/.gitignore` と `.claude/.gitignore`
   - `build/`: `tools/build-nar.ps1` が作る `build/.gitignore`
 - `auto_release.yml` は既存のリリースとタグをすべて消すので、キットにも seed にも入れない。
 - ルートに新しいファイルを足すときは、`files` か `seed` に載せる。載せないと配布されない。
-- 作者向けの説明は、キットに入る `DEVKIT-GUIDE.md`（キットを入れた後の使い方）と、konnoyayame の `README.md`（ゴーストの紹介、手で改造するときの案内、別のゴーストへの導入手順）に分けている。`DEVKIT-GUIDE.md` はどのゴーストにも入るので、上と同じく特定のゴーストに固有のことを書かない。導入手順は、キットを入れる前に読むものなので `README.md` に置く。
+- 作者向けの説明は、キットに入る `DEVKIT-GUIDE.md`（キットの使い方と、別のゴーストへの導入手順）と、konnoyayame の `README.md`（ゴーストの紹介、手で改造するときの案内）に分けている。`DEVKIT-GUIDE.md` はどのゴーストにも入るので、上と同じく特定のゴーストに固有のことを書かない。`README.md` には、キットについては `DEVKIT-GUIDE.md` への案内だけを書く。導入手順を `DEVKIT-GUIDE.md` に置くのは、キットの説明を 1 か所にまとめ、キットを入れたゴーストからも別のゴーストに導入できるようにするため。
 - キットの使い方が変わったら、`AGENTS.md` と `DEVKIT-GUIDE.md` の両方を直す。
 
 ## lock ファイル

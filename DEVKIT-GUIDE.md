@@ -17,6 +17,8 @@ git で管理しているフォルダでも、nar を SSP にインストール�
 
 AI エージェントを使わずに、`tools/` のスクリプトだけを使うこともできます。
 
+キットの入っていない YAYA ゴーストにキットを入れる手順は、このファイルの最後の「別の YAYA ゴーストに開発キットを入れる」にあります。
+
 ## あらかじめ入れておくもの
 
 開発キットは Windows を前提にしています（YAYA、SSP、辞書チェックに使う tamac.exe が Windows 用のため）。
@@ -86,7 +88,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
 - 辞書、シェル、`GHOST.md`、`README.md` などは変わりません。どのファイルがキットのものかは `AGENTS.md` の「開発キットとファイルの持ち主」に書いてあります。
 - 自分で手を入れたキットのファイルは上書きされません。新しい版でも変わっていた場合は、新しい版が `<ファイル名>.devkit-new` として横に置かれるので、マージしてから消してください。
 - `tools/devkit.lock.json` は、どの版のキットを入れたかの記録です。消さずに残し、git で管理しているならコミットしてください。
-- キットは、`tools/devkit.json` の `source` に書かれた GitHub のリポジトリから取得します。別の YAYA ゴーストにキットを入れる手順は、そのリポジトリの README にあります。
+- キットは、`tools/devkit.json` の `source` に書かれた GitHub のリポジトリから取得します。
 
 ## 配布物（nar）に開発キットを含めるかどうか
 
@@ -104,3 +106,105 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
 /.github/
 /tools/
 ```
+
+## 別の YAYA ゴーストに開発キットを入れる
+
+キットの入っていない手元の YAYA ゴーストにも、開発キットだけを入れられます。辞書やシェルには手を加えません。
+先に上の「あらかじめ入れておくもの」を見て、AI エージェント（自分で入れる場合は PowerShell）を用意してください。
+
+### 入れられるゴースト
+
+- SHIORI が YAYA で、ゴーストのフォルダに `ghost/master/descript.txt` と `ghost/master/yaya.dll` があること
+- Windows であること（mac・Linux では、上の「mac・Linux で使う場合」の範囲で使えます）
+- SSP にインストールしたフォルダでも、git で管理しているフォルダでもかまいません
+
+### 入るファイル
+
+| 区分 | ファイル | 入れるとき・更新するとき |
+|---|---|---|
+| キット | `AGENTS.md`<br>`CLAUDE.md`<br>`DEVKIT-GUIDE.md`<br>`.mcp.json`<br>`.claude/`<br>`.github/workflows/auto_check.yml`<br>`tools/` | 入れたときに作られ、キットを更新すると新しい版に置き換わります |
+| 初回だけ作るもの | `GHOST.md`<br>`.narignore`<br>`.updateignore`<br>`.gitattributes`<br>`.editorconfig`<br>`ghost/master/yayalint_config.lua` | 無いときだけ作られます。あとはゴーストのものです |
+
+それ以外のファイル（辞書、シェル、`descript.txt`、readme など）は変わりません。同じ名前のファイル（たとえば自分で書いた `AGENTS.md`）がすでにあるときは上書きせず、キットの版を `<ファイル名>.devkit-new` として横に置きます。
+
+### AI エージェントに頼んで入れる
+
+作業の前に、ゴーストのフォルダをバックアップしてください（git で管理しているなら、コミットしておけば十分です）。
+
+1. キットを入れたいゴーストのフォルダ（`ghost` と `shell` があるフォルダ）で、AI エージェントを起動します（Claude Code なら、そのフォルダで `claude`）。
+2. 次のように頼みます。
+
+   ```
+   https://github.com/YAYA-shiori/konnoyayame/blob/master/DEVKIT-GUIDE.md にある「別の YAYA ゴーストに開発キットを入れる」の手順で、このフォルダに開発キットを入れてください。
+   ```
+
+   エージェントは導入に使うスクリプトを取得し、作られるファイルの一覧を見せてから、了承を得て導入します。同じ名前のファイルがあったときは、マージを手伝います。
+3. 導入が終わったら、AI エージェントを起動し直します（キットの指示書、スキル、自動チェックは、起動したときに読み込まれます）。
+4. 「セットアップして」と頼みます。チェック用ツールの取得、SSP の場所の設定、動作確認に加えて、辞書とシェルを読んで `GHOST.md` の下書きを作ります（Claude Code では `/getting-started` スキル）。
+5. `GHOST.md` の下書きを読んで、キャラクターの人物像、使えるサーフェス、シェルのライセンス、トークの書き方の決まりなどを直してください（上の「GHOST.md を仕上げる」）。
+
+#### 導入を頼まれた AI エージェントへ
+
+この手順で導入を頼まれた AI エージェントは、次を守ってください。
+
+1. 導入先が「入れられるゴースト」の条件を満たしているか確かめる。
+2. 下の「自分で入れる」の手順 1 と 2 のコマンドでスクリプトを取得し、`-DryRun` で実行する。GitHub からダウンロードすることを、先に作者に伝える。
+3. 作られるファイル、`CONFLICT`（同じ名前のファイルがすでにある）、`seed`（無かったので作る）を作者に伝え、了承を得てから `-DryRun` を外して実行する。
+4. `.devkit-new` ができたら、1 つずつ差分を見せ、作者のファイルの内容を活かしたマージ案を示し、了承を得てから書き込んで `.devkit-new` を消す。ゴーストだけの決まりは `GHOST.md` に移すことを提案する。
+5. 下の「すでにあるファイルとの関係」に当てはまるもの（既存の `.narignore` など）があれば、対応を提案する。
+6. 取得に使った一時フォルダを消し、作者に、エージェントを起動し直してから手順 4 以降に進むよう伝える。
+
+### 自分で入れる
+
+作業の前に、ゴーストのフォルダをバックアップしてください。
+
+キットの入ったゴーストが手元にあれば、下の手順 1 と 4 は要りません。手順 2 と 3 のコマンドの `$installer` を、そのゴーストの `tools/update-devkit.ps1` のパスに置き換えて実行してください。キットは、そのゴーストのファイルからではなく、そのゴーストの `tools/devkit.json` の `source` に書かれたリポジトリの最新リリースから取得されます。
+
+1. PowerShell を開き（Windows はスタートメニューの「Windows PowerShell」、mac・Linux はターミナルで `pwsh`）、次を実行して、導入に使うスクリプトを取得します。
+
+   ```powershell
+   [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+   $work = Join-Path ([IO.Path]::GetTempPath()) 'ghost-devkit'
+   Remove-Item $work, "$work.zip" -Recurse -Force -ErrorAction SilentlyContinue
+   Invoke-WebRequest -UseBasicParsing https://github.com/YAYA-shiori/konnoyayame/archive/refs/heads/master.zip -OutFile "$work.zip"
+   Expand-Archive "$work.zip" $work
+   $installer = Join-Path $work 'konnoyayame-master/tools/update-devkit.ps1'
+   ```
+
+2. 同じ PowerShell で、`-DryRun` を付けて実行します。ここでは何も書き込まず、作られるファイルの一覧だけが表示されます。`-Target` のフォルダは、キットを入れるゴーストのフォルダ（`ghost` と `shell` があるフォルダ）に置き換えてください。
+
+   Windows:
+
+   ```powershell
+   powershell -NoProfile -ExecutionPolicy Bypass -File $installer -Target 'C:\SSP\ghost\myghost' -DryRun
+   ```
+
+   mac・Linux:
+
+   ```powershell
+   pwsh -NoProfile -File $installer -Target '/Users/me/ghosts/myghost' -DryRun
+   ```
+
+3. 一覧を確かめたら、`-DryRun` を外して同じコマンドをもう一度実行します。キットそのものは、配布元のリポジトリの最新リリース（自動チェックを通った版）から取得されます。最後に `merge each file below ...` と表示されたら、`.devkit-new` ができています（下の「すでにあるファイルとの関係」を見てください）。
+4. 取得に使った一時フォルダは、消してかまいません（`Remove-Item $work, "$work.zip" -Recurse -Force`）。
+5. その後は、上の「AI エージェントに頼んで入れる」の手順 3 から続けてください。
+
+### すでにあるファイルとの関係
+
+- **`AGENTS.md`、`CLAUDE.md`、`.claude/settings.json` などを自分で置いていた場合**: 上書きされず、キットの版が `<ファイル名>.devkit-new` として置かれます。見比べて、必要な部分を元のファイルにまとめてから、`.devkit-new` を消してください。AI エージェントにマージを頼むこともできます（Claude Code では `/update-devkit` スキル）。自分のゴーストだけの決まりは `GHOST.md` に移しておくと、次にキットを更新したときに衝突しません。
+- **`.narignore` をすでに使っていた場合**: 上書きされません。ダウンロードしたツールや各自の設定を nar から除外するために、`.narignore` に次の 1 行を足してください。足さないと、`tools/bin/` や `tools/local.json` が nar に入ってしまいます。
+
+  ```
+  include:tools/devkit.narignore
+  ```
+
+  `.updateignore` を使っていて、その中で `include:.narignore` をしていない場合は、`.updateignore` にも同じ行を足します。
+- **古い形式の `developer_options.txt` を使っている場合**: `.narignore` と両方あると、両方が処理されて紛らわしくなります。`.narignore` / `.updateignore` に移すことをおすすめします。
+- **`.gitignore`**: 追記は要りません。除外が必要なものは、キットの `tools/.gitignore` と `.claude/.gitignore` で除外しています。
+- **GitHub**: `.github/workflows/auto_check.yml` が入り、`main` / `master` ブランチに push するたびに辞書チェックが走ります。要らなければ消してかまいません（消したファイルは、キットを更新しても戻りません）。自動リリースのワークフローは入りません。
+
+### 導入した後
+
+導入先にも、この `DEVKIT-GUIDE.md` が入ります。キットの更新や、配布物（nar）にキットを含めるかどうかは、上の「開発キットの更新」と「配布物（nar）に開発キットを含めるかどうか」を見てください。
+
+`tools/devkit.lock.json` は、どの版のキットを入れたかの記録です。消さずに残し、git で管理しているならコミットしてください。
