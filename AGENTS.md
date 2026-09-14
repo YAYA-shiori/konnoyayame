@@ -42,7 +42,8 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 
 | コマンド | 内容 | 終了コード |
 |---|---|---|
-| `<ps> tools/setup.ps1` | tamac.exe と yayalint を `tools/bin/` に取得する（バージョンと SHA256 は `tools/tools.json` で固定） | 0 成功 / 1 失敗 |
+| `<ps> tools/doctor.ps1` | 開発環境を診断し、足りないもの（Git、Node.js、SSP、チェック用ツールなど）の用途と入手方法を表示する。何も変更しない（`-Json` で機械向けの出力） | 0 必須はそろっている / 1 必須が足りない |
+| `<ps> tools/setup.ps1` | git clone したフォルダなら submodule を取得し、tamac.exe と yayalint を `tools/bin/` に取得する（バージョンと SHA256 は `tools/tools.json` で固定）。最後に doctor の結果を表示する | 0 成功 / 1 失敗、または必須が足りない |
 | `<ps> tools/check-dic.ps1` | tamac.exe で辞書を実際に読み込み、エラーを表示する | 0 OK / 1 エラー / 3 ツール未導入 |
 | `<ps> tools/check-shell.ps1` | `ssp.exe --offline-dump` でシェルを検査する（Error / Warning / Notice） | 0 OK / 1 Error あり / 3 SSP が見つからない |
 | `<ps> tools/lint.ps1` | yayalint で未定義・未使用の変数と関数を探す（参考情報） | 0（`-Strict` なら未定義があると 1）/ 3 |
@@ -56,6 +57,21 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 
 SSP の場所は次の順に探す: `-SspPath` 引数 → 環境変数 `SSP_PATH` → `tools/local.json` の `sspPath`（`tools/local.example.json` を複製して作る）→ SSP にインストールされたフォルダなら `../../ssp.exe` → `.nar` のファイル関連付け。
 
+## 初回セットアップ（エージェントが代行する）
+
+作者には創作に集中してもらい、環境づくりのような決まった作業はエージェントが引き受ける。ユーザーに「セットアップして」と頼まれたとき、または `tools/doctor.ps1` で足りないものが見つかったときは、次の順に進める。
+
+1. `tools/doctor.ps1 -Json` で診断する。各項目に `level`（`required` / `recommended` / `optional`）、用途、直し方が入っている。
+2. 足りないアプリがあれば、何に使うかを一言で説明して入手を提案する。**アプリのインストールは、必ずユーザーの了承を得てから行う。**
+   - Git（推奨）: 変更履歴と GitHub での自動チェック・リリース。winget があれば `winget install --id Git.Git -e`
+   - SSP（推奨）: シェルのチェックと、実際のゴーストでの確認。https://ssp.shillest.net/ から入手してもらう。入っているのに見つからない場合は、場所を聞いて `tools/local.json` に書く
+   - Node.js 20 以上（任意）: 仕様検索 MCP。winget があれば `winget install --id OpenJS.NodeJS.LTS -e`
+   - インストールした直後は PATH が反映されず、ターミナルやエージェントの再起動が必要なことがある
+3. `tools/setup.ps1` を実行する（submodule の取得と、チェック用ツールのダウンロード）。
+4. `tools/check.ps1` でチェックが通ることを確かめる。
+5. 望まれたら `tools/run-ssp.ps1` でゴーストを起動して見せる。
+6. 次にできること（トークを書く、テンプレートから独立したゴーストを作る）を案内する。
+
 ## 作業のルール
 
 1. **辞書や `ghost/master/*.txt` を変更したら、必ず `tools/check-dic.ps1` を通す。** エラーが残ったゴーストは緊急モードで起動し、ほとんど話さなくなる。`shell/` を変更したら `tools/check-shell.ps1` も通す。
@@ -64,7 +80,7 @@ SSP の場所は次の順に探す: `-SspPath` 引数 → 環境変数 `SSP_PATH
 4. 編集しないもの: `ghost/master/dic/system/`（submodule。変更が必要なら上流の yaya-dic に提案する）、`yaya.dll`、実行時に作られるファイル。
 5. `tools/*.ps1` は Windows PowerShell 5.1 でも動くように書き、**ASCII 文字だけで書く**（BOM のないファイルに日本語を書くと 5.1 で文字化けするため）。
 6. 既存のトークや作者が書いた台詞を、頼まれていないのに大量に書き換えたり消したりしない。未使用の関数や変数が見つかっても、報告するだけにする。
-7. SSP へのインストール、yaya.dll の更新、リリース、ネットワーク更新ファイルのアップロードなど、手元のファイル編集を超える操作は、作者の確認を取ってから行う。
+7. アプリのインストール、SSP へのゴーストのインストール、yaya.dll の更新、リリース、ネットワーク更新ファイルのアップロードなど、手元のファイル編集を超える操作は、作者の確認を取ってから行う。
 
 ## YAYA 辞書の書き方の要点
 

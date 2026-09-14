@@ -25,15 +25,21 @@ https://github.com/YAYA-shiori/konnoyayame
 - `CLAUDE.md` / `.claude/` / `.mcp.json` : Claude Code 用の設定（編集後の自動チェック、スキル、仕様調査用サブエージェント、ドキュメント検索 MCP）
 - `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、yayalint、SSTP での実機確認、nar 作成、yaya.dll 更新のスクリプト
 
-はじめに次を実行して、チェック用のツールを取得してください（Windows）。
+## はじめかた
+
+このフォルダで AI エージェントを起動し（Claude Code なら `claude`）、「セットアップして」と頼んでください。足りないアプリ（Git、Node.js、SSP）の確認と案内、チェック用ツールの取得、動作確認までを代行します（Claude Code では `/getting-started` スキル）。アプリのインストールは、確認を取ってから行います。
+
+自分で行う場合は、次を実行してください（Windows）。
 
 ```
-git submodule update --init
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/doctor.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1
 ```
 
-- SSP の場所は `.nar` の関連付けから自動で探します。見つからない場合は環境変数 `SSP_PATH` か `tools/local.json`（`tools/local.example.json` を複製）で指定してください。
+- `tools/doctor.ps1` は、必要なものがそろっているかと、足りないものの入手方法を表示します（何も変更しません）。
+- `tools/setup.ps1` は、git clone したフォルダなら submodule を取得し、チェック用ツール（tamac、yayalint）をダウンロードします。
+- SSP の場所は `.nar` の関連付けなどから自動で探します。見つからない場合は環境変数 `SSP_PATH` か `tools/local.json`（`tools/local.example.json` を複製）で指定してください。
 - ドキュメント検索 MCP（[ukagaka-doc-mcp](https://github.com/finelagusaz/ukagaka-doc-mcp)）には Node.js 20 以上が必要です。
 
 # ライセンス

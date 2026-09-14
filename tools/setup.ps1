@@ -1,10 +1,12 @@
 <#
 .SYNOPSIS
-    Downloads the pinned development tools into tools/bin/ (not committed to git).
+    Prepares the development environment: the git submodule and the pinned tools in tools/bin/.
 .DESCRIPTION
-    Versions, URLs and SHA256 hashes are pinned in tools/tools.json.
-    Also prints hints about the git submodule, Node.js (for the ukagaka-doc MCP server) and SSP.
-    Exit codes: 0 = OK, 1 = a download failed.
+    - In a git clone, fetches ghost/master/dic/system (git submodule update --init) when it is empty.
+    - Downloads the tools pinned in tools/tools.json (version, URL and SHA256) into tools/bin/.
+    - Finally prints the result of tools/doctor.ps1.
+    Applications such as Git, Node.js or SSP are not installed; doctor.ps1 tells how to get them.
+    Exit codes: 0 = OK, 1 = a step failed or a required item is still missing.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup.ps1
 .EXAMPLE
@@ -19,6 +21,28 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/common.ps1')
 Initialize-DevkitConsole
 
+$failed = 0
+
+# --- git submodule ---------------------------------------------------------------------
+$systemDic = Join-Path $DevkitRoot 'ghost/master/dic/system/yaya_base/shiori3.dic'
+if (-not (Test-Path -LiteralPath $systemDic) -and (Test-Path -LiteralPath (Join-Path $DevkitRoot '.git'))) {
+    $git = Get-Command git -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($git) {
+        Write-Host '[submodule] git submodule update --init --recursive'
+        $result = Invoke-DevkitProcess -FilePath $git.Source -Arguments @('-C', $DevkitRoot, 'submodule', 'update', '--init', '--recursive') -TimeoutSeconds 300
+        if ($result.ExitCode -eq 0) {
+            Write-Host '[ok] ghost/master/dic/system'
+        } else {
+            $failed++
+            Write-Host "[error] submodule: $(($result.StdErr + $result.StdOut).Trim())"
+        }
+    } else {
+        $failed++
+        Write-Host '[error] Git is needed to fetch ghost/master/dic/system (see tools/doctor.ps1)'
+    }
+}
+
+# --- pinned tools ----------------------------------------------------------------------
 $manifest = Get-DevkitToolManifest
 $names = @($manifest.PSObject.Properties.Name)
 if ($Tool) {
@@ -32,7 +56,6 @@ if ($Tool) {
 $ProgressPreference = 'SilentlyContinue'
 New-Item -ItemType Directory -Force -Path $DevkitBinDir | Out-Null
 
-$failed = 0
 foreach ($name in $names) {
     $entry = $manifest.$name
     $exePath = Join-Path $DevkitBinDir $entry.exe
@@ -62,35 +85,19 @@ foreach ($name in $names) {
     } catch {
         $failed++
         Write-Host "[error] $name : $($_.Exception.Message)"
-        Write-Host "        If antivirus software removed the file, it may be a false positive; check the release page."
+        Write-Host '        If antivirus software removed the file, it may be a false positive; check the release page.'
     } finally {
         if (Test-Path -LiteralPath $tmp) { Remove-Item -LiteralPath $tmp -Force }
     }
 }
 
+# --- environment report ----------------------------------------------------------------
 Write-Host ''
-if (-not (Test-Path -LiteralPath (Join-Path $DevkitRoot 'ghost/master/dic/system/yaya_base/shiori3.dic'))) {
-    Write-Host '[warn] ghost/master/dic/system is empty. In a git clone, run: git submodule update --init'
-}
+Write-Host '==== environment (tools/doctor.ps1) ===='
+$powershell = (Get-Process -Id $PID).Path
+$ErrorActionPreference = 'Continue'
+& $powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot 'doctor.ps1')
+$doctorCode = $LASTEXITCODE
 
-$node = Get-Command node -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
-if (-not $node) {
-    Write-Host '[info] Node.js was not found. It is only needed for the ukagaka-doc MCP server (Node.js 20 or later).'
-} else {
-    $nodeVersion = (Invoke-DevkitProcess -FilePath $node.Source -Arguments @('--version') -TimeoutSeconds 30).StdOut.Trim()
-    if ($nodeVersion -match '^v(\d+)\.' -and [int]$matches[1] -lt 20) {
-        Write-Host "[warn] Node.js $nodeVersion is too old for the ukagaka-doc MCP server (needs 20 or later)."
-    } else {
-        Write-Host "[info] Node.js $nodeVersion"
-    }
-}
-
-$ssp = Resolve-SspPath
-if ($ssp) {
-    Write-Host "[info] SSP: $($ssp.Path) (found via $($ssp.Source))"
-} else {
-    Write-Host '[info] SSP was not found. Shell checks and SSTP need it: set SSP_PATH or create tools/local.json (see tools/local.example.json).'
-}
-
-if ($failed -gt 0) { exit 1 }
+if ($failed -gt 0 -or $doctorCode -ne 0) { exit 1 }
 exit 0

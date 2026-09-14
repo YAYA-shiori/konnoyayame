@@ -7,11 +7,13 @@
 - `.claude/settings.json` の PostToolUse hook（`tools/hooks/post-edit.ps1`）により、`ghost/` の `.dic` / `.txt` を編集すると `tools/check-dic.ps1` が、`shell/` の `.txt` を編集すると `tools/check-shell.ps1` が自動で実行される。
 - チェックに失敗すると、その出力が返ってくる。次の作業に進む前に直すこと。
 - ツールが入っていない、または SSP が見つからない場合は、何も言わずにスキップされる。自動チェックが動いていないようなら `tools/setup.ps1` を実行する（ダウンロードを伴うので、ユーザーに一言断る）。
+- 起動時には SessionStart hook（`tools/hooks/session-start.ps1`）が `tools/doctor.ps1` で環境を診断し、必須または推奨のものが足りないときだけ、その旨が伝えられる。そのときは、ほかの作業に入る前に `/getting-started` でのセットアップをユーザーに提案する。
 
 ## スキル
 
 | スキル | 用途 |
 |---|---|
+| `/getting-started` | 初回セットアップの代行（足りないアプリの案内、ツールの取得、動作確認） |
 | `/ghost-check` | 辞書・シェル・lint をまとめてチェックし、問題を直す |
 | `/try-in-ssp` | 起動中の SSP でトークやイベントを再生して確かめる |
 | `/build-nar` | nar を作る（ユーザーが呼び出す） |

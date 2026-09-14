@@ -2,10 +2,12 @@
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
   "permissions": {
     "allow": [
+      "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File tools/doctor.ps1*)",
       "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1*)",
       "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File tools/check-dic.ps1*)",
       "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File tools/check-shell.ps1*)",
       "Bash(powershell -NoProfile -ExecutionPolicy Bypass -File tools/lint.ps1*)",
+      "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File tools/doctor.ps1*)",
       "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1*)",
       "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File tools/check-dic.ps1*)",
       "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File tools/check-shell.ps1*)",
@@ -19,6 +21,25 @@
     ]
   },
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell.exe",
+            "args": [
+              "-NoProfile",
+              "-ExecutionPolicy",
+              "Bypass",
+              "-File",
+              "${CLAUDE_PROJECT_DIR}/tools/hooks/session-start.ps1"
+            ],
+            "timeout": 60
+          }
+        ]
+      }
+    ],
     "PostToolUse": [
       {
         "matcher": "Edit|Write|MultiEdit",
