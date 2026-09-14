@@ -20,14 +20,14 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 
 | 区分 | ファイル | キットを更新するとき |
 |---|---|---|
-| キット | `AGENTS.md`、`CLAUDE.md`、`.mcp.json`、`.claude/`（`settings.local.json` を除く）、`.github/workflows/auto_check.yml`、`tools/`（`bin/`、`local.json`、`devkit.lock.json` を除く） | 新しい版に置き換わる。手元で変えたファイルは残り、新しい版と両方が変わっていれば、新しい版が `<ファイル名>.devkit-new` として横に置かれる |
+| キット | `AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`、`.mcp.json`、`.claude/`（`settings.local.json` を除く）、`.github/workflows/auto_check.yml`、`tools/`（`bin/`、`local.json`、`devkit.lock.json` を除く） | 新しい版に置き換わる。手元で変えたファイルは残り、新しい版と両方が変わっていれば、新しい版が `<ファイル名>.devkit-new` として横に置かれる |
 | 初回だけ作るもの | `GHOST.md`、`.narignore`、`.updateignore`、`.gitattributes`、`.editorconfig`、`ghost/master/yayalint_config.lua` | 無いときだけ作られる。あとはゴーストのもの |
 | ゴースト | それ以外（辞書、シェル、`README.md`、`.gitignore`、ほかのワークフローなど） | 触らない |
 
 - 正確な一覧は `tools/devkit.json`、導入した版の記録は `tools/devkit.lock.json` にある。
 - キットのファイルは、なるべく直接変えない。このゴーストだけの決まりは `GHOST.md` に、Claude Code の個人設定は `.claude/settings.local.json` に書く。
 - `.devkit-new` ができたら、手元の変更を活かしながら中身を元のファイルにマージし、`.devkit-new` を消す（Claude Code では `/update-devkit`）。
-- ルートに `DEVKIT.md` があるフォルダは、キットの配布元のリポジトリ。キットのファイルや `tools/devkit/` を変える前に `DEVKIT.md` を読む。
+- ルートに `DEVKIT-MAINTAINING.md` があるフォルダは、キットの配布元のリポジトリ。キットのファイルや `tools/devkit/` を変える前に `DEVKIT-MAINTAINING.md` を読む。
 
 ## ディレクトリ構成
 
@@ -52,6 +52,7 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 | `.narignore` / `.updateignore` | nar / ネットワーク更新から除外するファイル。書き方は `.gitignore` と同じで、`include:ファイル名` で別のファイルを取り込める（パスはその行を書いたファイルのフォルダからの相対。取り込んだ先でも `include:` を書け、3 段まで）。キット用の除外は `tools/devkit.narignore` を取り込んでいる。SSP と `tools/build-nar.ps1` の両方が使い、どちらもルートに置いたものだけを読む（サブフォルダに置いても効かない）。古い形式の `developer_options.txt` は、併用すると両方が処理されて紛らわしいので作らない |
 | `delete.txt` | ネットワーク更新のときに削除するファイル |
 | `tools/` | 開発用スクリプト（下記） |
+| `DEVKIT-GUIDE.md` | 開発キットの使い方（作者向け）。キットについて作者に説明するときは、ここを案内する |
 | `CLAUDE.md`, `.claude/`, `.mcp.json` | Claude Code 用の設定 |
 | `.github/workflows/auto_check.yml` | push ごとに辞書チェック（tamac）する |
 

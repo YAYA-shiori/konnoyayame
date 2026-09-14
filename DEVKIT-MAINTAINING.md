@@ -1,8 +1,8 @@
-# DEVKIT.md
+# DEVKIT-MAINTAINING.md
 
-AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`.claude/`、`tools/` など）を作る・直すときの注意です。
+AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`、`.claude/`、`tools/` など）を作る・直すときの注意です。
 
-このファイルは、キットの配布元である konnoyayame のリポジトリにだけあります。nar、ネットワーク更新、キットの配布物のどれにも入りません（ルートの `.narignore` の `/DEVKIT.md`。`tools/devkit.json` の `files` にも載せない）。ゴーストを作るときの指示は `AGENTS.md`、konnoyayame に固有の情報は `GHOST.md` にあります。
+このファイルは、キットの配布元である konnoyayame のリポジトリにだけあります。nar、ネットワーク更新、キットの配布物のどれにも入りません（ルートの `.narignore` の `/DEVKIT-MAINTAINING.md`。`tools/devkit.json` の `files` にも載せない）。ゴーストを作るときの指示は `AGENTS.md`、作者向けのキットの使い方は `DEVKIT-GUIDE.md`、konnoyayame に固有の情報は `GHOST.md`、konnoyayame の紹介と、別のゴーストへのキットの導入手順は `README.md` にあります。
 
 ## キットの範囲
 
@@ -23,6 +23,8 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`.claude/`、`tools
   - `build/`: `tools/build-nar.ps1` が作る `build/.gitignore`
 - `auto_release.yml` は既存のリリースとタグをすべて消すので、キットにも seed にも入れない。
 - ルートに新しいファイルを足すときは、`files` か `seed` に載せる。載せないと配布されない。
+- 作者向けの説明は、キットに入る `DEVKIT-GUIDE.md`（キットを入れた後の使い方）と、konnoyayame の `README.md`（ゴーストの紹介、手で改造するときの案内、別のゴーストへの導入手順）に分けている。`DEVKIT-GUIDE.md` はどのゴーストにも入るので、上と同じく特定のゴーストに固有のことを書かない。導入手順は、キットを入れる前に読むものなので `README.md` に置く。
+- キットの使い方が変わったら、`AGENTS.md` と `DEVKIT-GUIDE.md` の両方を直す。
 
 ## lock ファイル
 
@@ -43,7 +45,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`.claude/`、`tools
 - **このリポジトリでキットのファイルを変えたら、コミットの前に `powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1 -WriteLock` を実行する。** 忘れると GitHub Actions の auto check（`-VerifyLock`）が落ちる。
 - konnoyayame から作ったゴーストは、この lock を引き継ぐ。lock が古いと、作者が変えていないファイルまで衝突として扱われる。
 - `-VerifyLock` は、GitHub Actions では `source` のリポジトリでだけ動く。派生ゴーストで、作者の変更によって落ちないようにするため。
-- 派生ゴーストで `-WriteLock` を使うと、作者の変更が「上流の内容」として記録され、次の更新で上書きされてしまう。作者向けの説明には書かない。
+- 派生ゴーストで `-WriteLock` を使うと、作者の変更が「上流の内容」として記録され、次の更新で上書きされてしまう。作者向けの説明（`DEVKIT-GUIDE.md`、`README.md`）には書かない。
 
 ## 配布
 
@@ -87,9 +89,9 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`.claude/`、`tools
    - マージして `.devkit-new` を消して再実行すると 0 になる
    - キットから外したファイルは消える
    - `GHOST.md` とルートの `.gitignore` は変わらない
-   - `DEVKIT.md` はコピーされない
+   - `DEVKIT-MAINTAINING.md` はコピーされない
 3. 導入のシナリオ: `ghost/` と `shell/` だけのフォルダに `-Target` で導入する。
    - seed がそろう
    - `doctor.ps1` が `GHOST.md` の未記入を知らせる
    - `check.ps1` が動く
-4. `tools/build-nar.ps1 -ListOnly` で、`tools/bin/`、`build/`、`*.devkit-new`、`DEVKIT.md` が入っていない。
+4. `tools/build-nar.ps1 -ListOnly` で、`tools/bin/`、`build/`、`*.devkit-new`、`DEVKIT-MAINTAINING.md` が入っていない。

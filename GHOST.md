@@ -7,7 +7,7 @@
 
 - 伺か（ukagaka）のゴースト「紺野ややめ」（`name` は「はろーYAYAワールド」）。SHIORI「YAYA」の**テンプレートゴースト**で、これを土台にして自分のゴーストを作ってもらうためのもの。
 - 配布元: https://github.com/YAYA-shiori/konnoyayame （nar は Releases から）
-- このリポジトリは、AI 開発キットの配布元も兼ねている。キットそのものを変えるときは `DEVKIT.md` を読む（リポジトリにだけあり、nar には入らない）。
+- このリポジトリは、AI 開発キットの配布元も兼ねている。キットそのものを変えるときは `DEVKIT-MAINTAINING.md` を読む（リポジトリにだけあり、nar には入らない）。
 
 ## ライセンス
 

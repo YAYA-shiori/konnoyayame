@@ -3,6 +3,7 @@
   "files": [
     "AGENTS.md",
     "CLAUDE.md",
+    "DEVKIT-GUIDE.md",
     ".mcp.json",
     ".claude/.gitignore",
     ".claude/settings.json",

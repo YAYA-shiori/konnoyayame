@@ -16,95 +16,56 @@ https://github.com/YAYA-shiori/konnoyayame
 
 このリポジトリをzipで取得しても不完全です。
 
-# AI エージェントで開発する (Vibe Coding)
+# 改造のしかた
+
+紺野ややめは、SHIORI「YAYA」で自分のゴーストを作るための土台（テンプレート）です。辞書を手で編集しても、AI コーディングエージェントに手伝ってもらってもかまいません。
+
+## 手で編集する
+
+- 辞書の本体は `ghost/master/dic/normal/` にある `.dic` ファイルです。文字コードは UTF-8（BOM なし）です。
+- どのファイルに何が書いてあるか（ランダムトーク、起動・終了、マウスへの反応、メニューなど）、キャラクターと使えるサーフェス番号、トークの書き方の決まりは、[GHOST.md](GHOST.md) にまとめてあります。
+- YAYA の文法の要点とトークでよくある失敗は、[AGENTS.md](AGENTS.md) の「YAYA 辞書の書き方の要点」と「トーク（さくらスクリプト）の書き方」にあります。AI エージェント向けの指示書ですが、人が読んでもわかるように書いてあります。
+- 詳しい仕様は、次を見てください。
+  - YAYA の文法と関数: YAYA Wiki（https://emily.shillest.net/ayaya/ ）
+  - さくらスクリプト、SHIORI イベント、設定ファイル: UKADOC（https://ssp.shillest.net/ukadoc/manual/ ）
+- 辞書にエラーがあると、ゴーストは緊急モードで起動し、ほとんど話さなくなります。Windows なら、同梱のスクリプトで辞書をチェックできます（最初の準備は [DEVKIT-GUIDE.md](DEVKIT-GUIDE.md) の「はじめかた」）。
+
+  ```
+  powershell -NoProfile -ExecutionPolicy Bypass -File tools/check-dic.ps1
+  ```
+
+- シェル（`shell/master/`）は SATO M 氏の作品で、CC BY-NC-ND 2.1 JP です。画像を改変したものは配布できません。
+- 自分のゴーストとして配布するときに変えるところ（名前、作者、インストール先、ネットワーク更新の URL など）は、`AGENTS.md` の「テンプレートから独立させるとき」と、`GHOST.md` の「テンプレートから独立させるときの追加項目」にチェックリストがあります。
+
+## AI エージェントで開発する (Vibe Coding)
 
 このゴーストには、AI コーディングエージェント（Claude Code、Codex、GitHub Copilot など）で開発するための開発キットが入っています。
 リポジトリを clone したフォルダでも、nar を SSP にインストールしたフォルダ（`<SSP>/ghost/konnoyayame/`）でも使えます。
-手元にある別の YAYA ゴーストにも、開発キットだけを入れられます（下の「別の YAYA ゴーストに開発キットを入れる」）。
 
-- `AGENTS.md` : エージェント向けの指示書（構成、ルール、YAYA とさくらスクリプトの要点、独立ゴーストにするときのチェックリスト）
-- `GHOST.md` : このゴーストに固有の情報（キャラクター、サーフェス、ライセンス、辞書の構成）。自分のゴーストを作ったら、その内容に書き直します
-- `CLAUDE.md` / `.claude/` / `.mcp.json` : Claude Code 用の設定（編集後の自動チェック、スキル、仕様調査用サブエージェント、ドキュメント検索 MCP）
-- `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、yayalint、SSTP での実機確認と SSP のログ取得、nar 作成、yaya.dll と開発キットの更新のスクリプト
+- [DEVKIT-GUIDE.md](DEVKIT-GUIDE.md) : 開発キットの使い方（あらかじめ入れておくもの、mac・Linux で使う場合、はじめかた、キットの更新、配布物にキットを含めるかどうか）
+- [AGENTS.md](AGENTS.md) : エージェント向けの指示書（構成、ルール、YAYA とさくらスクリプトの要点、独立ゴーストにするときのチェックリスト）
+- [GHOST.md](GHOST.md) : このゴーストに固有の情報（キャラクター、サーフェス、ライセンス、辞書の構成）。自分のゴーストを作ったら、その内容に書き直します
 
-## あらかじめ入れておくもの
+まずは [DEVKIT-GUIDE.md](DEVKIT-GUIDE.md) の「あらかじめ入れておくもの」を見て、このフォルダで AI エージェントを起動し、「セットアップして」と頼んでください。
 
-開発キットは Windows を前提にしています（YAYA、SSP、辞書チェックに使う tamac.exe が Windows 用のため）。
-
-| もの | 必要か | 用途 | 入手先 |
-|---|---|---|---|
-| AI コーディングエージェント | AI に頼むなら必須 | Claude Code、Codex、GitHub Copilot など。キットの指示書とスキルに沿って、開発を手伝います | 各ツールの案内に従ってください |
-| PowerShell | 必須 | `tools/` のスクリプト | Windows には最初から入っています（Windows PowerShell 5.1）。mac・Linux は下の「mac・Linux で使う場合」 |
-| SSP | 推奨 | シェルのチェック、実際のゴーストでの確認 | https://ssp.shillest.net/ |
-| Git | 推奨 | 変更履歴、GitHub での自動チェック、システム辞書（submodule）の取得 | https://git-scm.com/ |
-| Node.js 20 以上 | 任意 | 仕様を検索する MCP サーバー（ukagaka-doc） | https://nodejs.org/ |
-
-Windows で最初に入れておく必要があるのは、AI エージェントだけです。SSP、Git、Node.js は、AI エージェントに「セットアップして」と頼めば、足りないものを調べて入手方法を案内します（インストールは確認を取ってから行います）。
-
-### mac・Linux で使う場合
-
-PowerShell 7 を入れてください。mac は、Microsoft の案内（https://learn.microsoft.com/powershell/scripting/install/install-powershell-on-macos ）にあるリリースページから `.pkg` をダウンロードして開くのが簡単です。Linux は、同じ Microsoft のドキュメントにある Linux 向けの手順を見てください。入れた後は、ターミナルで `pwsh` と打つと起動します。
-
-ただし、mac・Linux で使えるのは開発キットの一部だけです。
-
-- 使えるもの: `AGENTS.md` と `GHOST.md` に沿った AI エージェントでの辞書の編集、開発キットの導入と更新（`tools/update-devkit.ps1`）、nar の作成（`tools/build-nar.ps1`）
-- 使えないもの: 辞書・シェルのチェックと lint（`tools/check.ps1` など）、SSP での起動と確認（`tools/run-ssp.ps1`、`tools/sstp.ps1`、`tools/ssp-log.ps1`）、チェック用ツールの取得（`tools/setup.ps1`。取得するツールが Windows 用）、yaya.dll の更新
-- Claude Code の編集後の自動チェックと起動時の診断（hooks）は Windows PowerShell（`powershell.exe`）を呼ぶので、mac・Linux ではエラーが表示されます。
-- `tools/doctor.ps1` は、Windows と Windows PowerShell が無いことを「必須が足りない」と表示します。
-- この README のコマンドにある `powershell -NoProfile -ExecutionPolicy Bypass -File` は、`pwsh -NoProfile -File` に読み替えてください。
-- 辞書にエラーがあると、ゴーストは緊急モードで起動してしまいます。配布する前に、Windows でチェックしてください。
-- mac・Linux での動作は、Windows ほど確かめられていません。
-
-## はじめかた
-
-このフォルダで AI エージェントを起動し（Claude Code なら `claude`）、「セットアップして」と頼んでください。足りないアプリ（Git、Node.js、SSP）の確認と案内、チェック用ツールの取得、動作確認までを代行します（Claude Code では `/getting-started` スキル）。アプリのインストールは、確認を取ってから行います。
-
-自分で行う場合は、次を実行してください（Windows）。
-
-```
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/doctor.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1
-```
-
-- `tools/doctor.ps1` は、必要なものがそろっているかと、足りないものの入手方法を表示します（何も変更しません）。
-- `tools/setup.ps1` は、git clone したフォルダなら submodule を取得し、チェック用ツール（tamac、yayalint）をダウンロードします。
-- SSP の場所は `.nar` の関連付けなどから自動で探します。見つからない場合は環境変数 `SSP_PATH` か `tools/local.json`（`tools/local.example.json` を複製）で指定してください。
-- ドキュメント検索 MCP（[ukagaka-doc-mcp](https://github.com/finelagusaz/ukagaka-doc-mcp)）には Node.js 20 以上が必要です。
-
-## 開発キットの更新
-
-開発キットは、ゴーストの辞書やシェルとは別に更新できます。このゴーストを元に自分のゴーストを作った後でも、キットの部分だけを新しくできます。
-
-AI エージェントに「開発キットを更新して」と頼んでください（Claude Code では `/update-devkit` スキル）。変わるファイルの一覧を見せてから、了承を得て更新します。
-
-自分で行う場合は、次を実行してください。
-
-```
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1 -DryRun
-powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
-```
-
-- 辞書、シェル、`GHOST.md`、`README.md` などは変わりません。どのファイルがキットのものかは `AGENTS.md` に書いてあります。
-- 自分で手を入れたキットのファイルは上書きされません。新しい版でも変わっていた場合は、新しい版が `<ファイル名>.devkit-new` として横に置かれるので、マージしてから消してください。
-- 別の YAYA ゴーストにキットを入れるときは、次の「別の YAYA ゴーストに開発キットを入れる」を見てください。
+手元にある別の YAYA ゴーストにも、開発キットだけを入れられます（次の「別の YAYA ゴーストに開発キットを入れる」）。
 
 # 別の YAYA ゴーストに開発キットを入れる
 
 紺野ややめを元にしていない、手元の YAYA ゴーストにも、開発キットだけを入れられます。辞書やシェルには手を加えません。
-先に「あらかじめ入れておくもの」を見て、AI エージェント（自分で入れる場合は PowerShell）を用意してください。
+先に [DEVKIT-GUIDE.md](DEVKIT-GUIDE.md) の「あらかじめ入れておくもの」を見て、AI エージェント（自分で入れる場合は PowerShell）を用意してください。
 
 ## 入れられるゴースト
 
 - SHIORI が YAYA で、ゴーストのフォルダに `ghost/master/descript.txt` と `ghost/master/yaya.dll` があること
-- Windows であること（mac・Linux では、上の「mac・Linux で使う場合」の範囲で使えます）
+- Windows であること（mac・Linux では、[DEVKIT-GUIDE.md](DEVKIT-GUIDE.md) の「mac・Linux で使う場合」の範囲で使えます）
 - SSP にインストールしたフォルダでも、git で管理しているフォルダでもかまいません
 
 ## 入るファイル
 
 | 区分 | ファイル | 入れるとき・更新するとき |
 |---|---|---|
-| キット | `AGENTS.md`<br>`CLAUDE.md`<br>`.mcp.json`<br>`.claude/`<br>`.github/workflows/auto_check.yml`<br>`tools/` | 入れたときに作られ、キットを更新すると新しい版に置き換わります |
+| キット | `AGENTS.md`<br>`CLAUDE.md`<br>`DEVKIT-GUIDE.md`<br>`.mcp.json`<br>`.claude/`<br>`.github/workflows/auto_check.yml`<br>`tools/` | 入れたときに作られ、キットを更新すると新しい版に置き換わります |
 | 初回だけ作るもの | `GHOST.md`<br>`.narignore`<br>`.updateignore`<br>`.gitattributes`<br>`.editorconfig`<br>`ghost/master/yayalint_config.lua` | 無いときだけ作られます。あとはゴーストのものです |
 
 それ以外のファイル（辞書、シェル、`descript.txt`、readme など）は変わりません。同じ名前のファイル（たとえば自分で書いた `AGENTS.md`）がすでにあるときは上書きせず、キットの版を `<ファイル名>.devkit-new` として横に置きます。
@@ -123,7 +84,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
    エージェントは導入に使うスクリプトを取得し、作られるファイルの一覧を見せてから、了承を得て導入します。同じ名前のファイルがあったときは、マージを手伝います。
 3. 導入が終わったら、AI エージェントを起動し直します（キットの指示書、スキル、自動チェックは、起動したときに読み込まれます）。
 4. 「セットアップして」と頼みます。チェック用ツールの取得、SSP の場所の設定、動作確認に加えて、辞書とシェルを読んで `GHOST.md` の下書きを作ります（Claude Code では `/getting-started` スキル）。
-5. `GHOST.md` の下書きを読んで、キャラクターの人物像、使えるサーフェス、シェルのライセンス、トークの書き方の決まりなどを直してください。AI エージェントは作業の前に必ずこのファイルを読むので、ここが正確なほど、書かれるトークや修正がゴーストに合ったものになります。書き終えたら、先頭にある `<!-- devkit:ghost-template -->` の 2 行を消します。
+5. `GHOST.md` の下書きを読んで、キャラクターの人物像、使えるサーフェス、シェルのライセンス、トークの書き方の決まりなどを直してください（導入先に入る `DEVKIT-GUIDE.md` の「GHOST.md を仕上げる」）。
 
 ### 導入を頼まれた AI エージェントへ
 
@@ -183,23 +144,9 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
 - **`.gitignore`**: 追記は要りません。除外が必要なものは、キットの `tools/.gitignore` と `.claude/.gitignore` で除外しています。
 - **GitHub**: `.github/workflows/auto_check.yml` が入り、`main` / `master` ブランチに push するたびに辞書チェックが走ります。要らなければ消してかまいません（消したファイルは、キットを更新しても戻りません）。自動リリースのワークフローは入りません。
 
-## 配布物（nar）に開発キットを含めるかどうか
+## 導入した後
 
-そのままでは、キットのファイルも nar とネットワーク更新に入ります。ゴーストをインストールした人が、そのフォルダでそのまま AI エージェントを使って改造を始められるようにするためです。配布物に含めたくない場合は、`.narignore` に次を足してください（`.updateignore` が `.narignore` を取り込んでいれば、ネットワーク更新からも除外されます）。
-
-```
-/AGENTS.md
-/CLAUDE.md
-/GHOST.md
-/.mcp.json
-/.claude/
-/.github/
-/tools/
-```
-
-## 導入した後の更新
-
-キットの更新は、そのゴーストのフォルダで行います。やり方は、上の「開発キットの更新」と同じです。
+キットの更新、配布物（nar）にキットを含めるかどうかなど、導入した後の使い方は、導入先に入る `DEVKIT-GUIDE.md` にあります。
 
 `tools/devkit.lock.json` は、どの版のキットを入れたかの記録です。消さずに残し、git で管理しているならコミットしてください。
 
@@ -208,3 +155,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
 Public Domain (Unlicense)
 
 煮るなり焼くなり好きにしてください。
+
+ただし、シェル（`shell/master/`）は SATO M 氏の作品で、CC BY-NC-ND 2.1 JP です（`shell/master/descript.txt` を参照）。
