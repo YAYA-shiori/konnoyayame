@@ -5,11 +5,4 @@
 /etc/tama.txt
 updates2.dau
 updates.txt
-
-# development kit
-/tools/bin/
-/tools/*.exe
-/tools/local.json
-/build/
 *.nar
-/.claude/settings.local.json

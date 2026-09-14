@@ -14,8 +14,8 @@ argument-hint: "[試したい関数名・イベント名・さくらスクリプ
    `powershell -NoProfile -ExecutionPolicy Bypass -File tools/sstp.ps1 -Reload ghost`
    - 再読み込みの後、SSP のエラーログに増えたものが表示される。`[Critical] ... error E0094 ...` のような辞書エラーが出たら、ゴーストは緊急モードになっている（イベントに `204 No Content` しか返さなくなる）。直してからもう一度読み込ませる。
 3. 試したい内容に合わせて送る。
-   - さくらスクリプトをそのまま再生する（1 行で書き、`\` が解釈されないようシングルクォートで囲む）:
-     `tools/sstp.ps1 -Script '\0\s[5]テストだよ。\w8\1\s[10]おう。\e'`
+   - さくらスクリプトをそのまま再生する（1 行で書き、`\` が解釈されないようシングルクォートで囲む。サーフェス番号は `GHOST.md` の表にあるものを使う）:
+     `tools/sstp.ps1 -Script '\0\s[0]テストだよ。\w8\1\s[10]おう。\e'`
    - イベントを発生させる:
      - ランダムトーク: `tools/sstp.ps1 -Event OnAiTalk`
      - つつき反応（`MouseDoubleClick0Head` など）: `tools/sstp.ps1 -Event OnMouseDoubleClick -Reference '0,0,0,0,Head'`（Reference3 がスコープ、Reference4 が当たり判定の名前）

@@ -1,0 +1,20 @@
+# Development kit files that must not be shipped in the nar or network updates (gitignore syntax).
+# Part of the kit: tools/update-devkit.ps1 replaces this file.
+# .narignore reads it with "include:tools/devkit.narignore"; write the ghost's own rules there.
+
+# local tools, settings and build output
+/build/
+/tools/bin/
+/tools/*.exe
+/tools/local.json
+/.claude/settings.local.json
+
+# new versions left by tools/update-devkit.ps1, waiting to be merged
+*.devkit-new
+
+# repository files of the yaya-dic submodule
+/ghost/master/dic/system/.github/
+/ghost/master/dic/system/.vscode/
+/ghost/master/dic/system/.gitattributes
+/ghost/master/dic/system/LICENSE
+/ghost/master/dic/system/README.md

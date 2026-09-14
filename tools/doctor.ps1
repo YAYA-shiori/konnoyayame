@@ -18,6 +18,7 @@ param(
 $ErrorActionPreference = 'Stop'
 $WarningPreference = 'SilentlyContinue'
 . (Join-Path $PSScriptRoot 'lib/common.ps1')
+. (Join-Path $PSScriptRoot 'lib/devkit.ps1')
 Initialize-DevkitConsole
 
 $items = New-Object System.Collections.Generic.List[object]
@@ -57,6 +58,25 @@ Add-DoctorItem -Id 'system-dic' -Name 'system dictionary (ghost/master/dic/syste
     -Purpose 'YAYA system dictionary (yaya-dic)' `
     -Detail $(if ($systemOk) { 'present' } else { 'empty' }) `
     -Fix $(if ($isGitWorkingCopy) { "Run: $ps tools/setup.ps1 (it runs git submodule update --init)" } else { 'The folder is incomplete. Download the nar again from the Releases page.' })
+
+# --- ghost profile and kit updates -----------------------------------------------------
+$ghostProfile = Join-Path $DevkitRoot 'GHOST.md'
+$profileState = 'ok'
+if (-not (Test-Path -LiteralPath $ghostProfile -PathType Leaf)) {
+    $profileState = 'missing'
+} elseif ([IO.File]::ReadAllText($ghostProfile, $DevkitUtf8).Contains($DevkitGhostTemplateMarker)) {
+    $profileState = 'template'
+}
+Add-DoctorItem -Id 'ghost-profile' -Name 'GHOST.md' -Level 'recommended' -Ok ($profileState -eq 'ok') `
+    -Purpose 'Ghost-specific notes that agents read before working: characters, surfaces, license, dictionary files' `
+    -Detail $(if ($profileState -eq 'ok') { 'filled in' } elseif ($profileState -eq 'template') { 'still the blank template' } else { 'missing' }) `
+    -Fix $(if ($profileState -eq 'missing') { 'Copy tools/devkit/seed/GHOST.md to GHOST.md and fill it in from the dictionaries and the shell (getting-started skill).' } else { 'Fill it in from the dictionaries and the shell, confirm it with the author, then remove the devkit:ghost-template marker lines (getting-started skill).' })
+
+$conflicts = @(Get-DevkitConflictFiles $DevkitRoot)
+Add-DoctorItem -Id 'devkit-conflicts' -Name 'development kit merges' -Level 'recommended' -Ok ($conflicts.Count -eq 0) `
+    -Purpose 'Kit files changed both locally and upstream by tools/update-devkit.ps1' `
+    -Detail $(if ($conflicts.Count -eq 0) { 'nothing to merge' } else { 'waiting to be merged: ' + ($conflicts -join ', ') }) `
+    -Fix 'Merge each <file>.devkit-new into <file>, then delete the .devkit-new file (update-devkit skill).'
 
 # --- downloaded tools ------------------------------------------------------------------
 $manifest = Get-DevkitToolManifest

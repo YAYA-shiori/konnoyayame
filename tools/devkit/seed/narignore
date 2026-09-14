@@ -8,13 +8,9 @@
 # development kit (tools/devkit.narignore is replaced when the kit is updated)
 include:tools/devkit.narignore
 
-# notes for developing the kit itself; only in the repository
-/DEVKIT.md
-
 # git metadata (ghost/master/dic/system is a plain folder in the nar, not a submodule)
 .git
 .gitmodules
-/LICENSE
 
 # needed only by network updates (.updateignore includes it again)
 /delete.txt

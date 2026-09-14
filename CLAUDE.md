@@ -1,4 +1,5 @@
 @AGENTS.md
+@GHOST.md
 
 # Claude Code 向けの補足
 
@@ -7,17 +8,21 @@
 - `.claude/settings.json` の PostToolUse hook（`tools/hooks/post-edit.ps1`）により、`ghost/` の `.dic` / `.txt` を編集すると `tools/check-dic.ps1` が、`shell/` の `.txt` を編集すると `tools/check-shell.ps1` が自動で実行される。
 - チェックに失敗すると、その出力が返ってくる。次の作業に進む前に直すこと。
 - ツールが入っていない、または SSP が見つからない場合は、何も言わずにスキップされる。自動チェックが動いていないようなら `tools/setup.ps1` を実行する（ダウンロードを伴うので、ユーザーに一言断る）。
-- 起動時には SessionStart hook（`tools/hooks/session-start.ps1`）が `tools/doctor.ps1` で環境を診断し、必須または推奨のものが足りないときだけ、その旨が伝えられる。そのときは、ほかの作業に入る前に `/getting-started` でのセットアップをユーザーに提案する。
+- 起動時には SessionStart hook（`tools/hooks/session-start.ps1`）が `tools/doctor.ps1` で環境を診断し、必須または推奨のものが足りないときだけ、その項目と直し方が伝えられる。そのときは、ほかの作業に入る前に対応をユーザーに提案する。
+  - セットアップの不足: `/getting-started`
+  - `GHOST.md` の未記入: `/getting-started` の手順で下書きする
+  - `.devkit-new` の残り: `/update-devkit` の手順でマージする
 
 ## スキル
 
 | スキル | 用途 |
 |---|---|
-| `/getting-started` | 初回セットアップの代行（足りないアプリの案内、ツールの取得、動作確認） |
+| `/getting-started` | 初回セットアップの代行（足りないアプリの案内、ツールの取得、`GHOST.md` の下書き、動作確認） |
 | `/ghost-check` | 辞書・シェル・lint をまとめてチェックし、問題を直す |
 | `/try-in-ssp` | 起動中の SSP でトークやイベントを再生して確かめる |
 | `/build-nar` | nar を作る（ユーザーが呼び出す） |
 | `/update-yaya` | yaya.dll を更新する（ユーザーが呼び出す） |
+| `/update-devkit` | 開発キットだけを更新する。別の YAYA ゴーストへの導入にも使う（ユーザーが呼び出す） |
 | `/new-ghost` | テンプレートから独立したゴーストを作る（ユーザーが呼び出す） |
 
 ## 仕様の調査

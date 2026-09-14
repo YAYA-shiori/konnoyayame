@@ -50,20 +50,32 @@ function ConvertFrom-DevkitIgnoreGlob([string]$Glob) {
     return $sb.ToString()
 }
 
-# Reads rules from an ignore file relative to $Root. Returns a List of rule objects.
-function Read-DevkitIgnoreRules([string]$Root, [string]$FileName, [hashtable]$Visited) {
-    if ($null -eq $Visited) { $Visited = @{} }
-    $rules = New-Object System.Collections.Generic.List[object]
-    $path = Join-Path $Root $FileName
-    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return , $rules }
-    $key = [IO.Path]::GetFullPath($path)
-    if ($Visited.ContainsKey($key)) { return , $rules }
-    $Visited[$key] = $true
+# Maximum nesting of include: lines, as in SSP (SP_GITIGNORE_FILTER_MAX_INCLUDE_DEPTH).
+# The first file is depth 0; a file at a greater depth is not read.
+$DevkitIgnoreMaxIncludeDepth = 3
 
-    foreach ($rawLine in [IO.File]::ReadAllLines($path, $DevkitUtf8)) {
+# Reads rules from an ignore file in $Root. Returns a List of rule objects.
+# Patterns match root-relative paths. As in SSP, the path of an include: line is relative to the
+# folder of the file that contains the line, and may use "/" or "\".
+function Read-DevkitIgnoreRules([string]$Root, [string]$FileName) {
+    $rules = New-Object System.Collections.Generic.List[object]
+    Add-DevkitIgnoreFileRules $rules (Join-Path $Root $FileName) 0
+    return , $rules
+}
+
+function Add-DevkitIgnoreFileRules($Rules, [string]$Path, [int]$Depth) {
+    if ($Depth -gt $DevkitIgnoreMaxIncludeDepth) {
+        Write-Warning "include: is nested more than $DevkitIgnoreMaxIncludeDepth levels; not read: $Path"
+        return
+    }
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return }
+    $folder = Split-Path $Path -Parent
+
+    foreach ($rawLine in [IO.File]::ReadAllLines($Path, $DevkitUtf8)) {
         $line = $rawLine.TrimStart([char]0xFEFF)
         if ($line.StartsWith('include:')) {
-            foreach ($rule in (Read-DevkitIgnoreRules $Root $line.Substring(8).Trim() $Visited)) { $rules.Add($rule) }
+            $includePath = $line.Substring(8).Trim().Replace('\', '/')
+            if ($includePath) { Add-DevkitIgnoreFileRules $Rules (Join-Path $folder $includePath) ($Depth + 1) }
             continue
         }
         # Trailing spaces are ignored unless escaped with a backslash.
@@ -87,14 +99,13 @@ function Read-DevkitIgnoreRules([string]$Root, [string]$FileName, [hashtable]$Vi
         $body = ConvertFrom-DevkitIgnoreGlob $line.TrimStart('/')
         $pattern = if ($anchored) { '^' + $body + '$' } else { '(?:^|/)' + $body + '$' }
         $options = [System.Text.RegularExpressions.RegexOptions]::IgnoreCase -bor [System.Text.RegularExpressions.RegexOptions]::CultureInvariant
-        $rules.Add([pscustomobject]@{
+        $Rules.Add([pscustomobject]@{
                 Regex         = New-Object System.Text.RegularExpressions.Regex($pattern, $options)
                 Negate        = $negate
                 DirectoryOnly = $directoryOnly
                 Source        = $rawLine
             })
     }
-    return , $rules
 }
 
 function New-DevkitIgnoreMatcher($Rules) {

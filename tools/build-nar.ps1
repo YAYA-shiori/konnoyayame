@@ -114,7 +114,13 @@ if ($ListOnly) {
 }
 
 # --- write the archive ---------------------------------------------------------------------
-New-Item -ItemType Directory -Force -Path (Split-Path $OutFile -Parent) | Out-Null
+$outDir = Split-Path $OutFile -Parent
+New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+# Keep the default output folder out of git without an entry in the ghost's own .gitignore.
+$buildDir = Join-Path $root 'build'
+if ($outDir.TrimEnd('\', '/') -ieq $buildDir -and -not (Test-Path -LiteralPath (Join-Path $buildDir '.gitignore'))) {
+    [IO.File]::WriteAllText((Join-Path $buildDir '.gitignore'), "*`n", $DevkitUtf8)
+}
 if (Test-Path -LiteralPath $OutFile) { Remove-Item -LiteralPath $OutFile -Force }
 $archive = [IO.Compression.ZipFile]::Open($OutFile, [IO.Compression.ZipArchiveMode]::Create)
 try {

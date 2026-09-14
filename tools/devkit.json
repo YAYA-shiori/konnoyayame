@@ -1,0 +1,29 @@
+{
+  "source": "YAYA-shiori/konnoyayame",
+  "files": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".mcp.json",
+    ".claude/.gitignore",
+    ".claude/settings.json",
+    ".claude/agents/**",
+    ".claude/skills/**",
+    ".github/workflows/auto_check.yml",
+    "tools/**"
+  ],
+  "exclude": [
+    "tools/bin/**",
+    "tools/*.exe",
+    "tools/local.json",
+    "tools/devkit.lock.json",
+    "**/*.devkit-new"
+  ],
+  "seed": {
+    "GHOST.md": "tools/devkit/seed/GHOST.md",
+    ".narignore": "tools/devkit/seed/narignore",
+    ".updateignore": "tools/devkit/seed/updateignore",
+    ".gitattributes": "tools/devkit/seed/gitattributes",
+    ".editorconfig": "tools/devkit/seed/editorconfig",
+    "ghost/master/yayalint_config.lua": "tools/devkit/seed/yayalint_config.lua"
+  }
+}

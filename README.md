@@ -22,8 +22,9 @@ https://github.com/YAYA-shiori/konnoyayame
 リポジトリを clone したフォルダでも、nar を SSP にインストールしたフォルダ（`<SSP>/ghost/konnoyayame/`）でも使えます。
 
 - `AGENTS.md` : エージェント向けの指示書（構成、ルール、YAYA とさくらスクリプトの要点、独立ゴーストにするときのチェックリスト）
+- `GHOST.md` : このゴーストに固有の情報（キャラクター、サーフェス、ライセンス、辞書の構成）。自分のゴーストを作ったら、その内容に書き直します
 - `CLAUDE.md` / `.claude/` / `.mcp.json` : Claude Code 用の設定（編集後の自動チェック、スキル、仕様調査用サブエージェント、ドキュメント検索 MCP）
-- `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、yayalint、SSTP での実機確認と SSP のログ取得、nar 作成、yaya.dll 更新のスクリプト
+- `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、yayalint、SSTP での実機確認と SSP のログ取得、nar 作成、yaya.dll と開発キットの更新のスクリプト
 
 ## はじめかた
 
@@ -41,6 +42,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1
 - `tools/setup.ps1` は、git clone したフォルダなら submodule を取得し、チェック用ツール（tamac、yayalint）をダウンロードします。
 - SSP の場所は `.nar` の関連付けなどから自動で探します。見つからない場合は環境変数 `SSP_PATH` か `tools/local.json`（`tools/local.example.json` を複製）で指定してください。
 - ドキュメント検索 MCP（[ukagaka-doc-mcp](https://github.com/finelagusaz/ukagaka-doc-mcp)）には Node.js 20 以上が必要です。
+
+## 開発キットの更新
+
+開発キットは、ゴーストの辞書やシェルとは別に更新できます。このゴーストを元に自分のゴーストを作った後でも、キットの部分だけを新しくできます（Claude Code では `/update-devkit` スキル）。
+
+```
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1 -DryRun
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
+```
+
+- 辞書、シェル、`GHOST.md`、`README.md` などは変わりません。どのファイルがキットのものかは `AGENTS.md` に書いてあります。
+- 自分で手を入れたキットのファイルは上書きされません。新しい版でも変わっていた場合は、新しい版が `<ファイル名>.devkit-new` として横に置かれるので、マージしてから消してください。
+- 別の YAYA ゴーストにキットを入れるときは、`-Target <そのゴーストのフォルダ>` を付けて実行します。
 
 # ライセンス
 

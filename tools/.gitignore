@@ -1,0 +1,4 @@
+# Development kit: downloaded tools and local settings
+/bin/
+/*.exe
+/local.json

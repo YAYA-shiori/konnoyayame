@@ -21,3 +21,7 @@ jobs:
       - name: dictionary check
         shell: pwsh
         run: ./tools/check-dic.ps1 -Ci
+      - name: development kit lock check
+        # Runs only in the repository that distributes the kit (source in tools/devkit.json)
+        shell: pwsh
+        run: ./tools/update-devkit.ps1 -VerifyLock
