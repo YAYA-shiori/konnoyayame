@@ -1,13 +1,13 @@
 # Files excluded when creating the .nar (gitignore syntax).
 # Used by SSP and tools/build-nar.ps1. .updateignore includes this file.
 # https://ssp.shillest.net/ukadoc/manual/descript_install.html
+#
+# .github/, .gitignore and .gitattributes are shipped on purpose, so that a ghost
+# made from the installed folder can be put on GitHub with the same checks and releases.
 
-# git and GitHub
+# git metadata (ghost/master/dic/system is a plain folder in the nar, not a submodule)
 .git
-.github/
-.gitignore
 .gitmodules
-.gitattributes
 /LICENSE
 /delete.txt
 
@@ -27,6 +27,8 @@ yaya_variable.cfg
 /.claude/settings.local.json
 
 # repository files of the yaya-dic submodule
+/ghost/master/dic/system/.github/
 /ghost/master/dic/system/.vscode/
+/ghost/master/dic/system/.gitattributes
 /ghost/master/dic/system/LICENSE
 /ghost/master/dic/system/README.md

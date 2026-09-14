@@ -171,7 +171,7 @@ AI がやりがちな失敗:
 - [ ] `README.md`、`thumbnail.pnr`、`delete.txt`（テンプレートの更新用なので、自分のゴーストに合わせて見直す）
 - [ ] 名前やキャラクター設定に関わる台詞（`OnFirstBoot` の自己紹介、ランダムトーク、マウスへの反応など）
 - [ ] 辞書に直接書かれたゴースト名: `yaya_menu.dic` の `OnStampInfo`（スタンプ帳で自分のスタンプを見分けるための `'はろーYAYAわーるど'` / `'紺野ややめ'`）
-- [ ] GitHub で自動リリースする場合は、`.github/workflows/auto_release.yml` の nar ファイル名とリリースの説明文
+- [ ] GitHub で自動リリースする場合は、`.github/workflows/auto_release.yml` の nar ファイル名とリリースの説明文。このワークフローは push のたびに**既存のリリースとタグをすべて削除して**作り直すので、残したいリリースがあるリポジトリでは書き換える。nar をインストールしたフォルダから始めた場合、`ghost/master/dic/system/` は submodule ではなく普通のフォルダとしてコミットしてよい
 - [ ] 元にしたテンプレートのクレジット（義務ではないが、慣習としておすすめ）。例:「紺野ややめ（https://github.com/YAYA-shiori/konnoyayame）をもとに作成」
 
 ## AI を使ったゴースト制作のガイドライン
