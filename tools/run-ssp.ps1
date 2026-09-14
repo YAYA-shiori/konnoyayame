@@ -4,7 +4,10 @@
 .DESCRIPTION
     Runs the working folder directly, without installing the ghost into SSP.
     Readiness is checked with "EXECUTE GetName", which must return sakura.name of ghost/master/descript.txt.
-    Exit codes: 0 = the ghost is running, 1 = it did not answer in time, 3 = ssp.exe was not found.
+    Then the entries that SSP added to its error log while starting are shown (SSP with developer.log
+    properties only; see also tools/ssp-log.ps1).
+    Exit codes: 0 = the ghost is running, 1 = it did not answer in time, 2 = the ghost is running but SSP
+    logged Error or Critical entries, 3 = ssp.exe was not found.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-ssp.ps1
 #>
@@ -18,6 +21,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/common.ps1')
+. (Join-Path $PSScriptRoot 'lib/sstp.ps1')
 Initialize-DevkitConsole
 
 if (-not $Root) { $Root = $DevkitRoot }
@@ -30,39 +34,43 @@ if (-not $ssp) {
     exit 3
 }
 
+# When SSP is already running, only the error log entries added from now on are of interest.
+$marker = New-DevkitSspLogMarker -Kind 'error' -Port $Port
+if (-not $marker) { $marker = [pscustomobject]@{ Kind = 'error'; Name = $null; Total = 0; Key = '' } }
+
 Start-Process -FilePath $ssp.Path -ArgumentList @('--ghost', ('"' + $Root + '"'))
 Write-Host "run-ssp: started $($ssp.Path) --ghost $Root"
 
-function Get-SstpGhostName {
-    $client = New-Object System.Net.Sockets.TcpClient
-    try {
-        $client.Connect('127.0.0.1', $Port)
-        $client.ReceiveTimeout = 5000
-        $stream = $client.GetStream()
-        $bytes = $DevkitUtf8.GetBytes("EXECUTE SSTP/1.1`r`nCharset: UTF-8`r`nSender: ghost-devkit`r`nCommand: GetName`r`n`r`n")
-        $stream.Write($bytes, 0, $bytes.Length)
-        return (New-Object System.IO.StreamReader($stream, $DevkitUtf8)).ReadToEnd()
-    } catch {
-        return $null
-    } finally {
-        $client.Close()
-    }
-}
-
 $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
 $lastResponse = $null
+$running = $false
 while ((Get-Date) -lt $deadline) {
-    $lastResponse = Get-SstpGhostName
-    if ($lastResponse -and $lastResponse -match '^SSTP/\d\.\d 200' -and (-not $sakuraName -or $lastResponse.Contains($sakuraName))) {
-        Write-Host "run-ssp: the ghost is running (SSTP port $Port)"
-        exit 0
+    $response = Invoke-DevkitSstp -Lines @('EXECUTE SSTP/1.1', 'Charset: UTF-8', 'Sender: ghost-devkit', 'Command: GetName') -Port $Port -TimeoutSeconds 5
+    $lastResponse = $response.Raw
+    if ($response.Status -eq 200 -and (-not $sakuraName -or $lastResponse.Contains($sakuraName))) {
+        $running = $true
+        break
     }
     Start-Sleep -Milliseconds 1000
 }
-if ($lastResponse) {
-    Write-Host "run-ssp: SSP answers, but '$sakuraName' is not the current ghost. Last GetName response:"
-    Write-Host $lastResponse.TrimEnd()
-} else {
-    Write-Host "run-ssp: SSTP did not answer on port $Port within $TimeoutSeconds seconds"
+if (-not $running) {
+    if ($lastResponse) {
+        Write-Host "run-ssp: SSP answers, but '$sakuraName' is not the current ghost. Last GetName response:"
+        Write-Host $lastResponse.TrimEnd()
+    } else {
+        Write-Host "run-ssp: SSTP did not answer on port $Port within $TimeoutSeconds seconds"
+    }
+    exit 1
 }
-exit 1
+Write-Host "run-ssp: the ghost is running (SSTP port $Port)"
+
+# Give the ghost time to boot, so that errors reported on its first events are in the log.
+Start-Sleep -Milliseconds 2000
+$max = 30
+$log = Get-DevkitSspLog -Kind 'error' -Since $marker -Max $max -Port $Port
+if ($log.State -ne 'ok') {
+    Write-Host 'run-ssp: the SSP error log cannot be read (this SSP has no developer.log properties; update SSP to see it)'
+    exit 0
+}
+if (Write-DevkitSspLogSummary 'run-ssp' $log $max -Base $Root) { exit 2 }
+exit 0

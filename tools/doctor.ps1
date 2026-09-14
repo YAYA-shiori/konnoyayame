@@ -80,7 +80,7 @@ if (-not $ssp -and ($env:SSP_PATH -or ($local -and ($local.PSObject.Properties.N
     $sspDetail = 'not found; the path in SSP_PATH or tools/local.json does not exist'
 }
 Add-DoctorItem -Id 'ssp' -Name 'SSP' -Level 'recommended' -Ok ([bool]$ssp) `
-    -Purpose 'Shell check (tools/check-shell.ps1), running the ghost (tools/run-ssp.ps1) and trying talks (tools/sstp.ps1)' `
+    -Purpose 'Shell check (tools/check-shell.ps1), running the ghost (tools/run-ssp.ps1), trying talks (tools/sstp.ps1) and reading its logs (tools/ssp-log.ps1)' `
     -Detail $sspDetail `
     -Fix 'Get SSP from https://ssp.shillest.net/ . If it is already installed, ask where ssp.exe is and write it to tools/local.json as {"sspPath": "C:\\path\\to\\ssp.exe"}.'
 

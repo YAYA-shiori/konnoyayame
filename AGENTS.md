@@ -48,10 +48,13 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 | `<ps> tools/check-shell.ps1` | `ssp.exe --offline-dump` でシェルを検査する（Error / Warning / Notice） | 0 OK / 1 Error あり / 3 SSP が見つからない |
 | `<ps> tools/lint.ps1` | yayalint で未定義・未使用の変数と関数を探す（参考情報） | 0（`-Strict` なら未定義があると 1）/ 3 |
 | `<ps> tools/check.ps1` | 上の 3 つを順に実行する | 0 / 1 |
-| `<ps> tools/run-ssp.ps1` | このフォルダのゴーストを SSP で直接起動し（`ssp.exe --ghost <フォルダ>`。インストール不要）、応答するまで待つ | 0 起動した / 1 応答なし / 3 SSP が見つからない |
-| `<ps> tools/sstp.ps1 -Reload ghost` | 起動中の SSP にゴーストを再読み込みさせる | 0 / 1 / 3 SSP に接続できない |
+| `<ps> tools/run-ssp.ps1` | このフォルダのゴーストを SSP で直接起動し（`ssp.exe --ghost <フォルダ>`。インストール不要）、応答するまで待つ。起動中に SSP のエラーログに増えた警告・エラーを表示する | 0 起動した / 1 応答なし / 2 起動したが、エラーログに Error か Critical が増えた / 3 SSP が見つからない |
+| `<ps> tools/sstp.ps1 -Reload ghost` | 起動中の SSP にゴーストを再読み込みさせ、その間に SSP のエラーログに増えた警告・エラー（YAYA の辞書エラーなど）を表示する | 0 / 1 エラー応答 / 2 エラーログに Error か Critical が増えた / 3 SSP に接続できない |
 | `<ps> tools/sstp.ps1 -Script '\0\s[5]テスト\e'` | さくらスクリプトを実際のゴーストで再生する | 同上 |
 | `<ps> tools/sstp.ps1 -Event OnAiTalk` | イベントを発生させる（この例はランダムトーク）。応答の `Script:` に、ゴーストが実際に返したスクリプトが入る | 同上 |
+| `<ps> tools/ssp-log.ps1` | 起動中の SSP のログを表示する。読み取りのみ。既定はこのゴーストのエラーログで、`-Kind script` で再生されたスクリプト（ほかに `network` / `update`）、`-All` で発信元を問わず全部、`-Json` で機械向けの出力 | 0 / 1 SSP が developer.log に未対応 / 2 Error か Critical がある / 3 SSP に接続できない |
+
+`tools/sstp.ps1` は、`EXECUTE GetFMO` で調べたゴーストの識別 ID を `ID` ヘッダに付けて送る（Owned SSTP）。付けないと SSP は外部のプログラムからの要求として扱い、`\![reload,ghost]` などを黙って無視する（応答は 200 のまま）。SSP のログは、プロパティシステムの `developer.log.*` を `EXECUTE GetProperty` で読む。ログは種類ごとに新しいものから 50 件ほどしか残らず、発信元の名前は descript.txt の `name`（`sakura.name` ではない）になる。
 | `<ps> tools/build-nar.ps1` | `build/<directory>.nar` を作る（`-ListOnly` で中身の一覧だけ表示） | 0 / 1 |
 | `<ps> tools/update-yaya.ps1` | yaya.dll を最新リリースに更新する。辞書チェックに失敗したら元に戻す（`-DryRun` で確認のみ） | 0 / 1 |
 
@@ -74,7 +77,7 @@ SSP の場所は次の順に探す: `-SspPath` 引数 → 環境変数 `SSP_PATH
 
 ## 作業のルール
 
-1. **辞書や `ghost/master/*.txt` を変更したら、必ず `tools/check-dic.ps1` を通す。** エラーが残ったゴーストは緊急モードで起動し、ほとんど話さなくなる。`shell/` を変更したら `tools/check-shell.ps1` も通す。
+1. **辞書や `ghost/master/*.txt` を変更したら、必ず `tools/check-dic.ps1` を通す。** エラーが残ったゴーストは緊急モードで起動し、ほとんど話さなくなる。`shell/` を変更したら `tools/check-shell.ps1` も通す。SSP で動かして確かめるときは、`tools/sstp.ps1` や `tools/run-ssp.ps1` が表示する SSP のエラーログ（終了コード 2）も見る。
 2. 仕様（さくらスクリプトのタグ、SHIORI イベントの名前と Reference、YAYA の関数、descript.txt や surfaces.txt の項目）を**推測で書かない**。確かでないときは「仕様の調べ方」に従って確かめる。
 3. 文字コードは UTF-8（BOM なし）、改行は LF、辞書のインデントはタブ（`.editorconfig` 参照）。ただし `readme-aya.txt` と `readme-yaya.txt` は Shift_JIS なので、文字コードを変えない。
 4. 編集しないもの: `ghost/master/dic/system/`（submodule。変更が必要なら上流の yaya-dic に提案する）、`yaya.dll`、実行時に作られるファイル。

@@ -12,4 +12,5 @@ description: ゴーストの辞書（tamac）、シェル（SSP offline-dump）�
    2. **check-shell の Error / Warning**: 直す。Notice（使われていないサーフェスなど）は報告だけにする。`shell/master/` の画像は CC BY-NC-ND なので、画像そのものは編集しない。
    3. **lint の `read undefined variable / function`**: 打ち間違いの可能性が高い。前後を読んで確かめてから直す。`unused function / variable` は報告だけにして、勝手に消さない。
 3. 直したら 1 をもう一度実行し、error がなくなるまで繰り返す。
-4. 最後に、直したことと残っている警告を短くまとめて報告する。
+4. SSP でこのゴーストを動かしている場合は、`powershell -NoProfile -ExecutionPolicy Bypass -File tools/ssp-log.ps1` で実行時のエラーログも見る（終了コード 3 なら SSP が起動していないので飛ばす）。古いエラーも残っているので、直したものは `tools/sstp.ps1 -Reload ghost` で読み込ませ、新しいエラーが出ないことを確かめる。
+5. 最後に、直したことと残っている警告を短くまとめて報告する。

@@ -4,7 +4,11 @@
 .DESCRIPTION
     By default the request is addressed to this ghost (ReceiverGhostName = sakura.name in
     ghost/master/descript.txt). Use -Ghost to address another ghost, or -AnyGhost for the active one.
-    Exit codes: 0 = 2xx response, 1 = error response, 3 = could not connect (SSP is not running).
+    For -Script, -Event and -Reload, the entries that SSP added to its error log in the meantime
+    (dictionary errors reported by YAYA, script errors, ...) are shown afterwards. This needs an SSP
+    that has the developer.log properties; -NoLog skips it. See also tools/ssp-log.ps1.
+    Exit codes: 0 = 2xx response, 1 = error response, 2 = 2xx response but SSP logged Error or Critical
+    entries, 3 = could not connect (SSP is not running).
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/sstp.ps1 -Reload ghost
 .EXAMPLE
@@ -39,17 +43,31 @@ param(
 
     [string]$Ghost,
     [switch]$AnyGhost,
+    # Do not show the new SSP error log entries.
+    [switch]$NoLog,
     [int]$Port = 9801,
     [int]$TimeoutSeconds = 60
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/common.ps1')
+. (Join-Path $PSScriptRoot 'lib/sstp.ps1')
 Initialize-DevkitConsole
 
 $mode = $PSCmdlet.ParameterSetName
 if ($mode -eq 'Reload') { $Script = '\![reload,' + $Reload + ']' }
+$ghostRoot = $null
 if ($mode -ne 'Execute' -and -not $AnyGhost -and -not $Ghost) {
     $Ghost = Get-DevkitDescriptValue (Join-Path $DevkitRoot 'ghost/master/descript.txt') 'sakura.name'
+    $ghostRoot = $DevkitRoot
+}
+
+# Owned SSTP: send the ghost's FMO identifier so that SSP does not ignore the request as an outside one.
+$ghostId = $null
+if ($mode -ne 'Execute' -and -not $AnyGhost) {
+    $ghostId = Get-DevkitSspGhostId -GhostRoot $ghostRoot -SakuraName $Ghost -Port $Port
+    if (-not $ghostId -and $mode -eq 'Reload') {
+        Write-Host "sstp: warning - the FMO identifier of '$Ghost' was not found, so SSP may ignore the reload"
+    }
 }
 
 $headers = New-Object System.Collections.Generic.List[string]
@@ -61,6 +79,7 @@ switch ($mode) {
 $headers.Add('Charset: UTF-8')
 $headers.Add('Sender: ghost-devkit')
 if ($mode -ne 'Execute' -and -not $AnyGhost -and $Ghost) { $headers.Add('ReceiverGhostName: ' + $Ghost) }
+if ($ghostId) { $headers.Add('ID: ' + $ghostId) }
 switch ($mode) {
     'Execute' { $headers.Add('Command: ' + $Execute) }
     'Event' {
@@ -76,38 +95,49 @@ foreach ($header in $headers) {
         exit 1
     }
 }
-$request = ($headers -join "`r`n") + "`r`n`r`n"
 
-$client = New-Object System.Net.Sockets.TcpClient
-$response = $null
-$timedOut = $false
-try {
-    try {
-        $client.Connect('127.0.0.1', $Port)
-    } catch {
-        Write-Host "sstp: could not connect to 127.0.0.1:$Port. Is SSP running?"
-        exit 3
-    }
-    $client.ReceiveTimeout = $TimeoutSeconds * 1000
-    $stream = $client.GetStream()
-    $bytes = $DevkitUtf8.GetBytes($request)
-    $stream.Write($bytes, 0, $bytes.Length)
-    $reader = New-Object System.IO.StreamReader($stream, $DevkitUtf8)
-    try { $response = $reader.ReadToEnd() } catch { $timedOut = $true }
-} finally {
-    $client.Close()
+$watchLog = $mode -ne 'Execute' -and -not $NoLog
+$marker = $null
+if ($watchLog) { $marker = New-DevkitSspLogMarker -Kind 'error' -Port $Port }
+
+$response = Invoke-DevkitSstp -Lines $headers.ToArray() -Port $Port -TimeoutSeconds $TimeoutSeconds
+if (-not $response.Connected) {
+    Write-Host "sstp: could not connect to 127.0.0.1:$Port. Is SSP running?"
+    exit 3
 }
 
-if ($timedOut) {
+$exitCode = 1
+if ($response.TimedOut) {
     Write-Host "sstp: no response within $TimeoutSeconds seconds (the script may still be playing)"
-    exit 0
+    $exitCode = 0
+} else {
+    Write-Host $response.Raw.TrimEnd()
+    if ($response.Status -ge 200 -and $response.Status -lt 300) {
+        $exitCode = 0
+    } elseif ($response.Status -eq 404 -and $Ghost) {
+        Write-Host "sstp: ghost '$Ghost' was not found. Is it running in SSP? Use -Ghost <sakura name> or -AnyGhost."
+    }
 }
-$response = $response.TrimEnd()
-Write-Host $response
-$status = 0
-if ($response -match '^SSTP/\d\.\d\s+(\d{3})') { $status = [int]$matches[1] }
-if ($status -ge 200 -and $status -lt 300) { exit 0 }
-if ($status -eq 404 -and $Ghost) {
-    Write-Host "sstp: ghost '$Ghost' was not found. Is it running in SSP? Use -Ghost <sakura name> or -AnyGhost."
+
+if ($watchLog -and -not $marker) {
+    Write-Host 'sstp: the SSP error log cannot be read (this SSP has no developer.log properties; update SSP to see it)'
+} elseif ($watchLog) {
+    if ($mode -eq 'Reload') {
+        # The reload runs after the response. Wait until SSP answers again, then give the ghost time to boot.
+        Start-Sleep -Milliseconds 1000
+        $deadline = (Get-Date).AddSeconds(30)
+        while ((Get-Date) -lt $deadline) {
+            $ready = Invoke-DevkitSstp -Lines @('EXECUTE SSTP/1.1', 'Charset: UTF-8', 'Sender: ghost-devkit', 'Command: GetName') -Port $Port -TimeoutSeconds 5
+            if ($ready.Status -eq 200) { break }
+            Start-Sleep -Milliseconds 500
+        }
+        Start-Sleep -Milliseconds 1500
+    } else {
+        Start-Sleep -Milliseconds 500
+    }
+    $max = 30
+    $log = Get-DevkitSspLog -Kind 'error' -Since $marker -Max $max -Port $Port
+    $hasError = Write-DevkitSspLogSummary 'sstp' $log $max
+    if ($exitCode -eq 0 -and $hasError) { $exitCode = 2 }
 }
-exit 1
+exit $exitCode

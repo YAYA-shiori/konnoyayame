@@ -23,7 +23,7 @@ https://github.com/YAYA-shiori/konnoyayame
 
 - `AGENTS.md` : エージェント向けの指示書（構成、ルール、YAYA とさくらスクリプトの要点、独立ゴーストにするときのチェックリスト）
 - `CLAUDE.md` / `.claude/` / `.mcp.json` : Claude Code 用の設定（編集後の自動チェック、スキル、仕様調査用サブエージェント、ドキュメント検索 MCP）
-- `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、yayalint、SSTP での実機確認、nar 作成、yaya.dll 更新のスクリプト
+- `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、yayalint、SSTP での実機確認と SSP のログ取得、nar 作成、yaya.dll 更新のスクリプト
 
 ## はじめかた
 
