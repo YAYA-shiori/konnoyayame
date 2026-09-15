@@ -20,7 +20,7 @@
 | `<ps> tools/sstp.ps1 -Execute GetStatus` | ゴーストの今の状態（`talking`、`choosing`、`online`、`opening(...)` などのカンマ区切り。当てはまるものが無ければ空）を表示する（SSP 2.8.94 以降） | 0 / 1 / 3 |
 | `<ps> tools/ssp-log.ps1` | 起動中の SSP のログを表示する。読み取りのみ。既定はこのゴーストのエラーログで、`-Kind script` で再生されたスクリプト（ほかに `network` / `update`）、`-All` で発信元を問わず全部、`-Json` で機械向けの出力 | 0 / 1 SSP が developer.log に未対応 / 2 Error か Critical がある / 3 SSP に接続できない |
 | `<ps> tools/build-nar.ps1` | `build/<directory>.nar` を作る（`-ListOnly` で中身の一覧だけ表示） | 0 / 1 |
-| `<ps> tools/update-yaya.ps1` | yaya.dll を最新リリースに更新する。辞書チェックに失敗したら元に戻す（`-DryRun` で確認のみ） | 0 / 1 |
+| `<ps> tools/update-yaya.ps1` | yaya.dll を最新リリースに、システム辞書（yaya-dic）を最新のコミットに更新する。システム辞書は、git のチェックアウト（submodule など）なら git で切り替え、普通のファイルなら zip から置き換える（`config.dic` と `_loading_order.txt` は、手元と違えば `<ファイル>.yaya-dic-new` を横に置く）。それぞれの後で辞書チェックを行い、失敗したら元に戻す。`-DryRun` で確認のみ、`-Tag` で yaya.dll の版を指定、`-SkipDll` / `-SkipSystemDic` で片方だけ、`-SystemDicDir dic/system` で新しいフォルダに yaya-dic を置く | 0 / 1 失敗 / 2 システム辞書に手作業が要る（古い構成、手元の変更、`.yaya-dic-new` のマージ待ち） |
 | `<ps> tools/update-devkit.ps1` | 開発キットだけを最新版に更新する（`-DryRun` で確認のみ、`-Ref` で版を指定）。別の YAYA ゴーストにキットを入れるときは `-Target <そのゴーストのフォルダ>` | 0 / 1 失敗 / 2 マージ待ちの `.devkit-new` がある |
 
 SSP の場所は次の順に探す: `-SspPath` 引数 → 環境変数 `SSP_PATH` → `tools/local.json` の `sspPath`（`tools/local.example.json` を複製して作る）→ SSP にインストールされたフォルダなら `../../ssp.exe` → `.nar` のファイル関連付け。

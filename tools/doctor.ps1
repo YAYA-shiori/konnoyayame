@@ -55,9 +55,23 @@ Add-DoctorItem -Id 'ghost' -Name 'ghost files' -Level 'required' -Ok $ghostOk `
 
 $systemDir = Get-DevkitSystemDicDir
 $systemOk = [bool]$systemDir
+$systemDetail = 'no .dic files in ' + (($DevkitSystemDicDirs | ForEach-Object { "ghost/master/$_" }) -join ' or ')
+if ($systemDir) {
+    $systemDetail = "ghost/master/$systemDir"
+    if (-not (Test-DevkitYayaDicLayout (Join-Path (Join-Path $DevkitRoot 'ghost/master') $systemDir))) {
+        $systemDetail += ' (an older layout than yaya-dic; tools/update-yaya.ps1 cannot update it until it is reorganized as in docs/agents/workflows/update-yaya.md)'
+    }
+} else {
+    # Older ghosts may keep the system dictionary elsewhere, such as directly in ghost/master. The ghost still works.
+    $oldSystemDic = @(Find-DevkitOldSystemDicFiles | Where-Object { $_ -match '(^|/)yaya_shiori3\.dic$' })
+    if ($oldSystemDic.Count -gt 0) {
+        $systemOk = $true
+        $systemDetail = "an older layout: $($oldSystemDic -join ', ') (tools/update-yaya.ps1 cannot update it until it is reorganized as in docs/agents/workflows/update-yaya.md)"
+    }
+}
 Add-DoctorItem -Id 'system-dic' -Name 'system dictionary' -Level 'required' -Ok $systemOk `
     -Purpose 'YAYA system dictionary (yaya-dic)' `
-    -Detail $(if ($systemOk) { "ghost/master/$systemDir" } else { 'no .dic files in ' + (($DevkitSystemDicDirs | ForEach-Object { "ghost/master/$_" }) -join ' or ') }) `
+    -Detail $systemDetail `
     -Fix $(if ($isGitWorkingCopy) { "Run: $ps tools/setup.ps1 (it runs git submodule update --init)" } else { 'The folder is incomplete. Download the nar again from the Releases page.' })
 
 # --- ghost profile and kit updates -----------------------------------------------------

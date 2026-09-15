@@ -163,13 +163,40 @@ function Get-SspPathFromNarAssociation {
 
 # Returns the system dictionary folder (for example 'dic/system', relative to ghost/master) that contains
 # .dic files, or $null when none of $DevkitSystemDicDirs does (such as an empty git submodule).
-function Get-DevkitSystemDicDir {
+function Get-DevkitSystemDicDir([string]$GhostDir) {
+    if (-not $GhostDir) { $GhostDir = Join-Path $DevkitRoot 'ghost/master' }
     foreach ($dir in $DevkitSystemDicDirs) {
-        $full = Join-Path (Join-Path $DevkitRoot 'ghost/master') $dir
+        $full = Join-Path $GhostDir $dir
         if (-not (Test-Path -LiteralPath $full -PathType Container)) { continue }
         if (Get-ChildItem -LiteralPath $full -Recurse -File -Filter '*.dic' -ErrorAction SilentlyContinue | Select-Object -First 1) { return $dir }
     }
     return $null
+}
+
+# Tells whether a folder holds the current layout of yaya-dic (yaya_base/shiori3.dic, since June 2022).
+function Test-DevkitYayaDicLayout([string]$Folder) {
+    return (Test-Path -LiteralPath (Join-Path $Folder 'yaya_base/shiori3.dic') -PathType Leaf)
+}
+
+# File names of the system dictionary in older layouts: yaya-dic before June 2022 kept yaya_*.dic in one folder
+# (yaya_config.dic only for a day), and older templates kept the settings dictionary as ghost/master/yaya_config.txt.
+$DevkitOldSystemDicNames = @('yaya_shiori3.dic', 'yaya_optional.dic', 'yaya_compatible.dic', 'yaya_config.dic', 'yaya_config.txt')
+
+# Returns the files under ghost/master (relative, '/'-separated) that have an old system dictionary file name.
+# The ghost may keep them in ghost/master itself, in system/, or anywhere else. Wrap the call in @().
+function Find-DevkitOldSystemDicFiles([string]$GhostDir) {
+    if (-not $GhostDir) { $GhostDir = Join-Path $DevkitRoot 'ghost/master' }
+    $root = [IO.Path]::GetFullPath($GhostDir).TrimEnd('\', '/')
+    $result = New-Object System.Collections.Generic.List[string]
+    foreach ($item in @(Get-ChildItem -LiteralPath $root -Recurse -File -Force -ErrorAction SilentlyContinue)) {
+        if ($DevkitOldSystemDicNames -notcontains $item.Name.ToLowerInvariant()) { continue }
+        $relative = $item.FullName.Substring($root.Length + 1).Replace('\', '/')
+        if ($relative -match '(^|/)\.git/') { continue }
+        $result.Add($relative)
+    }
+    [string[]]$paths = $result.ToArray()
+    [Array]::Sort($paths, [StringComparer]::OrdinalIgnoreCase)
+    return $paths
 }
 
 # Tells whether a '/'-separated path is inside a system dictionary folder.

@@ -9,8 +9,9 @@
 /tools/local.json
 /.claude/settings.local.json
 
-# new versions left by tools/update-devkit.ps1, waiting to be merged
+# new versions left by tools/update-devkit.ps1 and tools/update-yaya.ps1, waiting to be merged
 *.devkit-new
+*.yaya-dic-new
 
 # repository files of the yaya-dic submodule (ghost/master/dic/system, or ghost/master/system in some ghosts)
 /ghost/master/dic/system/.github/
