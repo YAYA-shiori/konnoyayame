@@ -35,7 +35,7 @@ https://github.com/YAYA-shiori/konnoyayame
   ```
 
 - シェル（`shell/master/`）は SATO M 氏の作品で、CC BY-NC-ND 2.1 JP です。画像を改変したものは配布できません。
-- 自分のゴーストとして配布するときに変えるところ（名前、作者、インストール先、ネットワーク更新の URL など）は、`AGENTS.md` の「テンプレートから独立させるとき」と、`GHOST.md` の「テンプレートから独立させるときの追加項目」にチェックリストがあります。
+- 自分のゴーストとして配布するときに変えるところ（名前、作者、インストール先、ネットワーク更新の URL など）は、[docs/agents/standalone.md](docs/agents/standalone.md) と、`GHOST.md` の「テンプレートから独立させるときの追加項目」にチェックリストがあります。
 
 ## AI エージェントで開発する (Vibe Coding)
 
@@ -43,7 +43,7 @@ https://github.com/YAYA-shiori/konnoyayame
 リポジトリを clone したフォルダでも、nar を SSP にインストールしたフォルダ（`<SSP>/ghost/konnoyayame/`）でも使えます。
 
 - [DEVKIT-GUIDE.md](DEVKIT-GUIDE.md) : 開発キットの使い方（あらかじめ入れておくもの、mac・Linux で使う場合、はじめかた、キットの更新、配布物にキットを含めるかどうか、別の YAYA ゴーストへの導入）
-- [AGENTS.md](AGENTS.md) : エージェント向けの指示書（構成、ルール、YAYA とさくらスクリプトの要点、独立ゴーストにするときのチェックリスト）
+- [AGENTS.md](AGENTS.md) : エージェント向けの指示書（作業のルール、YAYA とさくらスクリプトの要点、依頼の言い回しと手順書の対応）。開発コマンド、構成、独立ゴーストにするときのチェックリスト、作業の手順書は `docs/agents/` にあります
 - [GHOST.md](GHOST.md) : このゴーストに固有の情報（キャラクター、サーフェス、ライセンス、辞書の構成）。自分のゴーストを作ったら、その内容に書き直します
 
 まずは [DEVKIT-GUIDE.md](DEVKIT-GUIDE.md) の「あらかじめ入れておくもの」を見て、このフォルダで AI エージェントを起動し、「セットアップして」と頼んでください。

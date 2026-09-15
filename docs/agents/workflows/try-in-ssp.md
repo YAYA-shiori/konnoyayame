@@ -1,16 +1,18 @@
----
-name: try-in-ssp
-description: 起動中の SSP に SSTP を送り、書いたトークやイベントの反応を実際のゴーストで再生して確かめる。SSP のエラーログから、実行時の辞書エラーなども拾う。トークを追加・修正した後に、表示や掛け合いのテンポを見たいときに使う。
-argument-hint: "[試したい関数名・イベント名・さくらスクリプト]"
----
-
 # SSP で実際に動かして確かめる
+
+## 使うとき
+
+作者が「SSP で試して」「動かして見せて」「このトークを再生して」「実機で確かめて」「掛け合いのテンポを見たい」「つつき反応を試して」「ランダムトークを出して」と言ったとき。トークを追加・修正した後に、表示や間合いを見てもらいたいときも使う。
+
+何を試すか（関数名、イベント名、さくらスクリプトそのもの）が会話から分からなければ、作者に聞く。
 
 前提: SSP で、このフォルダのゴーストが動いていること。
 
 関数が返すスクリプトや実行時のエラーだけを見るなら、SSP は要らない。`powershell -NoProfile -ExecutionPolicy Bypass -File tools/shiori.ps1 -Eval '関数名'`（イベントなら `-Event OnMouseDoubleClick -Reference '0,0,0,0,Head'`）で、tamac.exe がその場で辞書を読み込んで答える。SSP では、表示、表情、掛け合いのテンポ、SSP が解釈できないタグを確かめる。
 
-0. 動いていなければ `powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-ssp.ps1` で起動する。`ssp.exe --ghost <このフォルダ>` を使うので、SSP にインストールしなくても作業中のフォルダがそのまま動く。ユーザーのデスクトップにゴーストが現れるので、一言断ってから起動する。起動中に SSP のエラーログに増えた警告・エラーも表示される。
+## 手順
+
+0. 動いていなければ `powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-ssp.ps1` で起動する。`ssp.exe --ghost <このフォルダ>` を使うので、SSP にインストールしなくても作業中のフォルダがそのまま動く。作者のデスクトップにゴーストが現れるので、一言断ってから起動する。起動中に SSP のエラーログに増えた警告・エラーも表示される。
 1. 辞書を変更したなら、先に `tools/check-dic.ps1` を通す。
 2. 変更を読み込ませる:
    `powershell -NoProfile -ExecutionPolicy Bypass -File tools/sstp.ps1 -Reload ghost`
@@ -33,8 +35,11 @@ argument-hint: "[試したい関数名・イベント名・さくらスクリプ
    - 再生されたスクリプト: `tools/ssp-log.ps1 -Kind script -Max 5`。ゴーストが自分から話したトークも、どのイベントで出たかと一緒に確かめられる
    - ログは新しいものから 50 件ほどしか残らず、直す前の古いエラーも残っている。時刻を見て、今回のものか確かめる
 6. 終了コードの意味: 2 は SSP のエラーログに Error か Critical が増えた（`sstp.ps1`、`run-ssp.ps1`）、またはそれが表示された（`ssp-log.ps1`）。3 は SSP に接続できない（起動していない）。404 が返ったらゴーストが見つからない（`-Ghost <\0 の名前>` か `-AnyGhost` を指定）。
-7. 吹き出しからのはみ出し、改行位置、表情はユーザーの画面にしか出ない。何を再生したかを伝えて、見た目を確認してもらう。
+7. 吹き出しからのはみ出し、改行位置、表情は作者の画面にしか出ない。何を再生したかを伝えて、見た目を確認してもらう。
 
 補足: `tools/sstp.ps1` は、`EXECUTE GetFMO` で調べたゴーストの識別 ID を `ID` ヘッダに付けて送る（Owned SSTP）。付けないと SSP は外部のプログラムからの要求として扱い、`\![reload,ghost]` などを黙って無視する（応答は 200 のまま）。`-AnyGhost` のときは ID を付けない。
 
-$ARGUMENTS
+## 関連
+
+- トークの書き方: `AGENTS.md` の「トーク（さくらスクリプト）の書き方」と、`GHOST.md` の「トークの書き方」
+- 辞書・シェルのチェック: `docs/agents/workflows/check.md`

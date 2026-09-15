@@ -67,7 +67,7 @@
 
 ## テンプレートから独立させるときの追加項目
 
-`AGENTS.md` の「テンプレートから独立させるとき」に加えて、このテンプレートでは次も変える。
+`docs/agents/standalone.md` に加えて、このテンプレートでは次も変える。
 
 - [ ] ネットワーク更新の URL は 2 か所ある: `ghost/master/dic/normal/yaya_homeurl.dic` と `ghost/master/dic/emerg/yaya_homeurl.dic` の `On_homeurl`
 - [ ] シェル: `shell/master/` は SATO M 氏の CC BY-NC-ND シェルなので、改変した画像は配布できない

@@ -20,5 +20,5 @@ if ($missing.Count -eq 0) { exit 0 }
 $names = ($missing | ForEach-Object { "$($_.name) ($($_.level))" }) -join ', '
 Write-Output "Ghost development kit: some items need attention: $names."
 foreach ($item in $missing) { Write-Output "- $($item.name): $($item.fix)" }
-Write-Output 'Before other work, offer to take care of them (setup and GHOST.md: getting-started skill; .devkit-new files: update-devkit skill; details: tools/doctor.ps1). Ask the user before installing any application.'
+Write-Output 'Before other work, offer to take care of them (setup and GHOST.md: docs/agents/workflows/setup.md; .devkit-new files: docs/agents/workflows/update-devkit.md; details: tools/doctor.ps1). Ask the user before installing any application.'
 exit 0

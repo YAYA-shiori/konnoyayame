@@ -10,9 +10,10 @@ AI コーディングエージェントでゴーストを開発するための�
 git で管理しているフォルダでも、nar を SSP にインストールしたフォルダ（`<SSP>/ghost/<フォルダ名>/`）でも使えます。
 
 - `DEVKIT-GUIDE.md` : このファイル。作者向けの使い方
-- `AGENTS.md` : エージェント向けの指示書（構成、ルール、YAYA とさくらスクリプトの要点、独立ゴーストにするときのチェックリスト）。人が読んでもわかるように書いてあります
+- `AGENTS.md` : エージェント向けの指示書（作業のルール、YAYA とさくらスクリプトの要点、依頼の言い回しと手順書の対応、仕様の調べ方）。人が読んでもわかるように書いてあります
+- `docs/agents/` : `AGENTS.md` から分けた資料（開発コマンドの一覧、ディレクトリ構成、キットのファイルの持ち主、独立ゴーストにするときのチェックリスト）と、`workflows/` の作業手順書。エージェントは必要になったときに読みます
 - `GHOST.md` : このゴーストに固有の情報（キャラクター、サーフェス、ライセンス、辞書の構成）。エージェントは作業の前に必ず読みます
-- `CLAUDE.md` / `.claude/` / `.mcp.json` : Claude Code 用の設定（編集後の自動チェック、スキル、仕様調査用サブエージェント、ドキュメント検索 MCP）
+- `CLAUDE.md` / `.claude/` / `.mcp.json` : Claude Code 用の設定（編集後の自動チェック、起動時の診断、仕様調査用サブエージェント、ドキュメント検索 MCP）
 - `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、yayalint、SSP を使わない SHIORI リクエストの送信と YAYA のコードの評価（tamac）、SSTP での実機確認と SSP のログ取得、nar 作成、yaya.dll と開発キットの更新のスクリプト
 
 AI エージェントを使わずに、`tools/` のスクリプトだけを使うこともできます。
@@ -25,7 +26,7 @@ AI エージェントを使わずに、`tools/` のスクリプトだけを使�
 
 | もの | 必要か | 用途 | 入手先 |
 |---|---|---|---|
-| AI コーディングエージェント | AI に頼むなら必須 | Claude Code、Codex、GitHub Copilot など。キットの指示書とスキルに沿って、開発を手伝います | 各ツールの案内に従ってください |
+| AI コーディングエージェント | AI に頼むなら必須 | Claude Code、Codex、GitHub Copilot など。キットの指示書と手順書に沿って、開発を手伝います | 各ツールの案内に従ってください |
 | PowerShell | 必須 | `tools/` のスクリプト | Windows には最初から入っています（Windows PowerShell 5.1）。mac・Linux は下の「mac・Linux で使う場合」 |
 | SSP 2.8.94 以降 | 推奨 | シェルのチェック、実際のゴーストでの確認。古い版でも動きますが、シェルの問題の位置（ファイル名と行番号）、再生したスクリプトの検査、トークが終わるのを待ってからのログの確認は、2.8.94 以降でだけ使えます | https://ssp.shillest.net/ |
 | Git | 推奨 | 変更履歴、GitHub での自動チェック、システム辞書（submodule）の取得 | https://git-scm.com/ |
@@ -49,7 +50,7 @@ PowerShell 7 を入れてください。mac は、Microsoft の案内（https://
 
 ## はじめかた
 
-このフォルダで AI エージェントを起動し（Claude Code なら `claude`）、「セットアップして」と頼んでください。足りないアプリ（Git、Node.js、SSP）の確認と案内、チェック用ツールの取得、動作確認までを代行します。`GHOST.md` がまだ書かれていなければ、辞書とシェルを読んで下書きも作ります（Claude Code では `/getting-started` スキル）。アプリのインストールは、確認を取ってから行います。
+このフォルダで AI エージェントを起動し（Claude Code なら `claude`）、「セットアップして」と頼んでください。足りないアプリ（Git、Node.js、SSP）の確認と案内、チェック用ツールの取得、動作確認までを代行します。`GHOST.md` がまだ書かれていなければ、辞書とシェルを読んで下書きも作ります。アプリのインストールは、確認を取ってから行います。
 
 自分で行う場合は、次を実行してください（Windows）。
 
@@ -64,7 +65,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1
 - `tools/check.ps1` は、辞書のチェック、シェルのチェック、yayalint を順に実行します。
 - SSP の場所は `.nar` の関連付けなどから自動で探します。見つからない場合は環境変数 `SSP_PATH` か `tools/local.json`（`tools/local.example.json` を複製）で指定してください。
 - ドキュメント検索 MCP（[ukagaka-doc-mcp](https://github.com/finelagusaz/ukagaka-doc-mcp)）には Node.js 20 以上が必要です。
-- ほかのスクリプト（SSP での起動、SSTP でのトークの再生、nar の作成など）は、`AGENTS.md` の「開発コマンド」に一覧があります。
+- ほかのスクリプト（SSP での起動、SSTP でのトークの再生、nar の作成など）は、`docs/agents/commands.md` に一覧があります。
 
 ## GHOST.md を仕上げる
 
@@ -76,7 +77,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1
 
 開発キットは、ゴーストの辞書やシェルとは別に更新できます。
 
-AI エージェントに「開発キットを更新して」と頼んでください（Claude Code では `/update-devkit` スキル）。変わるファイルの一覧を見せてから、了承を得て更新します。
+AI エージェントに「開発キットを更新して」と頼んでください。変わるファイルの一覧を見せてから、了承を得て更新します。
 
 自分で行う場合は、次を実行してください。
 
@@ -85,7 +86,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1 -Dry
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
 ```
 
-- 辞書、シェル、`GHOST.md`、`README.md` などは変わりません。どのファイルがキットのものかは `AGENTS.md` の「開発キットとファイルの持ち主」に書いてあります。
+- 辞書、シェル、`GHOST.md`、`README.md` などは変わりません。どのファイルがキットのものかは `docs/agents/devkit-files.md` に書いてあります。
 - 自分で手を入れたキットのファイルは上書きされません。新しい版でも変わっていた場合は、新しい版が `<ファイル名>.devkit-new` として横に置かれるので、マージしてから消してください。
 - `tools/devkit.lock.json` は、どの版のキットを入れたかの記録です。消さずに残し、git で管理しているならコミットしてください。
 - キットは、`tools/devkit.json` の `source` に書かれた GitHub のリポジトリから取得します。
@@ -101,6 +102,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
 /CLAUDE.md
 /DEVKIT-GUIDE.md
 /GHOST.md
+/docs/agents/
 /.mcp.json
 /.claude/
 /.github/
@@ -122,7 +124,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
 
 | 区分 | ファイル | 入れるとき・更新するとき |
 |---|---|---|
-| キット | `AGENTS.md`<br>`CLAUDE.md`<br>`DEVKIT-GUIDE.md`<br>`.mcp.json`<br>`.claude/`<br>`.github/workflows/auto_check.yml`<br>`tools/` | 入れたときに作られ、キットを更新すると新しい版に置き換わります |
+| キット | `AGENTS.md`<br>`CLAUDE.md`<br>`DEVKIT-GUIDE.md`<br>`docs/agents/`<br>`.mcp.json`<br>`.claude/`<br>`.github/workflows/auto_check.yml`<br>`tools/` | 入れたときに作られ、キットを更新すると新しい版に置き換わります |
 | 初回だけ作るもの | `GHOST.md`<br>`.narignore`<br>`.updateignore`<br>`.gitattributes`<br>`.editorconfig`<br>`ghost/master/yayalint_config.lua` | 無いときだけ作られます。あとはゴーストのものです |
 
 それ以外のファイル（辞書、シェル、`descript.txt`、readme など）は変わりません。同じ名前のファイル（たとえば自分で書いた `AGENTS.md`）がすでにあるときは上書きせず、キットの版を `<ファイル名>.devkit-new` として横に置きます。
@@ -139,8 +141,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
    ```
 
    エージェントは導入に使うスクリプトを取得し、作られるファイルの一覧を見せてから、了承を得て導入します。同じ名前のファイルがあったときは、マージを手伝います。
-3. 導入が終わったら、AI エージェントを起動し直します（キットの指示書、スキル、自動チェックは、起動したときに読み込まれます）。
-4. 「セットアップして」と頼みます。チェック用ツールの取得、SSP の場所の設定、動作確認に加えて、辞書とシェルを読んで `GHOST.md` の下書きを作ります（Claude Code では `/getting-started` スキル）。
+3. 導入が終わったら、AI エージェントを起動し直します（キットの指示書と、Claude Code の自動チェック・MCP は、起動したときに読み込まれます）。
+4. 「セットアップして」と頼みます。チェック用ツールの取得、SSP の場所の設定、動作確認に加えて、辞書とシェルを読んで `GHOST.md` の下書きを作ります。
 5. `GHOST.md` の下書きを読んで、キャラクターの人物像、使えるサーフェス、シェルのライセンス、トークの書き方の決まりなどを直してください（上の「GHOST.md を仕上げる」）。
 
 #### 導入を頼まれた AI エージェントへ
@@ -191,7 +193,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-devkit.ps1
 
 ### すでにあるファイルとの関係
 
-- **`AGENTS.md`、`CLAUDE.md`、`.claude/settings.json` などを自分で置いていた場合**: 上書きされず、キットの版が `<ファイル名>.devkit-new` として置かれます。見比べて、必要な部分を元のファイルにまとめてから、`.devkit-new` を消してください。AI エージェントにマージを頼むこともできます（Claude Code では `/update-devkit` スキル）。自分のゴーストだけの決まりは `GHOST.md` に移しておくと、次にキットを更新したときに衝突しません。
+- **`AGENTS.md`、`CLAUDE.md`、`.claude/settings.json` などを自分で置いていた場合**: 上書きされず、キットの版が `<ファイル名>.devkit-new` として置かれます。見比べて、必要な部分を元のファイルにまとめてから、`.devkit-new` を消してください。AI エージェントにマージを頼むこともできます（「開発キットを更新して」と頼んでください）。自分のゴーストだけの決まりは `GHOST.md` に移しておくと、次にキットを更新したときに衝突しません。
 - **`.narignore` をすでに使っていた場合**: 上書きされません。ダウンロードしたツールや各自の設定を nar から除外するために、`.narignore` に次の 1 行を足してください。足さないと、`tools/bin/` や `tools/local.json` が nar に入ってしまいます。
 
   ```

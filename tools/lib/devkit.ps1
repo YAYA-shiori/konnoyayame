@@ -125,7 +125,7 @@ function Get-DevkitConflictFiles([string]$Root) {
     $pattern = '*' + $DevkitConflictSuffix
     $items = New-Object System.Collections.Generic.List[object]
     foreach ($item in @(Get-ChildItem -LiteralPath $rootPath -File -Force -ErrorAction SilentlyContinue)) { $items.Add($item) }
-    foreach ($folder in @('.claude', '.github', 'tools')) {
+    foreach ($folder in @('.claude', '.github', 'docs', 'tools')) {
         $path = Join-Path $rootPath $folder
         if (Test-Path -LiteralPath $path -PathType Container) {
             foreach ($item in @(Get-ChildItem -LiteralPath $path -Recurse -File -Force -ErrorAction SilentlyContinue)) { $items.Add($item) }

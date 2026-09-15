@@ -8,7 +8,7 @@
     ".claude/.gitignore",
     ".claude/settings.json",
     ".claude/agents/**",
-    ".claude/skills/**",
+    "docs/agents/**",
     ".github/workflows/auto_check.yml",
     "tools/**"
   ],

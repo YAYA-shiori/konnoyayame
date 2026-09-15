@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Updates the development kit (AGENTS.md, CLAUDE.md, .claude/, tools/ ...) without touching the ghost itself.
+    Updates the development kit (AGENTS.md, CLAUDE.md, docs/agents/, .claude/, tools/ ...) without touching the ghost itself.
 .DESCRIPTION
     The kit files are listed in tools/devkit.json. tools/devkit.lock.json records the upstream hash of
     each kit file at the last update, so that changes made by the author are kept:

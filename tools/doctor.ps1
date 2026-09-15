@@ -71,13 +71,13 @@ if (-not (Test-Path -LiteralPath $ghostProfile -PathType Leaf)) {
 Add-DoctorItem -Id 'ghost-profile' -Name 'GHOST.md' -Level 'recommended' -Ok ($profileState -eq 'ok') `
     -Purpose 'Ghost-specific notes that agents read before working: characters, surfaces, license, dictionary files' `
     -Detail $(if ($profileState -eq 'ok') { 'filled in' } elseif ($profileState -eq 'template') { 'still the blank template' } else { 'missing' }) `
-    -Fix $(if ($profileState -eq 'missing') { 'Copy tools/devkit/seed/GHOST.md to GHOST.md and fill it in from the dictionaries and the shell (getting-started skill).' } else { 'Fill it in from the dictionaries and the shell, confirm it with the author, then remove the devkit:ghost-template marker lines (getting-started skill).' })
+    -Fix $(if ($profileState -eq 'missing') { 'Copy tools/devkit/seed/GHOST.md to GHOST.md and fill it in from the dictionaries and the shell (docs/agents/workflows/setup.md).' } else { 'Fill it in from the dictionaries and the shell, confirm it with the author, then remove the devkit:ghost-template marker lines (docs/agents/workflows/setup.md).' })
 
 $conflicts = @(Get-DevkitConflictFiles $DevkitRoot)
 Add-DoctorItem -Id 'devkit-conflicts' -Name 'development kit merges' -Level 'recommended' -Ok ($conflicts.Count -eq 0) `
     -Purpose 'Kit files changed both locally and upstream by tools/update-devkit.ps1' `
     -Detail $(if ($conflicts.Count -eq 0) { 'nothing to merge' } else { 'waiting to be merged: ' + ($conflicts -join ', ') }) `
-    -Fix 'Merge each <file>.devkit-new into <file>, then delete the .devkit-new file (update-devkit skill).'
+    -Fix $('Merge each <file>.devkit-new into <file>, then delete the .devkit-new file (docs/agents/workflows/update-devkit.md).' + $(if ($conflicts -contains 'AGENTS.md.devkit-new') { ' Start with AGENTS.md.devkit-new.' } else { '' }))
 
 # --- downloaded tools ------------------------------------------------------------------
 $manifest = Get-DevkitToolManifest

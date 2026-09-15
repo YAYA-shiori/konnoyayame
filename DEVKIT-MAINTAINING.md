@@ -1,8 +1,8 @@
 # DEVKIT-MAINTAINING.md
 
-AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`、`.claude/`、`tools/` など）を作る・直すときの注意です。
+AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`、`docs/agents/`、`.claude/`、`tools/` など）を作る・直すときの注意です。
 
-このファイルは、キットの配布元である konnoyayame のリポジトリにだけあります。nar、ネットワーク更新、キットの配布物のどれにも入りません（ルートの `.narignore` の `/DEVKIT-MAINTAINING.md`。`tools/devkit.json` の `files` にも載せない）。ゴーストを作るときの指示は `AGENTS.md`、作者向けのキットの使い方と、別のゴーストへのキットの導入手順は `DEVKIT-GUIDE.md`、konnoyayame に固有の情報は `GHOST.md`、konnoyayame の紹介は `README.md` にあります。
+このファイルは、キットの配布元である konnoyayame のリポジトリにだけあります。nar、ネットワーク更新、キットの配布物のどれにも入りません（ルートの `.narignore` の `/DEVKIT-MAINTAINING.md`。`tools/devkit.json` の `files` にも載せない）。ゴーストを作るときの指示は `AGENTS.md` と `docs/agents/`、作者向けのキットの使い方と、別のゴーストへのキットの導入手順は `DEVKIT-GUIDE.md`、konnoyayame に固有の情報は `GHOST.md`、konnoyayame の紹介は `README.md` にあります。
 
 ## キットの範囲
 
@@ -22,9 +22,15 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
   - git の除外: `tools/.gitignore` と `.claude/.gitignore`
   - `build/`: `tools/build-nar.ps1` が作る `build/.gitignore`
 - `auto_release.yml` は既存のリリースとタグをすべて消すので、キットにも seed にも入れない。
-- ルートに新しいファイルを足すときは、`files` か `seed` に載せる。載せないと配布されない。
+- ルートに新しいファイルを足すときは、`files` か `seed` に載せる。載せないと配布されない。glob はパス全体にフル一致するので、フォルダは `docs/agents/**` の形で書く。
+- ルートに新しいフォルダを足すときは、`tools/lib/devkit.ps1` の `Get-DevkitConflictFiles` が走査するフォルダにも足す。足さないと、そのフォルダの `.devkit-new` が `update-devkit.ps1` の終了コード 2 にも doctor の `devkit-conflicts` にも出ず、作者が気づけない。
 - 作者向けの説明は、キットに入る `DEVKIT-GUIDE.md`（キットの使い方と、別のゴーストへの導入手順）と、konnoyayame の `README.md`（ゴーストの紹介、手で改造するときの案内）に分けている。`DEVKIT-GUIDE.md` はどのゴーストにも入るので、上と同じく特定のゴーストに固有のことを書かない。`README.md` には、キットについては `DEVKIT-GUIDE.md` への案内だけを書く。導入手順を `DEVKIT-GUIDE.md` に置くのは、キットの説明を 1 か所にまとめ、キットを入れたゴーストからも別のゴーストに導入できるようにするため。
 - キットの使い方が変わったら、`AGENTS.md` と `DEVKIT-GUIDE.md` の両方を直す。
+- エージェント向けの文書は `AGENTS.md` と `docs/agents/` に分けている。
+  - `AGENTS.md` には、どの作業でも効くもの（作業のルール、YAYA 辞書とトークの書き方の要点、仕様の調べ方、ガイドライン）と、「こう頼まれたら」「資料」の 2 つの索引を置く。辞書とトークの要点を残すのは、`AGENTS.md` しか読まないエージェントが書いても、よくある失敗を避けられるようにするため。
+  - 調べるときにだけ要る資料（コマンド表、ディレクトリ構成など）と、特定の作業の手順書は `docs/agents/` に置き、索引に行を足す。資料の索引には、`AGENTS.md` にあったときの節名を書く（`GHOST.md` や派生ゴーストの `README.md` が「`AGENTS.md` の『テンプレートから独立させるとき』」のように節名で参照しているため）。
+- `docs/agents/workflows/` に手順書を足したら、`AGENTS.md` の「こう頼まれたら」の表にも行を足す。作者の言い回しは、その文書の「使うとき」とそろえる。スラッシュコマンドは使わない前提で書く（想定している作者は、コーディングエージェントに不慣れで、自然な言葉で頼む）。
+- 手順書のパスは `tools/doctor.ps1` の `fix` と `tools/hooks/session-start.ps1` の出力にも書かれている。パスを変えるときは両方直す。
 
 ## lock ファイル
 
@@ -60,7 +66,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 - 冒頭で `. (Join-Path $PSScriptRoot 'lib/common.ps1')` を読み、`Initialize-DevkitConsole` を呼ぶ。パスは `$DevkitRoot` から組み立て、`ghost/master` と `shell/master` を前提にしてよい。
 - システム辞書は `ghost/master/dic/system` と決め打ちしない。`ghost/master/system` に置くゴーストもあるので、`tools/lib/common.ps1` の `$DevkitSystemDicDirs`（探す順）、`Get-DevkitSystemDicDir`、`Test-DevkitSystemDicPath` を使う。
 - 終了コードをそろえる: 0 OK / 1 失敗・エラー / 2 注意が要る（SSP のエラーログの Error、`.devkit-new` の残りなど）/ 3 ツールや SSP が無くて確かめられない。
-- 冒頭のコメントヘルプ（`.SYNOPSIS`、`.DESCRIPTION`、終了コード、`.EXAMPLE`）を書き、`AGENTS.md` のコマンド表も直す。
+- 冒頭のコメントヘルプ（`.SYNOPSIS`、`.DESCRIPTION`、終了コード、`.EXAMPLE`）を書き、`docs/agents/commands.md` のコマンド表も直す。
 - ダウンロードして使うツールは `tools/tools.json` に書く。書き方は 2 通りある。
   - 版を固定する（yayalint）: `version`、`url`、`sha256` を書く。上げるときは 3 つとも書き換え（SHA256 は `Get-FileHash -Algorithm SHA256`）、`tools/setup.ps1 -Tool <名前>` で取り直せることを確かめる（取得済みの exe の SHA256 が違えば取り直す）。
   - 最新リリースを使う（tamac。YAYA のプロジェクトが出しているツールで、新しい機能をキットの更新を待たずに使えるようにするため）: `version` を `latest` にし、`repository`、`asset`（リリースのファイル名）、`minimumVersion` を書く。1 つの exe のツールだけに使う（zip では、取得済みのものが最新か見分けられない）。
@@ -85,7 +91,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
   - `?? コード` には、yaya-dic の `shiori3.dic`（`AyaTest.Eval`）が `!! 結果` で答える。行ごとに `EVAL` して結果をつなげ、配列は `,` で JOIN する。ローカル変数は次の行に残らない。`EVAL` に失敗すると結果はコードそのものになり、E0071 などが `shiori3.dic` の行で記録される。
   - システム辞書は、リクエストの `Charset` で `charset.output` を切り替える（`SETSETTING`）。`-Event` は `yaya.txt` の `charset.output` を送り、UTF-8 を決め打ちしない。`Sender` は `basewarename` になり、テンプレートは `SSP` かどうかで分岐するので、`SSP` を送る。
   - YAYA は解放のときに `yaya_variable.cfg` を保存するので、`Invoke-DevkitTamac` が前後で退避して戻す（`check-dic.ps1` も同じ）。
-  - `.claude/settings.json` の許可リストに入れている。`-Eval` は任意の YAYA のコード（`EXECUTE`、`FWRITE` など）を実行できるが、辞書の関数を試すたびに確認が出ると使われなくなるため、使いやすさを優先した。ファイルの書き込みや外部プログラムの実行をする関数は中身を読んでから呼ぶことを、`AGENTS.md` と `ghost-check` スキルに書いている。
+  - `.claude/settings.json` の許可リストに入れている。`-Eval` は任意の YAYA のコード（`EXECUTE`、`FWRITE` など）を実行できるが、辞書の関数を試すたびに確認が出ると使われなくなるため、使いやすさを優先した。ファイルの書き込みや外部プログラムの実行をする関数は中身を読んでから呼ぶことを、`AGENTS.md` と `docs/agents/workflows/check.md` に書いている。
 - `.narignore` / `.updateignore`（SSP の `sp_gitignorefilter.cpp` の挙動）: `tools/lib/ignore.ps1` をこれにそろえている。
   - ルートに置いたものだけを読む。
   - 行頭が `include:相対パス` の行はディレクティブとして扱う。
@@ -107,11 +113,15 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
    - 作者だけが変えたファイルは残る
    - 両方が変えたファイルは `.devkit-new` が書かれ、終了コードが 2 になる
    - マージして `.devkit-new` を消して再実行すると 0 になる
-   - キットから外したファイルは消える
+   - キットから外したファイルは消える。作者が手を入れていたものは `keep` で残る
    - `GHOST.md` とルートの `.gitignore` は変わらない
    - `DEVKIT-MAINTAINING.md` はコピーされない
+   - `docs/agents/` の外にある作者自身の `docs/` は巻き込まれない
+   - 手元と新しい版の両方で `docs/agents/` のファイルを変えておくと、`.devkit-new` が書かれ、終了コードが 2 になり、`doctor.ps1` の `devkit-conflicts` にもそのパスが出る（`Get-DevkitConflictFiles` の走査フォルダの確認）
+   - `AGENTS.md` を手元で変えてあると `CONFLICT` になる。本体が古いままでも、`.devkit-new` が残っていることが doctor と起動時の hook から伝わる
 3. 導入のシナリオ: `ghost/` と `shell/` だけのフォルダに `-Target` で導入する。
    - seed がそろう
    - `doctor.ps1` が `GHOST.md` の未記入を知らせる
    - `check.ps1` が動く
-4. `tools/build-nar.ps1 -ListOnly` で、`tools/bin/`、`build/`、`*.devkit-new`、`DEVKIT-MAINTAINING.md` が入っていない。
+4. `tools/build-nar.ps1 -ListOnly` で、`docs/agents/` のファイルが入っていて（git の作業コピーでは `git add` 済みであること）、`tools/bin/`、`build/`、`*.devkit-new`、`DEVKIT-MAINTAINING.md` が入っていない。
+5. `AGENTS.md` の索引（「こう頼まれたら」「資料」）と、`docs/agents/` の中から指しているパスが、すべて実在する。
