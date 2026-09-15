@@ -17,6 +17,9 @@ jobs:
           submodules: recursive
       - name: install tamac
         shell: pwsh
+        env:
+          # tamac.exe comes from its latest release; the token avoids the rate limit of anonymous GitHub API requests
+          GITHUB_TOKEN: ${{ github.token }}
         run: ./tools/setup.ps1 -Tool tamac
       - name: dictionary check
         shell: pwsh

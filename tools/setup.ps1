@@ -63,18 +63,52 @@ New-Item -ItemType Directory -Force -Path $DevkitBinDir | Out-Null
 foreach ($name in $names) {
     $entry = $manifest.$name
     $exePath = Join-Path $DevkitBinDir $entry.exe
-    if ((Test-Path -LiteralPath $exePath) -and -not $Force) {
-        Write-Host "[skip] $name $($entry.version) is already installed: $exePath"
-        continue
+    $installed = Test-Path -LiteralPath $exePath
+    $label = "$name $($entry.version)"
+    $url = [string]$entry.url
+    $sha256 = [string]$entry.sha256
+    if ($entry.version -eq 'latest') {
+        # Follows the latest release; the download is checked against the SHA256 digest that GitHub publishes.
+        try {
+            $release = Get-DevkitLatestReleaseAsset $entry.repository $entry.asset
+        } catch {
+            if ($installed -and (Test-DevkitToolCurrent $name)) {
+                Write-Host "[skip] $name is installed, but its latest release could not be checked: $($_.Exception.Message)"
+            } else {
+                $failed++
+                Write-Host "[error] $name : could not look up the latest release of $($entry.repository): $($_.Exception.Message)"
+            }
+            continue
+        }
+        if (-not $release.Sha256) {
+            $failed++
+            Write-Host "[error] $name : release $($release.Tag) of $($entry.repository) has no SHA256 digest to check the download against"
+            continue
+        }
+        $label = "$name $($release.Tag) (latest)"
+        $url = $release.Url
+        $sha256 = $release.Sha256
+    }
+    if ($installed -and -not $Force) {
+        if ($entry.version -eq 'latest' -and $entry.type -eq 'exe') {
+            $current = (Get-FileHash -LiteralPath $exePath -Algorithm SHA256).Hash -eq $sha256
+        } else {
+            $current = Test-DevkitToolCurrent $name
+        }
+        if ($current) {
+            Write-Host "[skip] $label is already installed: $exePath"
+            continue
+        }
+        Write-Host "[update] $label : the installed file is a different version"
     }
 
-    Write-Host "[download] $name $($entry.version) <- $($entry.url)"
-    $tmp = Join-Path ([IO.Path]::GetTempPath()) ('devkit-' + [guid]::NewGuid().ToString('N') + '-' + [IO.Path]::GetFileName($entry.url))
+    Write-Host "[download] $label <- $url"
+    $tmp = Join-Path ([IO.Path]::GetTempPath()) ('devkit-' + [guid]::NewGuid().ToString('N') + '-' + [IO.Path]::GetFileName($url))
     try {
-        Invoke-WebRequest -UseBasicParsing -Uri $entry.url -OutFile $tmp
+        Invoke-WebRequest -UseBasicParsing -Uri $url -OutFile $tmp
         $hash = (Get-FileHash -LiteralPath $tmp -Algorithm SHA256).Hash
-        if ($hash -ne $entry.sha256.ToUpperInvariant()) {
-            throw "SHA256 mismatch (expected $($entry.sha256), got $hash)"
+        if ($hash -ne $sha256.ToUpperInvariant()) {
+            throw "SHA256 mismatch (expected $sha256, got $hash)"
         }
         if ($entry.type -eq 'zip') {
             $dest = Join-Path $DevkitBinDir $entry.installDir

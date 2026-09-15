@@ -33,6 +33,95 @@ function Get-DevkitToolPath([string]$Name) {
     return (Join-Path $DevkitBinDir $entry.exe)
 }
 
+# Tells whether an installed tool is recent enough for the kit: $null when it is not installed, $false when it is out
+# of date, $true otherwise (also when that cannot be told). Works offline.
+# - Tools that follow the latest release (version "latest"): the file version must be minimumVersion or later.
+# - Pinned tools (version, url, sha256): the file must match the pinned SHA256, which changes when a kit update
+#   raises the version. Only single-file tools (type exe) can be compared.
+function Test-DevkitToolCurrent([string]$Name) {
+    $entry = (Get-DevkitToolManifest).$Name
+    if ($null -eq $entry) { throw "Unknown tool: $Name" }
+    $path = Join-Path $DevkitBinDir $entry.exe
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { return $null }
+    if ($entry.version -eq 'latest') {
+        $version = Get-DevkitFileVersion $path
+        if (-not $version -or -not $entry.minimumVersion) { return $true }
+        return ($version -ge [version]$entry.minimumVersion)
+    }
+    if ($entry.type -ne 'exe') { return $true }
+    return ((Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash -eq $entry.sha256)
+}
+
+# Returns the file version of a program (for example 1.0.3.25), or $null when it has none.
+function Get-DevkitFileVersion([string]$Path) {
+    try {
+        $info = (Get-Item -LiteralPath $Path).VersionInfo
+        if ($info.FileMajorPart -gt 0 -or $info.FileMinorPart -gt 0) {
+            return (New-Object System.Version($info.FileMajorPart, $info.FileMinorPart, $info.FileBuildPart, $info.FilePrivatePart))
+        }
+    } catch { }
+    return $null
+}
+
+# Looks up an asset in the latest release of a GitHub repository. Returns Tag, Url and Sha256 (from the digest that
+# GitHub publishes for each asset; $null when there is none). GITHUB_TOKEN is used when it is set, which avoids the
+# rate limit of anonymous API requests on GitHub Actions; when the token is refused, the request is sent without it.
+function Get-DevkitLatestReleaseAsset([string]$Repository, [string]$AssetName) {
+    if ($Repository -notmatch '^[A-Za-z0-9._-]+/[A-Za-z0-9._-]+$') { throw "invalid repository: $Repository" }
+    $uri = "https://api.github.com/repos/$Repository/releases/latest"
+    $headers = @{ 'User-Agent' = 'ghost-devkit'; 'Accept' = 'application/vnd.github+json' }
+    $release = $null
+    if ($env:GITHUB_TOKEN) {
+        $withToken = $headers.Clone()
+        $withToken['Authorization'] = 'Bearer ' + $env:GITHUB_TOKEN
+        try { $release = Invoke-RestMethod -UseBasicParsing -Uri $uri -Headers $withToken } catch { }
+    }
+    if (-not $release) { $release = Invoke-RestMethod -UseBasicParsing -Uri $uri -Headers $headers }
+    $asset = @($release.assets | Where-Object { $_.name -eq $AssetName }) | Select-Object -First 1
+    if (-not $asset) { throw "$AssetName was not found in the latest release ($($release.tag_name)) of $Repository" }
+    $sha256 = $null
+    if ([string]$asset.digest -match '^sha256:([0-9a-fA-F]{64})$') { $sha256 = $matches[1].ToUpperInvariant() }
+    return [pscustomobject]@{ Tag = [string]$release.tag_name; Url = [string]$asset.browser_download_url; Sha256 = $sha256 }
+}
+
+# Runs tamac.exe on the yaya.dll in $GhostDir (a full path: tamac.exe looks for yaya.txt in the folder part of the
+# dll path it is given). YAYA saves yaya_variable.cfg when it unloads, so the file is put back afterwards (or removed
+# when there was none) and running the ghost this way leaves nothing behind.
+function Invoke-DevkitTamac {
+    param(
+        [string]$GhostDir,
+        [string[]]$Arguments = @(),
+        [string]$InputText,
+        [string[]]$UnsetEnvironment = @(),
+        [int]$TimeoutSeconds = 120
+    )
+    $processArgs = @{
+        FilePath         = (Get-DevkitToolPath 'tamac')
+        Arguments        = @(Join-Path $GhostDir 'yaya.dll') + @($Arguments)
+        WorkingDirectory = $GhostDir
+        UnsetEnvironment = $UnsetEnvironment
+        TimeoutSeconds   = $TimeoutSeconds
+    }
+    if ($PSBoundParameters.ContainsKey('InputText')) { $processArgs['InputText'] = $InputText }
+
+    $variableFile = Join-Path $GhostDir 'yaya_variable.cfg'
+    $variableBackup = $null
+    if (Test-Path -LiteralPath $variableFile) {
+        $variableBackup = [IO.Path]::GetTempFileName()
+        Copy-Item -LiteralPath $variableFile -Destination $variableBackup -Force
+    }
+    try {
+        return (Invoke-DevkitProcess @processArgs)
+    } finally {
+        if ($variableBackup) {
+            Copy-Item -LiteralPath $variableBackup -Destination $variableFile -Force
+            Remove-Item -LiteralPath $variableBackup -Force
+        } elseif (Test-Path -LiteralPath $variableFile) {
+            Remove-Item -LiteralPath $variableFile -Force
+        }
+    }
+}
+
 function Get-DevkitLocalConfig {
     $path = Join-Path $DevkitToolsDir 'local.json'
     if (Test-Path -LiteralPath $path) {
@@ -148,7 +237,11 @@ function Invoke-DevkitProcess {
         [string]$FilePath,
         [string[]]$Arguments = @(),
         [string]$WorkingDirectory,
-        [int]$TimeoutSeconds = 120
+        [int]$TimeoutSeconds = 120,
+        # Text for the standard input, written as UTF-8 without BOM; the input is closed afterwards.
+        [string]$InputText,
+        # Environment variables that the program does not inherit.
+        [string[]]$UnsetEnvironment = @()
     )
     $psi = New-Object System.Diagnostics.ProcessStartInfo
     $psi.FileName = $FilePath
@@ -157,13 +250,30 @@ function Invoke-DevkitProcess {
     $psi.CreateNoWindow = $true
     $psi.RedirectStandardOutput = $true
     $psi.RedirectStandardError = $true
+    $psi.RedirectStandardInput = $PSBoundParameters.ContainsKey('InputText')
     $psi.StandardOutputEncoding = $DevkitUtf8
     $psi.StandardErrorEncoding = $DevkitUtf8
     if ($WorkingDirectory) { $psi.WorkingDirectory = $WorkingDirectory }
+    foreach ($name in $UnsetEnvironment) {
+        if ($psi.EnvironmentVariables.ContainsKey($name)) { $psi.EnvironmentVariables.Remove($name) }
+    }
 
     $process = [System.Diagnostics.Process]::Start($psi)
     $stdoutTask = $process.StandardOutput.ReadToEndAsync()
     $stderrTask = $process.StandardError.ReadToEndAsync()
+    if ($psi.RedirectStandardInput) {
+        # Write the bytes to the base stream: the StreamWriter of .NET Framework may add a BOM when it is closed.
+        $bytes = $DevkitUtf8.GetBytes([string]$InputText)
+        $stdin = $process.StandardInput.BaseStream
+        try {
+            $stdin.Write($bytes, 0, $bytes.Length)
+            $stdin.Flush()
+        } catch {
+            # The program exited without reading the input; its output tells why.
+        } finally {
+            try { $stdin.Close() } catch { }
+        }
+    }
     $timedOut = -not $process.WaitForExit($TimeoutSeconds * 1000)
     if ($timedOut) {
         try { $process.Kill() } catch { }

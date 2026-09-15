@@ -39,26 +39,10 @@ if (-not (Test-Path -LiteralPath $tamac)) {
 # Paths in the output are shown relative to the ghost root (the folder with ghost/ and shell/).
 $base = Split-Path (Split-Path $GhostDir -Parent) -Parent
 
-$variableFile = Join-Path $GhostDir 'yaya_variable.cfg'
-$variableBackup = $null
-if (Test-Path -LiteralPath $variableFile) {
-    $variableBackup = [IO.Path]::GetTempFileName()
-    Copy-Item -LiteralPath $variableFile -Destination $variableBackup -Force
-}
-
-$tamacArgs = @($dll)
+$tamacArgs = @()
 if ($Level) { $tamacArgs += @('-l', $Level) }
 if ($Ci) { $tamacArgs += '--ci' }
-try {
-    $result = Invoke-DevkitProcess -FilePath $tamac -Arguments $tamacArgs -WorkingDirectory $GhostDir -TimeoutSeconds 120
-} finally {
-    if ($variableBackup) {
-        Copy-Item -LiteralPath $variableBackup -Destination $variableFile -Force
-        Remove-Item -LiteralPath $variableBackup -Force
-    } elseif (Test-Path -LiteralPath $variableFile) {
-        Remove-Item -LiteralPath $variableFile -Force
-    }
-}
+$result = Invoke-DevkitTamac -GhostDir $GhostDir -Arguments $tamacArgs -TimeoutSeconds 120
 
 if ($ShowLog -or $Ci) {
     foreach ($line in ($result.StdOut -split "\r?\n")) {

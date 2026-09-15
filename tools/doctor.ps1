@@ -82,10 +82,19 @@ Add-DoctorItem -Id 'devkit-conflicts' -Name 'development kit merges' -Level 'rec
 # --- downloaded tools ------------------------------------------------------------------
 $manifest = Get-DevkitToolManifest
 $tamacPath = Get-DevkitToolPath 'tamac'
-Add-DoctorItem -Id 'tamac' -Name 'tamac.exe' -Level 'required' -Ok (Test-Path -LiteralPath $tamacPath) `
+$tamacCurrent = Test-DevkitToolCurrent 'tamac'
+$tamacVersion = if ($null -ne $tamacCurrent) { Get-DevkitFileVersion $tamacPath } else { $null }
+Add-DoctorItem -Id 'tamac' -Name 'tamac.exe' -Level 'required' -Ok ($null -ne $tamacCurrent) `
     -Purpose 'Dictionary check (tools/check-dic.ps1 and the check after each edit)' `
-    -Detail $(if (Test-Path -LiteralPath $tamacPath) { "$($manifest.tamac.version) in tools/bin" } else { 'not installed' }) `
+    -Detail $(if ($null -eq $tamacCurrent) { 'not installed' } elseif ($tamacVersion) { "v$tamacVersion in tools/bin" } else { 'in tools/bin (version unknown)' }) `
     -Fix "Run: $ps tools/setup.ps1"
+
+# An older tamac.exe still checks the dictionaries, so being out of date is only recommended.
+$tamacMinimum = $manifest.tamac.minimumVersion
+Add-DoctorItem -Id 'tamac-version' -Name "tamac.exe $tamacMinimum or later" -Level 'recommended' -Ok ($tamacCurrent -ne $false) `
+    -Purpose 'SHIORI requests without SSP (tools/shiori.ps1)' `
+    -Detail $(if ($null -eq $tamacCurrent) { 'not installed (see tamac.exe)' } elseif ($tamacCurrent) { 'ok' } else { "v$tamacVersion is older than $tamacMinimum" }) `
+    -Fix "Run: $ps tools/setup.ps1 -Tool tamac (downloads the latest release)"
 
 $yayalintPath = Get-DevkitToolPath 'yayalint'
 Add-DoctorItem -Id 'yayalint' -Name 'yayalint' -Level 'optional' -Ok (Test-Path -LiteralPath $yayalintPath) `

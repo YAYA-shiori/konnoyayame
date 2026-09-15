@@ -65,11 +65,12 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 | コマンド | 内容 | 終了コード |
 |---|---|---|
 | `<ps> tools/doctor.ps1` | 開発環境を診断し、足りないもの（Git、Node.js、SSP、チェック用ツール、`GHOST.md` など）の用途と入手方法を表示する。何も変更しない（`-Json` で機械向けの出力） | 0 必須はそろっている / 1 必須が足りない |
-| `<ps> tools/setup.ps1` | git clone したフォルダなら submodule を取得し、tamac.exe と yayalint を `tools/bin/` に取得する（バージョンと SHA256 は `tools/tools.json` で固定）。最後に doctor の結果を表示する | 0 成功 / 1 失敗、または必須が足りない |
+| `<ps> tools/setup.ps1` | git clone したフォルダなら submodule を取得し、tamac.exe と yayalint を `tools/bin/` に取得する（tamac.exe は最新リリースを、GitHub が公開している SHA256 で照合して取得する。yayalint はバージョンと SHA256 を `tools/tools.json` で固定）。取得済みでも版が違えば取り直す。最後に doctor の結果を表示する | 0 成功 / 1 失敗、または必須が足りない |
 | `<ps> tools/check-dic.ps1` | tamac.exe で辞書を実際に読み込み、エラーを表示する | 0 OK / 1 エラー / 3 ツール未導入 |
 | `<ps> tools/check-shell.ps1` | `ssp.exe --offline-dump` でシェルを検査する（Error / Warning / Notice）。SSP 2.8.94 以降では、問題の定義位置（`shell/master/surfaces.txt:Line=123`）も表示する | 0 OK / 1 Error あり / 3 SSP が見つからない |
 | `<ps> tools/lint.ps1` | yayalint で未定義・未使用の変数と関数を探す（参考情報） | 0（`-Strict` なら未定義があると 1）/ 3 |
 | `<ps> tools/check.ps1` | 上の 3 つを順に実行する | 0 / 1 |
+| `<ps> tools/shiori.ps1 -Eval '関数名や式'` | SSP を使わずに、tamac.exe でこのゴーストの yaya.dll に SHIORI リクエストを 1 回送る。`-Eval` は YAYA のコードを評価して結果を表示する（関数名なら返すトーク、組み込み関数なら実際の戻り値。システム辞書の `??` を使う）。`-Event <ID> -Reference '0,0,0,0,Head'` は SSP と同じ形の GET（`-Notify` で NOTIFY）、`-Request` は生のリクエスト。呼ぶたびに辞書を読み込み直し（`OnBoot` などは先に送らない）、`yaya_variable.cfg` は元に戻す | 0 / 1 失敗（辞書の読み込みエラー、エラー応答など）/ 2 処理中に YAYA がエラーを出した / 3 tamac.exe が無いか古い |
 | `<ps> tools/run-ssp.ps1` | このフォルダのゴーストを SSP で直接起動し（`ssp.exe --ghost <フォルダ>`。インストール不要）、応答するまで待つ。起動中に SSP のエラーログに増えた警告・エラーを表示する（SSP 2.8.94 以降では、起動時のトークが終わるのを待ってから読む） | 0 起動した / 1 応答なし / 2 起動したが、エラーログに Error か Critical が増えた / 3 SSP が見つからない |
 | `<ps> tools/sstp.ps1 -Reload ghost` | 起動中の SSP にゴーストを再読み込みさせ、その間に SSP のエラーログに増えた警告・エラー（YAYA の辞書エラーなど）を表示する | 0 / 1 エラー応答 / 2 エラーログに Error か Critical が増えた / 3 SSP に接続できない |
 | `<ps> tools/sstp.ps1 -Script '\0\s[0]テスト\e'` | さくらスクリプトを実際のゴーストで再生する。SSP 2.8.94 以降では、SSP が解釈できなかったタグ（存在しないサーフェス、閉じていない `[` など）が `[GHOST/Script]` のエラーとして表示され（`Option: strict`）、ログはゴーストが話し終わるのを待ってから読む | 同上 |
@@ -100,7 +101,7 @@ SSP の場所は次の順に探す: `-SspPath` 引数 → 環境変数 `SSP_PATH
 
 ## 作業のルール
 
-1. **辞書や `ghost/master/*.txt` を変更したら、必ず `tools/check-dic.ps1` を通す。** エラーが残ったゴーストは緊急モードで起動し、ほとんど話さなくなる。`shell/` を変更したら `tools/check-shell.ps1` も通す。SSP で動かして確かめるときは、`tools/sstp.ps1` や `tools/run-ssp.ps1` が表示する SSP のエラーログ（終了コード 2）も見る。SSP 2.8.94 以降では、書いたトークを `tools/sstp.ps1 -Script` や `-Event` で再生すると、解釈できなかったタグが `[GHOST/Script]` のエラーとして出るので、それも直す。
+1. **辞書や `ghost/master/*.txt` を変更したら、必ず `tools/check-dic.ps1` を通す。** エラーが残ったゴーストは緊急モードで起動し、ほとんど話さなくなる。`shell/` を変更したら `tools/check-shell.ps1` も通す。辞書の関数を書いたり直したりしたら、`tools/shiori.ps1 -Eval '関数名'` で呼び出して、返すスクリプトと、実行時のエラー（存在しない関数の呼び出しなど。読み込みのチェックでは見つからない）も確かめる（ファイルの書き込みや外部プログラムの実行をする関数は本当に動くので、中身を読んでから呼ぶ）。SSP で動かして確かめるときは、`tools/sstp.ps1` や `tools/run-ssp.ps1` が表示する SSP のエラーログ（終了コード 2）も見る。SSP 2.8.94 以降では、書いたトークを `tools/sstp.ps1 -Script` や `-Event` で再生すると、解釈できなかったタグが `[GHOST/Script]` のエラーとして出るので、それも直す。
 2. 仕様（さくらスクリプトのタグ、SHIORI イベントの名前と Reference、YAYA の関数、descript.txt や surfaces.txt の項目）を**推測で書かない**。確かでないときは「仕様の調べ方」に従って確かめる。
 3. 文字コードは UTF-8（BOM なし）、改行は LF、辞書のインデントはタブ（`.editorconfig` 参照）。ただし `readme-aya.txt` と `readme-yaya.txt` は Shift_JIS なので、文字コードを変えない。
 4. 編集しないもの: `ghost/master/dic/system/` または `ghost/master/system/`（システム辞書の submodule。変更が必要なら上流の yaya-dic に提案する）、`yaya.dll`、実行時に作られるファイル。
@@ -162,6 +163,8 @@ AI がやりがちな失敗:
    - YAYA Wiki（文法と関数）: https://emily.shillest.net/ayaya/
    - システム辞書 yaya-dic: https://github.com/YAYA-shiori/yaya-dic
 3. それでもわからなければ Web 検索する。
+
+YAYA の関数の戻り値や細かい挙動は、調べたうえで、`tools/shiori.ps1 -Eval` でこのゴーストの yaya.dll に実際に評価させて確かめられる（例: `tools/shiori.ps1 -Eval "SPLIT('a,b', ',')"`）。
 
 調べものは、小さく速いモデルのサブエージェントに任せるとよい（Claude Code では `ukagaka-researcher`）。
 

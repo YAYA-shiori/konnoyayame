@@ -13,7 +13,7 @@ git で管理しているフォルダでも、nar を SSP にインストール�
 - `AGENTS.md` : エージェント向けの指示書（構成、ルール、YAYA とさくらスクリプトの要点、独立ゴーストにするときのチェックリスト）。人が読んでもわかるように書いてあります
 - `GHOST.md` : このゴーストに固有の情報（キャラクター、サーフェス、ライセンス、辞書の構成）。エージェントは作業の前に必ず読みます
 - `CLAUDE.md` / `.claude/` / `.mcp.json` : Claude Code 用の設定（編集後の自動チェック、スキル、仕様調査用サブエージェント、ドキュメント検索 MCP）
-- `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、yayalint、SSTP での実機確認と SSP のログ取得、nar 作成、yaya.dll と開発キットの更新のスクリプト
+- `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、yayalint、SSP を使わない SHIORI リクエストの送信と YAYA のコードの評価（tamac）、SSTP での実機確認と SSP のログ取得、nar 作成、yaya.dll と開発キットの更新のスクリプト
 
 AI エージェントを使わずに、`tools/` のスクリプトだけを使うこともできます。
 
@@ -40,7 +40,7 @@ PowerShell 7 を入れてください。mac は、Microsoft の案内（https://
 ただし、mac・Linux で使えるのは開発キットの一部だけです。
 
 - 使えるもの: `AGENTS.md` と `GHOST.md` に沿った AI エージェントでの辞書の編集、開発キットの導入と更新（`tools/update-devkit.ps1`）、nar の作成（`tools/build-nar.ps1`）
-- 使えないもの: 辞書・シェルのチェックと lint（`tools/check.ps1` など）、SSP での起動と確認（`tools/run-ssp.ps1`、`tools/sstp.ps1`、`tools/ssp-log.ps1`）、チェック用ツールの取得（`tools/setup.ps1`。取得するツールが Windows 用）、yaya.dll の更新
+- 使えないもの: 辞書・シェルのチェックと lint（`tools/check.ps1` など）、SSP を使わない SHIORI リクエストの送信（`tools/shiori.ps1`）、SSP での起動と確認（`tools/run-ssp.ps1`、`tools/sstp.ps1`、`tools/ssp-log.ps1`）、チェック用ツールの取得（`tools/setup.ps1`。取得するツールが Windows 用）、yaya.dll の更新
 - Claude Code の編集後の自動チェックと起動時の診断（hooks）は Windows PowerShell（`powershell.exe`）を呼ぶので、mac・Linux ではエラーが表示されます。
 - `tools/doctor.ps1` は、Windows と Windows PowerShell が無いことを「必須が足りない」と表示します。
 - このファイルのコマンドにある `powershell -NoProfile -ExecutionPolicy Bypass -File` は、`pwsh -NoProfile -File` に読み替えてください。

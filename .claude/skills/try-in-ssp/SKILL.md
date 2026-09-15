@@ -8,6 +8,8 @@ argument-hint: "[試したい関数名・イベント名・さくらスクリプ
 
 前提: SSP で、このフォルダのゴーストが動いていること。
 
+関数が返すスクリプトや実行時のエラーだけを見るなら、SSP は要らない。`powershell -NoProfile -ExecutionPolicy Bypass -File tools/shiori.ps1 -Eval '関数名'`（イベントなら `-Event OnMouseDoubleClick -Reference '0,0,0,0,Head'`）で、tamac.exe がその場で辞書を読み込んで答える。SSP では、表示、表情、掛け合いのテンポ、SSP が解釈できないタグを確かめる。
+
 0. 動いていなければ `powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-ssp.ps1` で起動する。`ssp.exe --ghost <このフォルダ>` を使うので、SSP にインストールしなくても作業中のフォルダがそのまま動く。ユーザーのデスクトップにゴーストが現れるので、一言断ってから起動する。起動中に SSP のエラーログに増えた警告・エラーも表示される。
 1. 辞書を変更したなら、先に `tools/check-dic.ps1` を通す。
 2. 変更を読み込ませる:
