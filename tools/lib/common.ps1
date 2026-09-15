@@ -6,6 +6,8 @@ $DevkitRoot = [IO.Path]::GetFullPath((Join-Path (Join-Path $PSScriptRoot '..') '
 $DevkitToolsDir = Join-Path $DevkitRoot 'tools'
 $DevkitBinDir = Join-Path $DevkitToolsDir 'bin'
 $DevkitUtf8 = New-Object System.Text.UTF8Encoding($false)
+# SSP version that the kit is written for: GetStatus, Option: strict, SERIKO error places and --dump-error-log exit codes.
+$DevkitSspRecommendedVersion = New-Object System.Version(2, 8, 94)
 
 function Initialize-DevkitConsole {
     try { [Console]::OutputEncoding = $DevkitUtf8 } catch { }
@@ -93,6 +95,15 @@ function Resolve-SspPath([string]$Explicit) {
     return $null
 }
 
+# Returns the version of ssp.exe as major.minor.build (for example 2.8.94), or $null when it cannot be read.
+function Get-DevkitSspVersion([string]$Path) {
+    try {
+        $info = (Get-Item -LiteralPath $Path).VersionInfo
+        if ($info.FileMajorPart -gt 0) { return (New-Object System.Version($info.FileMajorPart, $info.FileMinorPart, $info.FileBuildPart)) }
+    } catch { }
+    return $null
+}
+
 # Quotes arguments for ProcessStartInfo.Arguments (MSVCRT rules).
 function ConvertTo-DevkitArgumentString([string[]]$Arguments) {
     $parts = foreach ($arg in $Arguments) {
@@ -145,8 +156,11 @@ function Invoke-DevkitProcess {
 }
 
 # Rewrites absolute paths under $Base into root-relative paths with forward slashes.
+# SSP 2.8.94 or later adds places such as "shell\master\surfaces.txt:Line=12" to SERIKO messages (absolute with
+# --offline-dump, relative to the ghost folder otherwise); their backslashes are turned into slashes as well.
 function ConvertTo-DevkitRelativeText([string]$Text, [string]$Base = $DevkitRoot) {
     if ([string]::IsNullOrEmpty($Text)) { return $Text }
     $pattern = '(?i)' + [regex]::Escape($Base.TrimEnd('\', '/')) + '[\\/]([^\s(),"]*)'
-    return [regex]::Replace($Text, $pattern, { param($m) $m.Groups[1].Value.Replace('\', '/') })
+    $Text = [regex]::Replace($Text, $pattern, { param($m) $m.Groups[1].Value.Replace('\', '/') })
+    return [regex]::Replace($Text, '[^\s(),"]+(?=:Line=\d)', { param($m) $m.Value.Replace('\', '/') })
 }

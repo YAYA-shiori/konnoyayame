@@ -7,7 +7,9 @@
     By default only the entries of this ghost are shown: SSP records the name of ghost/master/descript.txt
     (not sakura.name) as their source. Use -All to include every source, such as [SYSTEM].
       error   : dictionary errors reported by YAYA, shell (SERIKO) problems, ... (type: Info, Notice,
-                Warning, Error, Critical or System)
+                Warning, Error, Critical or System). With SSP 2.8.94 or later, SERIKO entries tell the file
+                and line ("shell/master/surfaces.txt:Line=123"), and tags that SSP could not interpret in
+                scripts played by tools/sstp.ps1 (Option: strict) are logged as "[GHOST/Script] ...".
       script  : the scripts that were played (type: the event or SSTP request that caused it)
       network : HTTP and SSL messages (mostly [SYSTEM])
       update  : network update messages

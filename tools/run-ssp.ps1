@@ -5,7 +5,8 @@
     Runs the working folder directly, without installing the ghost into SSP.
     Readiness is checked with "EXECUTE GetName", which must return sakura.name of ghost/master/descript.txt.
     Then the entries that SSP added to its error log while starting are shown (SSP with developer.log
-    properties only; see also tools/ssp-log.ps1).
+    properties only; see also tools/ssp-log.ps1). With SSP 2.8.94 or later, the log is read after the ghost
+    has finished its boot talk ("EXECUTE GetStatus"); older versions get a fixed wait of 2 seconds.
     Exit codes: 0 = the ghost is running, 1 = it did not answer in time, 2 = the ghost is running but SSP
     logged Error or Critical entries, 3 = ssp.exe was not found.
 .EXAMPLE
@@ -64,8 +65,14 @@ if (-not $running) {
 }
 Write-Host "run-ssp: the ghost is running (SSTP port $Port)"
 
-# Give the ghost time to boot, so that errors reported on its first events are in the log.
-Start-Sleep -Milliseconds 2000
+# Give the ghost time to boot and finish its first talk, so that errors reported on its first events are in the log.
+$wait = Wait-DevkitSspTalkEnd -StartSeconds 2 -TimeoutSeconds 60 -Port $Port
+if ($wait -eq 'unsupported') {
+    Start-Sleep -Milliseconds 2000
+} else {
+    if ($wait -eq 'timeout') { Write-Host 'run-ssp: the ghost is still talking after 60 seconds; reading the log anyway' }
+    Start-Sleep -Milliseconds 300
+}
 $max = 30
 $log = Get-DevkitSspLog -Kind 'error' -Since $marker -Max $max -Port $Port
 if ($log.State -ne 'ok') {

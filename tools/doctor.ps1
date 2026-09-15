@@ -94,15 +94,27 @@ Add-DoctorItem -Id 'yayalint' -Name 'yayalint' -Level 'optional' -Ok (Test-Path 
 
 # --- SSP -------------------------------------------------------------------------------
 $ssp = Resolve-SspPath
-$sspDetail = if ($ssp) { "$($ssp.Path) (found via $($ssp.Source))" } else { 'not found' }
-$local = Get-DevkitLocalConfig
-if (-not $ssp -and ($env:SSP_PATH -or ($local -and ($local.PSObject.Properties.Name -contains 'sspPath')))) {
-    $sspDetail = 'not found; the path in SSP_PATH or tools/local.json does not exist'
+$sspOk = [bool]$ssp
+$sspFix = 'Get SSP from https://ssp.shillest.net/ . If it is already installed, ask where ssp.exe is and write it to tools/local.json as {"sspPath": "C:\\path\\to\\ssp.exe"}.'
+$sspDetail = 'not found'
+if ($ssp) {
+    $sspVersion = Get-DevkitSspVersion $ssp.Path
+    $sspDetail = "$($ssp.Path) $(if ($sspVersion) { $sspVersion } else { '(version unknown)' }) (found via $($ssp.Source))"
+    if ($sspVersion -and $sspVersion -lt $DevkitSspRecommendedVersion) {
+        $sspOk = $false
+        $sspDetail += "; $DevkitSspRecommendedVersion or later is needed for the file and line of shell problems, script checks (Option: strict) and waiting for talks to end (GetStatus)"
+        $sspFix = "Update SSP to $DevkitSspRecommendedVersion or later (https://ssp.shillest.net/ , or the network update of SSP itself). The scripts still work with this version, with less information."
+    }
+} else {
+    $local = Get-DevkitLocalConfig
+    if ($env:SSP_PATH -or ($local -and ($local.PSObject.Properties.Name -contains 'sspPath'))) {
+        $sspDetail = 'not found; the path in SSP_PATH or tools/local.json does not exist'
+    }
 }
-Add-DoctorItem -Id 'ssp' -Name 'SSP' -Level 'recommended' -Ok ([bool]$ssp) `
+Add-DoctorItem -Id 'ssp' -Name "SSP $DevkitSspRecommendedVersion+" -Level 'recommended' -Ok $sspOk `
     -Purpose 'Shell check (tools/check-shell.ps1), running the ghost (tools/run-ssp.ps1), trying talks (tools/sstp.ps1) and reading its logs (tools/ssp-log.ps1)' `
     -Detail $sspDetail `
-    -Fix 'Get SSP from https://ssp.shillest.net/ . If it is already installed, ask where ssp.exe is and write it to tools/local.json as {"sspPath": "C:\\path\\to\\ssp.exe"}.'
+    -Fix $sspFix
 
 # --- git -------------------------------------------------------------------------------
 $git = Get-Command git -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1

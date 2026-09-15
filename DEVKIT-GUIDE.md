@@ -27,7 +27,7 @@ AI エージェントを使わずに、`tools/` のスクリプトだけを使�
 |---|---|---|---|
 | AI コーディングエージェント | AI に頼むなら必須 | Claude Code、Codex、GitHub Copilot など。キットの指示書とスキルに沿って、開発を手伝います | 各ツールの案内に従ってください |
 | PowerShell | 必須 | `tools/` のスクリプト | Windows には最初から入っています（Windows PowerShell 5.1）。mac・Linux は下の「mac・Linux で使う場合」 |
-| SSP | 推奨 | シェルのチェック、実際のゴーストでの確認 | https://ssp.shillest.net/ |
+| SSP 2.8.94 以降 | 推奨 | シェルのチェック、実際のゴーストでの確認。古い版でも動きますが、シェルの問題の位置（ファイル名と行番号）、再生したスクリプトの検査、トークが終わるのを待ってからのログの確認は、2.8.94 以降でだけ使えます | https://ssp.shillest.net/ |
 | Git | 推奨 | 変更履歴、GitHub での自動チェック、システム辞書（submodule）の取得 | https://git-scm.com/ |
 | Node.js 20 以上 | 任意 | 仕様を検索する MCP サーバー（ukagaka-doc） | https://nodejs.org/ |
 

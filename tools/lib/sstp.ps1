@@ -78,6 +78,64 @@ function Get-DevkitSspGhostId([string]$GhostRoot, [string]$SakuraName, [int]$Por
     return $null
 }
 
+# Reads the state of the running ghost with "EXECUTE GetStatus" (SSP 2.8.94 or later). States are the same as the
+# SHIORI/3.0 Status header, for example talking, choosing, online, opening(input) or balloon(0=0).
+# Returns an object whose States is the list (empty when no state applies), or $null when SSP did not answer 200:
+# SSP is not running, it is older than 2.8.94, or the ghost is being loaded (SSP answers 400 meanwhile).
+function Get-DevkitSspStatus([int]$Port = 9801) {
+    $response = Invoke-DevkitSstp -Lines @('EXECUTE SSTP/1.1', 'Charset: UTF-8', 'Sender: ghost-devkit', 'Command: GetStatus') -Port $Port -TimeoutSeconds 5
+    if ($response.Status -ne 200) { return $null }
+    return [pscustomobject]@{ States = @($response.Data.Split(',') | ForEach-Object { $_.Trim() } | Where-Object { $_ }) }
+}
+
+# Waits until the ghost has finished talking, with GetStatus. SSP answers SEND and NOTIFY before it plays the
+# script, and it logs script errors (Option: strict) while playing, so the error log is complete only afterwards.
+# Waits up to StartSeconds for the talk to start (a script with nothing to play never shows "talking"), then up
+# to TimeoutSeconds in all. Returns done, timeout (still talking, for example waiting for a click) or unsupported
+# (GetStatus did not answer; the caller should fall back to a fixed wait).
+function Wait-DevkitSspTalkEnd([double]$StartSeconds = 1, [int]$TimeoutSeconds = 60, [int]$Port = 9801) {
+    $start = Get-Date
+    $talked = $false
+    while ($true) {
+        $status = Get-DevkitSspStatus $Port
+        if ($null -eq $status) {
+            if ($talked) { return 'done' }
+            return 'unsupported'
+        }
+        $elapsed = ((Get-Date) - $start).TotalSeconds
+        if ($status.States -contains 'talking') {
+            $talked = $true
+        } elseif ($talked -or $elapsed -ge $StartSeconds) {
+            return 'done'
+        }
+        if ($elapsed -ge $TimeoutSeconds) { return 'timeout' }
+        Start-Sleep -Milliseconds 200
+    }
+}
+
+# Waits for a ghost reload that was just requested, then for the talk after it. While the ghost is being loaded,
+# GetStatus does not answer 200. The reload itself starts after the \![reload,...] script is played, and a
+# quick reload can pass between two polls, so this stops waiting for it after GraceSeconds of not talking.
+# Call it only when GetStatus answered before the request; otherwise it waits for TimeoutSeconds.
+# Returns the same values as Wait-DevkitSspTalkEnd.
+function Wait-DevkitSspReload([double]$GraceSeconds = 2, [int]$TimeoutSeconds = 30, [int]$Port = 9801) {
+    $start = Get-Date
+    $reloading = $false
+    $graceStart = $start
+    while (((Get-Date) - $start).TotalSeconds -lt $TimeoutSeconds) {
+        $status = Get-DevkitSspStatus $Port
+        if ($null -eq $status) {
+            $reloading = $true
+        } elseif ($status.States -contains 'talking') {
+            $graceStart = Get-Date
+        } elseif ($reloading -or ((Get-Date) - $graceStart).TotalSeconds -ge $GraceSeconds) {
+            break
+        }
+        Start-Sleep -Milliseconds 200
+    }
+    return (Wait-DevkitSspTalkEnd -StartSeconds 1 -TimeoutSeconds $TimeoutSeconds -Port $Port)
+}
+
 # Reads a property system value with "EXECUTE GetProperty" and returns the SSTP response.
 function Get-DevkitSspProperty([string]$Name, [int]$Port = 9801) {
     return Invoke-DevkitSstp -Lines @('EXECUTE SSTP/1.1', 'Charset: UTF-8', 'Sender: ghost-devkit', 'Command: GetProperty', ('Reference0: ' + $Name)) -Port $Port -TimeoutSeconds 10
