@@ -2,7 +2,8 @@
 .SYNOPSIS
     Prepares the development environment: the git submodule and the pinned tools in tools/bin/.
 .DESCRIPTION
-    - In a git clone, fetches ghost/master/dic/system (git submodule update --init) when it is empty.
+    - In a git clone, fetches the system dictionary (git submodule update --init) when neither
+      ghost/master/dic/system nor ghost/master/system has .dic files.
     - Downloads the tools pinned in tools/tools.json (version, URL and SHA256) into tools/bin/.
     - Finally prints the result of tools/doctor.ps1.
     Applications such as Git, Node.js or SSP are not installed; doctor.ps1 tells how to get them.
@@ -24,21 +25,24 @@ Initialize-DevkitConsole
 $failed = 0
 
 # --- git submodule ---------------------------------------------------------------------
-$systemDic = Join-Path $DevkitRoot 'ghost/master/dic/system/yaya_base/shiori3.dic'
-if (-not (Test-Path -LiteralPath $systemDic) -and (Test-Path -LiteralPath (Join-Path $DevkitRoot '.git'))) {
+$systemDicNames = ($DevkitSystemDicDirs | ForEach-Object { "ghost/master/$_" }) -join ' or '
+if (-not (Get-DevkitSystemDicDir) -and (Test-Path -LiteralPath (Join-Path $DevkitRoot '.git'))) {
     $git = Get-Command git -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($git) {
         Write-Host '[submodule] git submodule update --init --recursive'
         $result = Invoke-DevkitProcess -FilePath $git.Source -Arguments @('-C', $DevkitRoot, 'submodule', 'update', '--init', '--recursive') -TimeoutSeconds 300
-        if ($result.ExitCode -eq 0) {
-            Write-Host '[ok] ghost/master/dic/system'
-        } else {
+        $systemDir = Get-DevkitSystemDicDir
+        if ($result.ExitCode -ne 0) {
             $failed++
             Write-Host "[error] submodule: $(($result.StdErr + $result.StdOut).Trim())"
+        } elseif ($systemDir) {
+            Write-Host "[ok] ghost/master/$systemDir"
+        } else {
+            Write-Host "[warn] submodules were fetched, but $systemDicNames still has no .dic files"
         }
     } else {
         $failed++
-        Write-Host '[error] Git is needed to fetch ghost/master/dic/system (see tools/doctor.ps1)'
+        Write-Host "[error] Git is needed to fetch the system dictionary ($systemDicNames) (see tools/doctor.ps1)"
     }
 }
 

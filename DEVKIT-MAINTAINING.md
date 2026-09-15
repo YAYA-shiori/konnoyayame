@@ -58,6 +58,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 - Windows PowerShell 5.1 と PowerShell 7 の両方で動かす。`??`、`?.`、三項演算子、パイプラインの `&&` など、7 だけの構文は使わない。GitHub Actions では pwsh（Windows と Ubuntu）でも動く。
 - **ASCII 文字だけで書く**（BOM のないファイルに日本語を書くと、5.1 で文字化けする）。
 - 冒頭で `. (Join-Path $PSScriptRoot 'lib/common.ps1')` を読み、`Initialize-DevkitConsole` を呼ぶ。パスは `$DevkitRoot` から組み立て、`ghost/master` と `shell/master` を前提にしてよい。
+- システム辞書は `ghost/master/dic/system` と決め打ちしない。`ghost/master/system` に置くゴーストもあるので、`tools/lib/common.ps1` の `$DevkitSystemDicDirs`（探す順）、`Get-DevkitSystemDicDir`、`Test-DevkitSystemDicPath` を使う。
 - 終了コードをそろえる: 0 OK / 1 失敗・エラー / 2 注意が要る（SSP のエラーログの Error、`.devkit-new` の残りなど）/ 3 ツールや SSP が無くて確かめられない。
 - 冒頭のコメントヘルプ（`.SYNOPSIS`、`.DESCRIPTION`、終了コード、`.EXAMPLE`）を書き、`AGENTS.md` のコマンド表も直す。
 - ダウンロードして使うツールは `tools/tools.json` でバージョン、URL、SHA256 を固定する。上げるときは 3 つとも書き換え（SHA256 は `Get-FileHash -Algorithm SHA256`）、`tools/setup.ps1 -Tool <名前> -Force` で取得できることを確かめる。

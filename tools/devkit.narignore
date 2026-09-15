@@ -12,9 +12,14 @@
 # new versions left by tools/update-devkit.ps1, waiting to be merged
 *.devkit-new
 
-# repository files of the yaya-dic submodule
+# repository files of the yaya-dic submodule (ghost/master/dic/system, or ghost/master/system in some ghosts)
 /ghost/master/dic/system/.github/
 /ghost/master/dic/system/.vscode/
 /ghost/master/dic/system/.gitattributes
 /ghost/master/dic/system/LICENSE
 /ghost/master/dic/system/README.md
+/ghost/master/system/.github/
+/ghost/master/system/.vscode/
+/ghost/master/system/.gitattributes
+/ghost/master/system/LICENSE
+/ghost/master/system/README.md

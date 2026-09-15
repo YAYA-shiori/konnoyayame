@@ -95,8 +95,9 @@ foreach ($relative in ($files | Sort-Object -Unique)) {
     if ($relative -eq $outRelative -or (Test-Excluded $relative)) { $excluded.Add($relative) } else { $included.Add($relative) }
 }
 
-if (-not ($included | Where-Object { $_ -like 'ghost/master/dic/system/*' })) {
-    Write-Host 'build-nar: FAILED - ghost/master/dic/system is empty. Run: git submodule update --init'
+if (-not ($included | Where-Object { Test-DevkitSystemDicPath $_ 'ghost/master/' })) {
+    $systemDicNames = ($DevkitSystemDicDirs | ForEach-Object { "ghost/master/$_" }) -join ' or '
+    Write-Host "build-nar: FAILED - the system dictionary ($systemDicNames) is empty. Run: git submodule update --init"
     exit 1
 }
 if ($included -notcontains 'install.txt') {

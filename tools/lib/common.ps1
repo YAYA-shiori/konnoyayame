@@ -8,6 +8,9 @@ $DevkitBinDir = Join-Path $DevkitToolsDir 'bin'
 $DevkitUtf8 = New-Object System.Text.UTF8Encoding($false)
 # SSP version that the kit is written for: GetStatus, Option: strict, SERIKO error places and --dump-error-log exit codes.
 $DevkitSspRecommendedVersion = New-Object System.Version(2, 8, 94)
+# Folders of the system dictionary (yaya-dic), relative to ghost/master, in the order they are looked for.
+# Most ghosts keep it in dic/system; some keep it in system.
+$DevkitSystemDicDirs = @('dic/system', 'system')
 
 function Initialize-DevkitConsole {
     try { [Console]::OutputEncoding = $DevkitUtf8 } catch { }
@@ -67,6 +70,26 @@ function Get-SspPathFromNarAssociation {
         if ($command -match '^\s*(\S+)') { return $matches[1] }
     } catch { }
     return $null
+}
+
+# Returns the system dictionary folder (for example 'dic/system', relative to ghost/master) that contains
+# .dic files, or $null when none of $DevkitSystemDicDirs does (such as an empty git submodule).
+function Get-DevkitSystemDicDir {
+    foreach ($dir in $DevkitSystemDicDirs) {
+        $full = Join-Path (Join-Path $DevkitRoot 'ghost/master') $dir
+        if (-not (Test-Path -LiteralPath $full -PathType Container)) { continue }
+        if (Get-ChildItem -LiteralPath $full -Recurse -File -Filter '*.dic' -ErrorAction SilentlyContinue | Select-Object -First 1) { return $dir }
+    }
+    return $null
+}
+
+# Tells whether a '/'-separated path is inside a system dictionary folder.
+# Prefix: what the path starts with before those folders ('' for paths relative to ghost/master).
+function Test-DevkitSystemDicPath([string]$Path, [string]$Prefix = '') {
+    foreach ($dir in $DevkitSystemDicDirs) {
+        if ($Path.StartsWith("$Prefix$dir/", [StringComparison]::OrdinalIgnoreCase)) { return $true }
+    }
+    return $false
 }
 
 # Finds ssp.exe. Order: explicit argument, SSP_PATH, tools/local.json, the SSP that

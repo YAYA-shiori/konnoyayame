@@ -53,10 +53,11 @@ Add-DoctorItem -Id 'ghost' -Name 'ghost files' -Level 'required' -Ok $ghostOk `
     -Detail $(if ($ghostOk) { "yaya.dll $((Get-Item -LiteralPath $dll).VersionInfo.FileVersion)" } else { 'ghost/master/yaya.dll or ghost/master/yaya.txt is missing' }) `
     -Fix 'Work in the ghost root folder (the one that contains ghost/ and shell/).'
 
-$systemOk = Test-Path -LiteralPath (Join-Path $DevkitRoot 'ghost/master/dic/system/yaya_base/shiori3.dic')
-Add-DoctorItem -Id 'system-dic' -Name 'system dictionary (ghost/master/dic/system)' -Level 'required' -Ok $systemOk `
+$systemDir = Get-DevkitSystemDicDir
+$systemOk = [bool]$systemDir
+Add-DoctorItem -Id 'system-dic' -Name 'system dictionary' -Level 'required' -Ok $systemOk `
     -Purpose 'YAYA system dictionary (yaya-dic)' `
-    -Detail $(if ($systemOk) { 'present' } else { 'empty' }) `
+    -Detail $(if ($systemOk) { "ghost/master/$systemDir" } else { 'no .dic files in ' + (($DevkitSystemDicDirs | ForEach-Object { "ghost/master/$_" }) -join ' or ') }) `
     -Fix $(if ($isGitWorkingCopy) { "Run: $ps tools/setup.ps1 (it runs git submodule update --init)" } else { 'The folder is incomplete. Download the nar again from the Releases page.' })
 
 # --- ghost profile and kit updates -----------------------------------------------------
@@ -121,7 +122,7 @@ $git = Get-Command git -CommandType Application -ErrorAction SilentlyContinue | 
 $gitDetail = 'not found'
 if ($git) { $gitDetail = (Invoke-DevkitProcess -FilePath $git.Source -Arguments @('--version') -TimeoutSeconds 30).StdOut.Trim() }
 Add-DoctorItem -Id 'git' -Name 'Git' -Level 'recommended' -Ok ([bool]$git) `
-    -Purpose 'Version history, GitHub (checks and automatic releases), and the dic/system submodule in a git clone' `
+    -Purpose 'Version history, GitHub (checks and automatic releases), and the system dictionary submodule in a git clone' `
     -Detail $gitDetail `
     -Fix $(if ($hasWinget) { 'After the user agrees, run: winget install --id Git.Git -e (then restart the terminal)' } else { 'Download from https://git-scm.com/download/win' })
 

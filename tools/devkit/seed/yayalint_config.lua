@@ -28,6 +28,7 @@ add(config.func.used, {
 -- Files whose unused globals are not reported (paths relative to the folder of yaya.txt).
 add(config.file.no_unused_global, {
   "^dic/system/",    -- yaya-dic git submodule; do not edit
+  "^system/",        -- the same, in ghosts that keep it in ghost/master/system
 })
 
 return config
