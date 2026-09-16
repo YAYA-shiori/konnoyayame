@@ -7,10 +7,10 @@
 | コマンド | 内容 | 終了コード |
 |---|---|---|
 | `<ps> tools/doctor.ps1` | 開発環境を診断し、足りないもの（Git、Node.js、SSP、チェック用ツール、`GHOST.md` など）の用途と入手方法を表示する。何も変更しない（`-Json` で機械向けの出力） | 0 必須はそろっている / 1 必須が足りない |
-| `<ps> tools/setup.ps1` | git clone したフォルダなら submodule を取得し、tamac.exe と yayalint を `tools/bin/` に取得する（tamac.exe は最新リリースを、GitHub が公開している SHA256 で照合して取得する。yayalint はバージョンと SHA256 を `tools/tools.json` で固定）。取得済みでも版が違えば取り直す。最後に doctor の結果を表示する | 0 成功 / 1 失敗、または必須が足りない |
+| `<ps> tools/setup.ps1` | git clone したフォルダなら submodule を取得し、tamac.exe を `tools/bin/` に取得する（最新リリースを、GitHub が公開している SHA256 で照合して取得する。ツールは `tools/tools.json` に書く）。取得済みでも版が違えば取り直す。最後に doctor の結果を表示する | 0 成功 / 1 失敗、または必須が足りない |
 | `<ps> tools/check-dic.ps1` | tamac.exe で辞書を実際に読み込み、エラーを表示する | 0 OK / 1 エラー / 3 ツール未導入 |
 | `<ps> tools/check-shell.ps1` | `ssp.exe --offline-dump` でシェルを検査する（Error / Warning / Notice）。SSP 2.8.94 以降では、問題の定義位置（`shell/master/surfaces.txt:Line=123`）も表示する | 0 OK / 1 Error あり / 3 SSP が見つからない |
-| `<ps> tools/lint.ps1` | yayalint で未定義・未使用の変数と関数を探す（参考情報） | 0（`-Strict` なら未定義があると 1）/ 3 |
+| `<ps> tools/lint.ps1` | 未定義・未使用の変数と関数、条件式の中の代入を探す（参考情報）。tamac.exe でゴーストを読み込み、システム辞書の `SHIORI3FW.Lint.Run`（yaya-dic の `yaya_base/lint.dic`）が yaya.dll の `LINT.*` 関数で辞書を調べる。`ファイル:行: 種類 '名前' in 関数名` の形で表示し、桁は出ない。システム辞書の結果は `-IncludeSystem` のときだけ表示する。`tools/shiori.ps1 -Eval 'SHIORI3FW.Lint.Run'` でも同じ結果を得られる | 0（`-Strict` なら未定義があると 1）/ 1 辞書の読み込みエラーなど / 3 tamac.exe が無いか古い、yaya.dll が Tc574-1 より古い、システム辞書に `lint.dic` が無い |
 | `<ps> tools/check.ps1` | 上の 3 つを順に実行する | 0 / 1 |
 | `<ps> tools/shiori.ps1 -Eval '関数名や式'` | SSP を使わずに、tamac.exe でこのゴーストの yaya.dll に SHIORI リクエストを 1 回送る。`-Eval` は YAYA のコードを評価して結果を表示する（関数名なら返すトーク、組み込み関数なら実際の戻り値。システム辞書の `??` を使う）。`-Event <ID> -Reference '0,0,0,0,Head'` は SSP と同じ形の GET（`-Notify` で NOTIFY）、`-Request` は生のリクエスト。呼ぶたびに辞書を読み込み直し（`OnBoot` などは先に送らない）、`yaya_variable.cfg` は元に戻す | 0 / 1 失敗（辞書の読み込みエラー、エラー応答など）/ 2 処理中に YAYA がエラーを出した / 3 tamac.exe が無いか古い |
 | `<ps> tools/run-ssp.ps1` | このフォルダのゴーストを SSP で直接起動し（`ssp.exe --ghost <フォルダ>`。インストール不要）、応答するまで待つ。起動中に SSP のエラーログに増えた警告・エラーを表示する（SSP 2.8.94 以降では、起動時のトークが終わるのを待ってから読む） | 0 起動した / 1 応答なし / 2 起動したが、エラーログに Error か Critical が増えた / 3 SSP が見つからない |

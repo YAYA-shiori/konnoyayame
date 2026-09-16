@@ -110,12 +110,6 @@ Add-DoctorItem -Id 'tamac-version' -Name "tamac.exe $tamacMinimum or later" -Lev
     -Detail $(if ($null -eq $tamacCurrent) { 'not installed (see tamac.exe)' } elseif ($tamacCurrent) { 'ok' } else { "v$tamacVersion is older than $tamacMinimum" }) `
     -Fix "Run: $ps tools/setup.ps1 -Tool tamac (downloads the latest release)"
 
-$yayalintPath = Get-DevkitToolPath 'yayalint'
-Add-DoctorItem -Id 'yayalint' -Name 'yayalint' -Level 'optional' -Ok (Test-Path -LiteralPath $yayalintPath) `
-    -Purpose 'Static analysis of dictionaries (tools/lint.ps1)' `
-    -Detail $(if (Test-Path -LiteralPath $yayalintPath) { "$($manifest.yayalint.version) in tools/bin" } else { 'not installed' }) `
-    -Fix "Run: $ps tools/setup.ps1"
-
 # --- SSP -------------------------------------------------------------------------------
 $ssp = Resolve-SspPath
 $sspOk = [bool]$ssp

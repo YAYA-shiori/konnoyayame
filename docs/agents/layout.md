@@ -13,7 +13,6 @@
 | `ghost/master/dic/emerg/*.dic` | 緊急モード用の最小限の辞書 |
 | `ghost/master/dic/system/` | システム辞書（[yaya-dic](https://github.com/YAYA-shiori/yaya-dic)。git clone したフォルダでは submodule）。ゴーストによっては `ghost/master/system/` にあり、開発キットのスクリプトはどちらにも対応している。古いゴーストでは `ghost/master/` の直下などに古い名前（`yaya_shiori3.dic` など）で置かれていることもある（`docs/agents/workflows/update-yaya.md`）。**編集しない**。更新は `tools/update-yaya.ps1` で行う |
 | `ghost/master/yaya.dll` | SHIORI 本体。`tools/update-yaya.ps1` 以外で差し替えない |
-| `ghost/master/yayalint_config.lua` | yayalint の設定 |
 | `shell/master/surfaces.txt` | サーフェス（表情、アニメーション、当たり判定）の定義 |
 | `shell/master/surfacetable.txt` | サーフェス番号と表情名の一覧 |
 | `shell/master/descript.txt` | シェルの情報、メニューや吹き出し位置の設定 |

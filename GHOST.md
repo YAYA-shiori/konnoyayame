@@ -34,7 +34,7 @@
 | `yaya_string.dic` | ユーザー名の初期値、メニュー項目の文字列などのリソース（`On_*`） |
 | `yaya_word.dic` | トーク中に `%(ms)` のように埋め込む単語 |
 | `yaya_homeurl.dic` | ネットワーク更新の URL（`On_homeurl`） |
-| `yaya_tmpl_util.dic` | テンプレートの内部処理（`AYATEMPLATE.*`）。必要なとき以外は触らない |
+| `yaya_tmpl_util.dic` | テンプレートの内部処理（`AYATEMPLATE.*`）と、それが名前を組み立てて呼ぶ関数を lint に伝える `OnSHIORI3FW.Lint.UsedFunctions`。必要なとき以外は触らない |
 
 新しいイベントに反応させる関数は、内容の近い辞書ファイルに書く。`dic/normal/` に新しい `.dic` ファイルを置いた場合も自動で読み込まれる。
 

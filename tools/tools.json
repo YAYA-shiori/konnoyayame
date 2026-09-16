@@ -7,14 +7,5 @@
     "minimumVersion": "1.0.3.25",
     "type": "exe",
     "exe": "tamac.exe"
-  },
-  "yayalint": {
-    "description": "Static linter for YAYA dictionaries (https://github.com/Tatakinov/yayalint)",
-    "version": "v2.1.2",
-    "url": "https://github.com/Tatakinov/yayalint/releases/download/v2.1.2/yayalint.zip",
-    "sha256": "9AD71F8AC0DDB0DC0409CEBB5265244CBEF182CFBE9B0EED862BDDDF05F1C30D",
-    "type": "zip",
-    "installDir": "yayalint",
-    "exe": "yayalint/yayalint/yayalint.exe"
   }
 }

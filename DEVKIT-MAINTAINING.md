@@ -68,7 +68,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 - 終了コードをそろえる: 0 OK / 1 失敗・エラー / 2 注意が要る（SSP のエラーログの Error、`.devkit-new` の残りなど）/ 3 ツールや SSP が無くて確かめられない。
 - 冒頭のコメントヘルプ（`.SYNOPSIS`、`.DESCRIPTION`、終了コード、`.EXAMPLE`）を書き、`docs/agents/commands.md` のコマンド表も直す。
 - ダウンロードして使うツールは `tools/tools.json` に書く。書き方は 2 通りある。
-  - 版を固定する（yayalint）: `version`、`url`、`sha256` を書く。上げるときは 3 つとも書き換え（SHA256 は `Get-FileHash -Algorithm SHA256`）、`tools/setup.ps1 -Tool <名前>` で取り直せることを確かめる（取得済みの exe の SHA256 が違えば取り直す）。
+  - 版を固定する（今は使っているツールが無い。以前は yayalint）: `version`、`url`、`sha256` を書く。上げるときは 3 つとも書き換え（SHA256 は `Get-FileHash -Algorithm SHA256`）、`tools/setup.ps1 -Tool <名前>` で取り直せることを確かめる（取得済みの exe の SHA256 が違えば取り直す）。
   - 最新リリースを使う（tamac。YAYA のプロジェクトが出しているツールで、新しい機能をキットの更新を待たずに使えるようにするため）: `version` を `latest` にし、`repository`、`asset`（リリースのファイル名）、`minimumVersion` を書く。1 つの exe のツールだけに使う（zip では、取得済みのものが最新か見分けられない）。
     - `tools/setup.ps1` は GitHub API で最新リリースを調べ、GitHub が各ファイルに付けている SHA256（`digest`）で照合する。`digest` が無ければ失敗させる。GitHub Actions では、匿名の API 呼び出しの回数制限を避けるため、`auto_check.yml` から `GITHUB_TOKEN` を渡している（`Get-DevkitLatestReleaseAsset` は、トークンが拒否されたら付けずにやり直す）。
     - `doctor.ps1` と `tools/shiori.ps1` はネットワークに出ずに、exe のファイルバージョンが `minimumVersion` 以上かを見る（`Test-DevkitToolCurrent`）。キットのスクリプトが新しいオプションを使い始めたら `minimumVersion` を上げる。
