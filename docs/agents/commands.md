@@ -6,7 +6,7 @@
 
 | コマンド | 内容 | 終了コード |
 |---|---|---|
-| `<ps> tools/doctor.ps1` | 開発環境を診断し、足りないもの（Git、Node.js、SSP、チェック用ツール、`GHOST.md` など）の用途と入手方法を表示する。何も変更しない（`-Json` で機械向けの出力） | 0 必須はそろっている / 1 必須が足りない |
+| `<ps> tools/doctor.ps1` | 開発環境を診断し、足りないもの（Git、SSP、チェック用ツール、`GHOST.md` など）の用途と入手方法を表示する。何も変更しない（`-Json` で機械向けの出力） | 0 必須はそろっている / 1 必須が足りない |
 | `<ps> tools/setup.ps1` | git clone したフォルダなら submodule を取得し、tamac.exe を `tools/bin/` に取得する（最新リリースを、GitHub が公開している SHA256 で照合して取得する。ツールは `tools/tools.json` に書く）。取得済みでも版が違えば取り直す。最後に doctor の結果を表示する | 0 成功 / 1 失敗、または必須が足りない |
 | `<ps> tools/check-dic.ps1` | tamac.exe で辞書を実際に読み込み、エラーを表示する | 0 OK / 1 エラー / 3 ツール未導入 |
 | `<ps> tools/check-shell.ps1` | `ssp.exe --offline-dump` でシェルを検査する（Error / Warning / Notice）。SSP 2.8.94 以降では、問題の定義位置（`shell/master/surfaces.txt:Line=123`）も表示する | 0 OK / 1 Error あり / 3 SSP が見つからない |

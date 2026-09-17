@@ -143,20 +143,6 @@ Add-DoctorItem -Id 'git' -Name 'Git' -Level 'recommended' -Ok ([bool]$git) `
     -Detail $gitDetail `
     -Fix $(if ($hasWinget) { 'After the user agrees, run: winget install --id Git.Git -e (then restart the terminal)' } else { 'Download from https://git-scm.com/download/win' })
 
-# --- Node.js ---------------------------------------------------------------------------
-$node = Get-Command node -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
-$nodeOk = $false
-$nodeDetail = 'not found'
-if ($node) {
-    $nodeDetail = (Invoke-DevkitProcess -FilePath $node.Source -Arguments @('--version') -TimeoutSeconds 30).StdOut.Trim()
-    $nodeOk = ($nodeDetail -match '^v(\d+)\.') -and ([int]$matches[1] -ge 20)
-    if (-not $nodeOk) { $nodeDetail += ' (version 20 or later is needed)' }
-}
-Add-DoctorItem -Id 'node' -Name 'Node.js 20+' -Level 'optional' -Ok $nodeOk `
-    -Purpose 'ukagaka-doc MCP server (offline search of UKADOC and YAYA Wiki)' `
-    -Detail $nodeDetail `
-    -Fix $(if ($hasWinget) { 'After the user agrees, run: winget install --id OpenJS.NodeJS.LTS -e (then restart the terminal)' } else { 'Download the LTS version from https://nodejs.org/' })
-
 # --- output ----------------------------------------------------------------------------
 $missingRequired = @($items | Where-Object { $_.level -eq 'required' -and -not $_.ok })
 $ready = $missingRequired.Count -eq 0

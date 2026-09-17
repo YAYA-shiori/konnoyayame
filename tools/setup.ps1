@@ -6,7 +6,7 @@
       ghost/master/dic/system nor ghost/master/system has .dic files.
     - Downloads the tools pinned in tools/tools.json (version, URL and SHA256) into tools/bin/.
     - Finally prints the result of tools/doctor.ps1.
-    Applications such as Git, Node.js or SSP are not installed; doctor.ps1 tells how to get them.
+    Applications such as Git or SSP are not installed; doctor.ps1 tells how to get them.
     Exit codes: 0 = OK, 1 = a step failed or a required item is still missing.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup.ps1

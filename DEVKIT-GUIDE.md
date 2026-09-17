@@ -30,9 +30,8 @@ AI エージェントを使わずに、`tools/` のスクリプトだけを使�
 | PowerShell | 必須 | `tools/` のスクリプト | Windows には最初から入っています（Windows PowerShell 5.1）。mac・Linux は下の「mac・Linux で使う場合」 |
 | SSP 2.8.94 以降 | 推奨 | シェルのチェック、実際のゴーストでの確認。古い版でも動きますが、シェルの問題の位置（ファイル名と行番号）、再生したスクリプトの検査、トークが終わるのを待ってからのログの確認は、2.8.94 以降でだけ使えます | https://ssp.shillest.net/ |
 | Git | 推奨 | 変更履歴、GitHub での自動チェック、システム辞書（submodule）の取得 | https://git-scm.com/ |
-| Node.js 20 以上 | 任意 | 仕様を検索する MCP サーバー（ukagaka-doc） | https://nodejs.org/ |
 
-Windows で最初に入れておく必要があるのは、AI エージェントだけです。SSP、Git、Node.js は、AI エージェントに「セットアップして」と頼めば、足りないものを調べて入手方法を案内します（インストールは確認を取ってから行います）。
+Windows で最初に入れておく必要があるのは、AI エージェントだけです。SSP と Git は、AI エージェントに「セットアップして」と頼めば、足りないものを調べて入手方法を案内します（インストールは確認を取ってから行います）。
 
 ### mac・Linux で使う場合
 
@@ -50,7 +49,7 @@ PowerShell 7 を入れてください。mac は、Microsoft の案内（https://
 
 ## はじめかた
 
-このフォルダで AI エージェントを起動し（Claude Code なら `claude`）、「セットアップして」と頼んでください。足りないアプリ（Git、Node.js、SSP）の確認と案内、チェック用ツールの取得、動作確認までを代行します。`GHOST.md` がまだ書かれていなければ、辞書とシェルを読んで下書きも作ります。アプリのインストールは、確認を取ってから行います。
+このフォルダで AI エージェントを起動し（Claude Code なら `claude`）、「セットアップして」と頼んでください。足りないアプリ（Git、SSP）の確認と案内、チェック用ツールの取得、動作確認までを代行します。`GHOST.md` がまだ書かれていなければ、辞書とシェルを読んで下書きも作ります。アプリのインストールは、確認を取ってから行います。
 
 自分で行う場合は、次を実行してください（Windows）。
 
@@ -64,7 +63,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1
 - `tools/setup.ps1` は、git clone したフォルダなら submodule を取得し、チェック用ツール（tamac）をダウンロードします。
 - `tools/check.ps1` は、辞書のチェック、シェルのチェック、辞書の lint（未定義・未使用の変数と関数の検出。yaya.dll Tc574-1 以降と、`yaya_base/lint.dic` のあるシステム辞書が必要）を順に実行します。
 - SSP の場所は `.nar` の関連付けなどから自動で探します。見つからない場合は環境変数 `SSP_PATH` か `tools/local.json`（`tools/local.example.json` を複製）で指定してください。
-- ドキュメント検索 MCP（[ukagaka-doc-mcp](https://github.com/finelagusaz/ukagaka-doc-mcp)）には Node.js 20 以上が必要です。
+- ドキュメント検索 MCP（ukagaka-doc）は、オンラインのサーバー `https://ssp.shillest.net/ukadoc/mcp` に接続します。インストールするものはありません。
 - ほかのスクリプト（SSP での起動、SSTP でのトークの再生、nar の作成など）は、`docs/agents/commands.md` に一覧があります。
 
 ## GHOST.md を仕上げる

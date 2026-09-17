@@ -1,9 +1,8 @@
 {
   "mcpServers": {
     "ukagaka-doc": {
-      "type": "stdio",
-      "command": "cmd",
-      "args": ["/c", "npx", "-y", "ukagaka-doc-mcp"]
+      "type": "http",
+      "url": "https://ssp.shillest.net/ukadoc/mcp"
     }
   }
 }

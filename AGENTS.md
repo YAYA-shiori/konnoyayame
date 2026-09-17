@@ -91,7 +91,7 @@ AI がやりがちな失敗:
 
 さくらスクリプトのタグ、SHIORI イベントの名前と Reference、YAYA の関数、各種設定ファイルの項目は、推測で書かずに次の順で調べる。
 
-1. MCP サーバー `ukagaka-doc`（UKADOC、YAYA Wiki などをオフラインで検索できる。起動コマンドは `npx -y ukagaka-doc-mcp`、Node.js 20 以上が必要）。Claude Code では `.mcp.json` で設定済み。他のツールでは、そのツールの MCP 設定に stdio サーバーとして登録する（Windows では `cmd /c npx -y ukagaka-doc-mcp`）。
+1. MCP サーバー `ukagaka-doc`（UKADOC、YAYA Wiki などを検索できるオンラインのサーバー。URL は `https://ssp.shillest.net/ukadoc/mcp`）。Claude Code では `.mcp.json` で設定済み。他のツールでは、そのツールの MCP 設定に HTTP（Streamable HTTP）のサーバーとしてこの URL を登録する。
 2. 一次資料を読む。
    - さくらスクリプト一覧: https://ssp.shillest.net/ukadoc/manual/list_sakura_script.html
    - SHIORI イベント一覧: https://ssp.shillest.net/ukadoc/manual/list_shiori_event.html
