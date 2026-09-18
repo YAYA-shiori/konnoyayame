@@ -6,8 +6,12 @@ $DevkitRoot = [IO.Path]::GetFullPath((Join-Path (Join-Path $PSScriptRoot '..') '
 $DevkitToolsDir = Join-Path $DevkitRoot 'tools'
 $DevkitBinDir = Join-Path $DevkitToolsDir 'bin'
 $DevkitUtf8 = New-Object System.Text.UTF8Encoding($false)
-# SSP version that the kit is written for: GetStatus, Option: strict, SERIKO error places and --dump-error-log exit codes.
-$DevkitSspRecommendedVersion = New-Object System.Version(2, 8, 94)
+# SSP version with GetStatus, Option: strict, SERIKO error places and --dump-error-log exit codes.
+$DevkitSspDiagnosticsVersion = New-Object System.Version(2, 8, 94)
+# SSP version with "--option readonly" and "--sstp-listen", used by tools/run-ssp.ps1 for an isolated SSP.
+$DevkitSspIsolatedVersion = New-Object System.Version(2, 8, 97)
+# SSP version that the kit is written for (tools/doctor.ps1 reports older versions): all of the above.
+$DevkitSspRecommendedVersion = $DevkitSspIsolatedVersion
 # Folders of the system dictionary (yaya-dic), relative to ghost/master, in the order they are looked for.
 # Most ghosts keep it in dic/system; some keep it in system.
 $DevkitSystemDicDirs = @('dic/system', 'system')

@@ -37,7 +37,7 @@ if (-not $ssp) {
 }
 
 $sspVersion = Get-DevkitSspVersion $ssp.Path
-$levelExitCode = $sspVersion -and $sspVersion -ge $DevkitSspRecommendedVersion
+$levelExitCode = $sspVersion -and $sspVersion -ge $DevkitSspDiagnosticsVersion
 
 $log = Join-Path ([IO.Path]::GetTempPath()) ('devkit-ssp-' + [guid]::NewGuid().ToString('N') + '.log')
 $result = Invoke-DevkitProcess -FilePath $ssp.Path -Arguments @('--offline-dump', $Root, '--dump-error-log', $log) -TimeoutSeconds 180
@@ -91,7 +91,7 @@ if ($levelExitCode -and $result.ExitCode -ge 2 -and $errors -eq 0) {
     $warnings++
 }
 if ($sspVersion -and -not $levelExitCode) {
-    Write-Host "check-shell: note - SSP $sspVersion is older than $DevkitSspRecommendedVersion. Update SSP to see the file and line of each problem and to keep every log entry."
+    Write-Host "check-shell: note - SSP $sspVersion is older than $DevkitSspDiagnosticsVersion. Update SSP to see the file and line of each problem and to keep every log entry."
 }
 
 $summary = "errors: $errors, warnings: $warnings, notices: $notices"

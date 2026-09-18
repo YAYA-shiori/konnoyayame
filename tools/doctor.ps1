@@ -120,7 +120,7 @@ if ($ssp) {
     $sspDetail = "$($ssp.Path) $(if ($sspVersion) { $sspVersion } else { '(version unknown)' }) (found via $($ssp.Source))"
     if ($sspVersion -and $sspVersion -lt $DevkitSspRecommendedVersion) {
         $sspOk = $false
-        $sspDetail += "; $DevkitSspRecommendedVersion or later is needed for the file and line of shell problems, script checks (Option: strict) and waiting for talks to end (GetStatus)"
+        $sspDetail += "; $DevkitSspRecommendedVersion or later is needed for running the ghost in a separate SSP that saves nothing (tools/run-ssp.ps1)$(if ($sspVersion -lt $DevkitSspDiagnosticsVersion) { ", and $DevkitSspDiagnosticsVersion or later for the file and line of shell problems, script checks (Option: strict) and waiting for talks to end (GetStatus)" })"
         $sspFix = "Update SSP to $DevkitSspRecommendedVersion or later (https://ssp.shillest.net/ , or the network update of SSP itself). The scripts still work with this version, with less information."
     }
 } else {

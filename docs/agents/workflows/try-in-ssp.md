@@ -13,6 +13,10 @@
 ## 手順
 
 0. 動いていなければ `powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-ssp.ps1` で起動する。`ssp.exe --ghost <このフォルダ>` を使うので、SSP にインストールしなくても作業中のフォルダがそのまま動く。作者のデスクトップにゴーストが現れるので、一言断ってから起動する。起動中に SSP のエラーログに増えた警告・エラーも表示される。
+   - SSP 2.8.97 以降では、作者がふだん使っている SSP とは別に、試験用の SSP が立つ（`--option readonly`）。作者の SSP の設定や起動履歴を変えず、vanish してもフォルダは消えない。この後の `tools/sstp.ps1` と `tools/ssp-log.ps1` は、自動でこの SSP に送る。
+   - すでに試験用の SSP が動いていれば、何もせずにそのことを表示する。変更を読み込ませるには手順 2 の再読み込みを使う。
+   - 試し終わったら、作者に聞いてから `tools/run-ssp.ps1 -Stop` で閉じる（ゴーストの終了トークが流れる）。作者が自分で閉じてもかまわない。
+   - 作者が「いつもの SSP で動かして」と言ったときや、作者の SSP にいるほかのゴーストと一緒に試すときは、`-Shared` を付ける。古い SSP では、付けなくてもこの動きになる。
 1. 辞書を変更したなら、先に `tools/check-dic.ps1` を通す。
 2. 変更を読み込ませる:
    `powershell -NoProfile -ExecutionPolicy Bypass -File tools/sstp.ps1 -Reload ghost`

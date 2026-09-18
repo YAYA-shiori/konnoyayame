@@ -14,6 +14,7 @@
     Older SSP versions get a fixed short wait instead.
     Exit codes: 0 = 2xx response, 1 = error response, 2 = 2xx response but SSP logged Error or Critical
     entries, 3 = could not connect (SSP is not running).
+    While the isolated SSP started by tools/run-ssp.ps1 runs, requests go to its port unless -Port is given.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/sstp.ps1 -Reload ghost
 .EXAMPLE
@@ -52,7 +53,8 @@ param(
     [switch]$AnyGhost,
     # Do not show the new SSP error log entries.
     [switch]$NoLog,
-    [int]$Port = 9801,
+    # SSTP port (default: the isolated SSP started by tools/run-ssp.ps1 while it runs, otherwise 9801).
+    [int]$Port = 0,
     # Time to wait for the SSTP response, and for the talk to end before the log is read.
     [int]$TimeoutSeconds = 60
 )
@@ -60,6 +62,7 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/common.ps1')
 . (Join-Path $PSScriptRoot 'lib/sstp.ps1')
 Initialize-DevkitConsole
+$Port = Resolve-DevkitSspPort $Port
 
 $mode = $PSCmdlet.ParameterSetName
 if ($mode -eq 'Reload') { $Script = '\![reload,' + $Reload + ']' }
@@ -116,7 +119,7 @@ if ($watchLog) {
 
 $response = Invoke-DevkitSstp -Lines $headers.ToArray() -Port $Port -TimeoutSeconds $TimeoutSeconds
 if (-not $response.Connected) {
-    Write-Host "sstp: could not connect to 127.0.0.1:$Port. Is SSP running?"
+    Write-Host "sstp: could not connect to 127.0.0.1:$Port. Is SSP running? (start it with tools/run-ssp.ps1)"
     exit 3
 }
 
