@@ -19,6 +19,7 @@
 5. doctor の `ghost-profile` が ok でなければ（`GHOST.md` が無い、または先頭に `<!-- devkit:ghost-template -->` が残っている）、`GHOST.md` を下書きする。
    - 無ければ `tools/devkit/seed/GHOST.md` を複製して始める。
    - `ghost/master/descript.txt`、`ghost/master/yaya.txt`、辞書（`dic/` 以下のファイル名と、どのイベントがどこにあるか）、`shell/master/surfaces.txt` と `surfacetable.txt`、`shell/master/descript.txt`（シェルの作者とライセンス）、既存のトークを読んで埋める。
+   - 「使えるサーフェス」の表情の説明は、`surfacetable.txt` や既存のトークで使われている場面に加えて、画像を読めるなら実際の見た目で確かめる: `powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0-9 -Backlog -Sheet`（`sheet.png` に顔のまわりが番号付きで並ぶ。番号は surfaces.txt に合わせる。`\1` 側は `-Scope 1` を付ける）。
    - 人物像やトークの決まりは、既存の台詞から読み取れる範囲にとどめ、推測で足さない。わからない欄は空けたまま、作者に聞く。
    - 下書きを見せて確かめてもらい、了承を得てから書き込む。書き終えたら先頭のマーカーの 2 行を消す。
 6. 作者が望めば `powershell -NoProfile -ExecutionPolicy Bypass -File tools/run-ssp.ps1` でゴーストを起動して見せる（デスクトップにゴーストが現れる。SSP 2.8.97 以降では試験用の SSP が別に立つので、見せ終わったら `tools/run-ssp.ps1 -Stop` で閉じてよいか聞く）。
