@@ -10,6 +10,7 @@ include:tools/devkit.narignore
 
 # notes for developing the kit itself; only in the repository
 /DEVKIT-MAINTAINING.md
+/docs/devkit-maintaining/
 
 # git metadata (ghost/master/dic/system is a plain folder in the nar, not a submodule)
 .git

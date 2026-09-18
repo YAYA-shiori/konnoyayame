@@ -2,7 +2,7 @@
 
 AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`、`docs/agents/`、`.claude/`、`tools/` など）を作る・直すときの注意です。
 
-このファイルは、キットの配布元である konnoyayame のリポジトリにだけあります。nar、ネットワーク更新、キットの配布物のどれにも入りません（ルートの `.narignore` の `/DEVKIT-MAINTAINING.md`。`tools/devkit.json` の `files` にも載せない）。ゴーストを作るときの指示は `AGENTS.md` と `docs/agents/`、作者向けのキットの使い方と、別のゴーストへのキットの導入手順は `DEVKIT-GUIDE.md`、konnoyayame に固有の情報は `GHOST.md`、konnoyayame の紹介は `README.md` にあります。
+このファイルと、スクリプトごとの実装メモを置いた `docs/devkit-maintaining/` は、キットの配布元である konnoyayame のリポジトリにだけあります。nar、ネットワーク更新、キットの配布物のどれにも入りません（ルートの `.narignore` の `/DEVKIT-MAINTAINING.md` と `/docs/devkit-maintaining/`。`tools/devkit.json` の `files` にも載せない）。ゴーストを作るときの指示は `AGENTS.md` と `docs/agents/`、作者向けのキットの使い方と、別のゴーストへのキットの導入手順は `DEVKIT-GUIDE.md`、konnoyayame に固有の情報は `GHOST.md`、konnoyayame の紹介は `README.md` にあります。
 
 ## キットの範囲
 
@@ -76,51 +76,18 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 
 ## 実装メモ
 
-- SSTP: `tools/sstp.ps1` は、`EXECUTE GetFMO` で調べたゴーストの識別 ID を `ID` ヘッダに付けて送る（Owned SSTP）。付けないと SSP は外部のプログラムからの要求として扱い、`\![reload,ghost]` などを黙って無視する（応答は 200 のまま）。
-- SSP のログ: プロパティシステムの `developer.log.*` を `EXECUTE GetProperty` で読む。ログは種類ごとに新しいものから 50 件ほどしか残らず、発信元の名前は descript.txt の `name`（`sakura.name` ではない）になる。
-- SSP の版: 機能ごとに `tools/lib/common.ps1` の定数を基準にする（2.8.94 の機能は `$DevkitSspDiagnosticsVersion`、2.8.97 の試験用 SSP は `$DevkitSspIsolatedVersion`）。doctor は `$DevkitSspRecommendedVersion`（今は 2.8.97）より古い版を recommended の不足として知らせる。版は `ssp.exe` のファイルバージョン（`2, 8, 94, 3000`）の上 3 つで比べる（`Get-DevkitSspVersion`）。古い版では、各スクリプトは今までどおりの動き（決まった時間だけ待つなど）に戻す。2.8.94 の機能は次のとおり。
-  - `EXECUTE GetStatus`（`Get-DevkitSspStatus`）: SEND と NOTIFY は、スクリプトを再生する前に応答する。再生中は `talking` が付くので、`Wait-DevkitSspTalkEnd` でそれが消えるまで待ってからエラーログを読む。ゴーストの読み込み中は 400 が返り、`\![reload,ghost]` の後は `talking` → 400 → 200 と変わる（`Wait-DevkitSspReload`）。古い SSP も 200 を返さないので、要求を送る前に 1 回呼んで使えるか確かめる。
-  - `Option: strict`: `tools/sstp.ps1` の `-Script` と `-Event` に付ける。解釈に失敗したタグは、再生がその位置に来たときに、Error として `[GHOST/Script] 理由 (詳細) at position 位置 : 抜粋` の形で記録される（位置はスクリプトの先頭を 0 とした文字数）。
-  - `--dump-error-log`: ssp.exe の終了コードが、記録された最も重いレベルになる（0 Notice 以下 / 1 Warning / 2 Error / 3 Critical）。`tools/check-shell.ps1` はログから数えた件数と照らし合わせ、0〜3 以外は異常終了として扱う。
-  - SERIKO のメッセージの定義位置（`<ファイル>:Line=<n>:`）: SSP の説明ではゴーストのフォルダからの相対パスだが、`--offline-dump` では絶対パスになる（2.8.94 で確認）。`ConvertTo-DevkitRelativeText` がどちらも `/` 区切りの相対パスにそろえ、`check-shell.ps1 -Ci` はそれを GitHub Actions の注釈の `file` と `line` にする。
-- `tools/dump-surface.ps1`（`--offline-dump` の `--dump-surface-list`。版による分岐はしない）:
-  - 出力のファイル名は `<--dump-output-prefix><番号>.png`。プレフィックスを省くと `surface` になる。スクリプトは通常 `surface`、`-Backlog` では `backlog` を明示して渡す。
-  - 無い番号は黙って飛ばされ、終了コードは 0 のまま。空のフォルダに出してから移し、`-Surface` の単純な番号と出たファイルを突き合わせて知らせる。範囲などの拡張形式は突き合わせない。
-  - `--dump-shell` に無いシェルを渡すと、黙って既定のシェルになる。スクリプトが先に `shell/` のフォルダ名と descript.txt の `name` で確かめる。
-  - `--dump-surface-list` の `surface10` の形は、2.8.97 では出力されなかった。スクリプトが番号だけにして渡す。
-  - `--dump-scope` は、別のスコープの番号（スコープ 1 で 0 など）でもそのまま出力する。
-  - 出力先を既定で一時フォルダにするのは、改変を禁じたシェル（CC BY-NC-ND など）の合成画像を、ゴーストのフォルダや nar、リポジトリに紛れ込ませないため。
-  - `-Sheet` は System.Drawing で並べる。Windows PowerShell 5.1 と Windows の pwsh で動く。失敗しても個々の画像はあるので、注意を出すだけにする。
-  - `.claude/settings.json` の許可リストに入れている（書き込むのは一時フォルダだけ）。
-- SSP 2.8.97 以降の試験用 SSP（`tools/run-ssp.ps1`。基準は `$DevkitSspIsolatedVersion`）:
-  - `--option readonly --sstp-listen <ポート> --ghost <フォルダ>` で起動する。readonly は `bootunlock,standalone` を含むので、起動中の SSP に処理を渡さず、別のプロセスになる。設定、起動履歴、キャッシュなどを保存せず、vanish してもゴーストのフォルダを消さない。YAYA が書く `yaya_variable.cfg` は SSP の保存とは別なので、ふだんどおり書かれる。
-  - ポートは 9822〜10999 で、IPv4 と IPv6 のループバックの両方に bind できる最初のもの（`Find-DevkitSspFreePort`）。9801、9821、11000 は伺かのほかのプログラムの既定値なので避ける。
-  - 起動した SSP のポート、PID、プロセスの開始時刻、ゴーストのフォルダを、一時フォルダの `ghost-devkit/ssp-<キットのフォルダのハッシュ>.json` に記録する（`Save-DevkitSspSession`）。ゴーストのフォルダに置かないのは、nar や git の除外を増やさないため。PID が生きていて開始時刻も同じときだけ有効とし（PID の再利用対策）、それ以外は消す。
-  - `tools/sstp.ps1` と `tools/ssp-log.ps1` の `-Port` の既定値は 0 で、`Resolve-DevkitSspPort` が、記録が有効ならそのポート、無ければ 9801 にする。
-  - `-Stop` は Owned SSTP で `\-` を送ってゴーストを閉じ（`OnClose` が動き、YAYA が変数を保存する）、閉じなければプロセスを止める。ゴーストが 1 体なら SSP も終わる（2.8.97 で確認）。
-  - readonly は二重起動のチェックに関わらないので、記録が有効な間は新しく立てず、そのことを表示して終わる。別のフォルダ（`-Root`）の記録が有効なら、先に `-Stop` するよう促して 1 で終わる。
-- tamac.exe の `-r`（v1.0.3.25 以降。`tools/shiori.ps1`）:
-  - 標準入力を EOF まで読んでリクエストにし（改行を CRLF にそろえ、終わりの空行を足し、先頭の BOM を外す）、応答を標準出力に、ログをすべて標準エラー出力に出す。1 回に送れるのは 1 リクエストだけ。
-  - dll は絶対パスで渡す（`Invoke-DevkitTamac`）。相対パスだと `yaya.txt` を探すフォルダが空になり、読み込めない。
-  - 終了コード: 0 / 1（dll が読めない、空のリクエスト、空の応答）/ 2（読み込み中か処理中に `-l` 以上のログ。応答は出る）。環境変数 `GITHUB_ACTIONS` があると `--ci` の出力に切り替わるので、`shiori.ps1` は子プロセスに渡さない。
-  - ログには、読み込み（`// request` の次の行がゴーストのフォルダ）、送ったリクエスト、解放の順に、`// request` と本文が並ぶ。`shiori.ps1` は、送ったリクエストの 1 行目より前のエラーを読み込みエラーとして扱う。緊急モードでも `?? 1+2` に答える（konnoyayame で確認）ので、応答だけでは見分けられない。
-  - `?? コード` には、yaya-dic の `shiori3.dic`（`AyaTest.Eval`）が `!! 結果` で答える。行ごとに `EVAL` して結果をつなげ、配列は `,` で JOIN する。ローカル変数は次の行に残らない。`EVAL` に失敗すると結果はコードそのものになり、E0071 などが `shiori3.dic` の行で記録される。
-  - システム辞書は、リクエストの `Charset` で `charset.output` を切り替える（`SETSETTING`）。`-Event` は `yaya.txt` の `charset.output` を送り、UTF-8 を決め打ちしない。`Sender` は `basewarename` になり、テンプレートは `SSP` かどうかで分岐するので、`SSP` を送る。
-  - YAYA は解放のときに `yaya_variable.cfg` を保存するので、`Invoke-DevkitTamac` が前後で退避して戻す（`check-dic.ps1` も同じ）。
-  - `.claude/settings.json` の許可リストに入れている。`-Eval` は任意の YAYA のコード（`EXECUTE`、`FWRITE` など）を実行できるが、辞書の関数を試すたびに確認が出ると使われなくなるため、使いやすさを優先した。ファイルの書き込みや外部プログラムの実行をする関数は中身を読んでから呼ぶことを、`AGENTS.md` と `docs/agents/workflows/check.md` に書いている。
-- `tools/update-yaya.ps1` のシステム辞書（yaya-dic）:
-  - yaya-dic にはリリースもタグも無いので、既定のブランチの最新のコミットを使う。git のチェックアウトでは `git fetch origin HEAD` の `FETCH_HEAD`、それ以外では GitHub API の `commits/HEAD` の SHA の zip。
-  - 今の構成かどうかは `yaya_base/shiori3.dic` の有無で見る（`Test-DevkitYayaDicLayout`）。yaya-dic は 2022-06-17 に `yaya_shiori3.dic` などをフォルダに分けて改名した。古い名前は `$DevkitOldSystemDicNames` にあり（`yaya_config.txt` は古いテンプレートがゴースト側に置いていた設定辞書）、`Find-DevkitOldSystemDicFiles` が `ghost/master` の下を探す。古い構成は自動では直さず、終了コード 2 で手順書の再編に回す。doctor も、`yaya_shiori3.dic` が見つかれば system-dic を不足にしない（ゴーストは動くため）。
-  - 普通のファイルには、lock のような「入れた版」の記録が無い。作者が変えることのある `yaya_base/config.dic` と `_loading_order.txt` は、新しい版と違えば置き換えずに `.yaya-dic-new` を横に置く（上流が変えただけでも衝突になるが、手順書でエージェントがマージする）。それ以外は作者が変えない前提で置き換える。`.github/` など先頭がドットのものは取り込まない。
-  - git のチェックアウトは、未コミットの変更か、今のコミットが新しいコミットの祖先でなければ切り替えない。`.gitmodules` に載っていても、ルートに `.git` が無いフォルダ（nar など）は submodule として扱わない。
-  - 辞書チェックは yaya.dll とシステム辞書のそれぞれの後で行い、失敗した部分だけを戻す。どちらが原因かを分けるため。
-- `.narignore` / `.updateignore`（SSP の `sp_gitignorefilter.cpp` の挙動）: `tools/lib/ignore.ps1` をこれにそろえている。
-  - ルートに置いたものだけを読む。
-  - 行頭が `include:相対パス` の行はディレクティブとして扱う。
-  - パスは、その行が書かれたファイルのフォルダを基準に解決する（ルート固定ではない）。
-  - 取り込んだ先でも `include:` を書ける。最初のファイルが深さ 0 で、深さ 3 を超えると読まれない（`SP_GITIGNORE_FILTER_MAX_INCLUDE_DEPTH`）。
-  - 区切りは `/` でも `\` でもよい。
-  - 今の構成は `.updateignore` → `.narignore` → `tools/devkit.narignore` の深さ 2。キット側でこれ以上 `include:` を重ねるときは、上限に注意する。
+スクリプトが頼っている外部のプログラムの挙動と、そう実装した理由は、話題ごとに `docs/devkit-maintaining/` に書いている。そのスクリプトを変えるときに読む。新しい話題はファイルを足し、この表に行を足す。
+
+| ファイル | 中身 |
+|---|---|
+| `ssp.md` | SSTP（Owned SSTP）、SSP のログ、SSP の版ごとの機能（2.8.94 の `GetStatus`、`Option: strict`、`--dump-error-log`）、試験用 SSP（`tools/run-ssp.ps1`） |
+| `dump-surface.md` | `tools/dump-surface.ps1` と `--offline-dump` の `--dump-surface-list` |
+| `tamac.md` | tamac.exe の `-r` と `tools/shiori.ps1` |
+| `update-yaya.md` | `tools/update-yaya.ps1` のシステム辞書（yaya-dic）の取得と置き換え |
+| `ignore.md` | `.narignore` / `.updateignore` の解釈（`tools/lib/ignore.ps1`） |
+
+どのスクリプトにも関わる短いものは、ここに書く。
+
 - hooks: `.claude/settings.json` に書いている。
   - SessionStart: `tools/hooks/session-start.ps1` が、doctor の recommended 以上の不足と直し方を Claude に伝える。
   - PostToolUse: `tools/hooks/post-edit.ps1` が、`ghost/` と `shell/` の編集後にチェックを走らせる。
@@ -137,7 +104,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
    - マージして `.devkit-new` を消して再実行すると 0 になる
    - キットから外したファイルは消える。作者が手を入れていたものは `keep` で残る
    - `GHOST.md` とルートの `.gitignore` は変わらない
-   - `DEVKIT-MAINTAINING.md` はコピーされない
+   - `DEVKIT-MAINTAINING.md` と `docs/devkit-maintaining/` はコピーされない
    - `docs/agents/` の外にある作者自身の `docs/` は巻き込まれない
    - 手元と新しい版の両方で `docs/agents/` のファイルを変えておくと、`.devkit-new` が書かれ、終了コードが 2 になり、`doctor.ps1` の `devkit-conflicts` にもそのパスが出る（`Get-DevkitConflictFiles` の走査フォルダの確認）
    - `AGENTS.md` を手元で変えてあると `CONFLICT` になる。本体が古いままでも、`.devkit-new` が残っていることが doctor と起動時の hook から伝わる
@@ -145,5 +112,5 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
    - seed がそろう
    - `doctor.ps1` が `GHOST.md` の未記入を知らせる
    - `check.ps1` が動く
-4. `tools/build-nar.ps1 -ListOnly` で、`docs/agents/` のファイルが入っていて（git の作業コピーでは `git add` 済みであること）、`tools/bin/`、`build/`、`*.devkit-new`、`DEVKIT-MAINTAINING.md` が入っていない。
+4. `tools/build-nar.ps1 -ListOnly` で、`docs/agents/` のファイルが入っていて（git の作業コピーでは `git add` 済みであること）、`tools/bin/`、`build/`、`*.devkit-new`、`DEVKIT-MAINTAINING.md`、`docs/devkit-maintaining/` が入っていない。
 5. `AGENTS.md` の索引（「こう頼まれたら」「資料」）と、`docs/agents/` の中から指しているパスが、すべて実在する。
