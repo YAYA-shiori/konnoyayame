@@ -12,7 +12,7 @@
    - 各項目の `level` は `required`（ないとチェックが動かない）、`recommended`、`optional`。`purpose` が用途、`fix` が直し方。
 2. 足りないアプリがあれば、用途を一言で説明して、入手を提案する。**インストールは必ず了承を得てから行う。**
    - **Git**（推奨）: 変更履歴と GitHub での自動チェック・リリース。`fix` に winget のコマンドがあれば、了承を得てから実行する（`winget install --id Git.Git -e`）。winget がなければダウンロード先を案内する。
-   - **SSP**（推奨）: 2.8.97 以降を使う。https://ssp.shillest.net/ から入手してもらう。すでに入っているのに見つからない場合は、`ssp.exe` の場所を聞いて `tools/local.json` に `{"sspPath": "C:\\path\\to\\ssp.exe"}` と書く（`tools/local.example.json` 参照）。見つかったのに `ssp` が ok でないときは版が古いので、更新を提案する（古い版でもチェックは動くが、ゴーストは作者がふだん使う SSP で動き、2.8.94 より古いと、シェルの問題の位置、再生したスクリプトの検査、トークが終わるのを待ってからのログの確認も使えない）。
+   - **SSP**（推奨）: 2.8.98 以降を使う。https://ssp.shillest.net/ から入手してもらう。すでに入っているのに見つからない場合は、`ssp.exe` の場所を聞いて `tools/local.json` に `{"sspPath": "C:\\path\\to\\ssp.exe"}` と書く（`tools/local.example.json` 参照）。見つかったのに `ssp` が ok でないときは版が古いので、更新を提案する（2.8.98 より古いと nar と更新ファイルを作れない。チェックは古い版でも動くが、2.8.97 より古いとゴーストは作者がふだん使う SSP で動き、2.8.94 より古いと、シェルの問題の位置、再生したスクリプトの検査、トークが終わるのを待ってからのログの確認も使えない）。
    - アプリを入れた直後は PATH が反映されていないことがある。見つからないままなら、ターミナル（エージェント）を起動し直してもらう。
 3. `powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup.ps1` を実行する。git clone したフォルダなら submodule を取得し、チェック用ツールを GitHub からダウンロードする（ダウンロードを伴うことを一言伝える）。最後に doctor の結果が出るので、`required` がすべて ok になったか確かめる。
 4. `powershell -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1` で、辞書・シェル・lint のチェックが通ることを確かめる。

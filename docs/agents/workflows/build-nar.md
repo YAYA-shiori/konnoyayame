@@ -1,20 +1,31 @@
-# nar の作成
+# nar とネットワーク更新ファイルの作成
 
 ## 使うとき
 
-作者が「nar を作って」「配布用のファイルを作って」「配布用に固めて」「リリースしたい」と言ったとき。
+作者が「nar を作って」「配布用のファイルを作って」「配布用に固めて」「リリースしたい」「更新ファイルを作って」「ネットワーク更新の準備をして」と言ったとき。
 
 **作者にはっきり頼まれたときだけ行う。自分から始めない。**
+
+## 前提
+
+- SSP 2.8.98 以降が要る。`tools/build-nar.ps1` は試験用 SSP（`tools/run-ssp.ps1` と同じもの）でこのゴーストを起動し、SSP の `\![execute,createupdatedata,<ファイル>]` と `\![execute,createnar,<ファイル>]` に作らせて、終わったら閉じる。試験用 SSP がこのフォルダで動いていれば、それを使い、閉じずに残す。
+- SSP が古いと失敗する（終了コード 1）。SSP の更新を作者に勧める。
+- GitHub Actions（`GITHUB_ACTIONS=true`）と `-Builtin` のときだけは、SSP を使わずにスクリプト自身が nar を作る（更新ファイルは作れない）。
 
 ## 手順
 
 1. `powershell -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1` を通す。error が残っているうちは作らない。
 2. `tools/build-nar.ps1 -ListOnly` で入るファイルと除外されるファイルを表示し、個人データ、ローカル設定、ビルド生成物が混ざっていないか確かめる。
-   - nar から除外するファイルは `.narignore`（`.gitignore` と同じ書き方）で指定する。ネットワーク更新からの除外は `.updateignore`（先頭の `include:.narignore` で共通部分を取り込んでいる）。どちらも SSP の nar・更新ファイル作成機能と同じファイル。
-   - `.narinclude`（ホワイトリスト形式）は `tools/build-nar.ps1` が対応していないので使わない。
-   - git の作業コピーでは、追跡されていないファイルは入らない。新しく作ったファイルを入れたいときは `git add` が必要なことを作者に伝える。
-3. `tools/build-nar.ps1` で `build/<install.txt の directory>.nar` を作る。
-4. 作者が望んだときだけ `-Install` を付けて SSP にインストールする。SSP 側の同じゴーストが上書きされるので、必ず先に確認を取る。
+   - nar から除外するファイルは `.narignore`（`.gitignore` と同じ書き方）で指定する。ネットワーク更新からの除外は `.updateignore`（先頭の `include:.narignore` で共通部分を取り込んでいる）。どちらも SSP が読むファイルで、`-ListOnly` は `.narignore` を SSP と同じように解釈して表示する。
+   - SSP はフォルダの中身をそのまま固める。git の作業コピーでも、追跡されていないファイルは入る。`-ListOnly` の最後に件数が出るので、入れたくないものがあれば `.narignore` に足すか、消すかを作者に確かめる。
+   - `.narinclude`（ホワイトリスト形式）は SSP が読むが、`-ListOnly` では一覧を出せない。
+3. 作る。
+   - nar を頼まれたとき: `tools/build-nar.ps1` で、`build/<install.txt の directory>.nar` と、同じフォルダに `updates2.dau` と `updates.txt` を作る。
+   - 更新ファイルだけを頼まれたとき: `tools/build-nar.ps1 -UpdateOnly` で、`build/updates2.dau` と `build/updates.txt` だけを作る。
+   - 出力先は `-OutFile <nar のパス>` で変えられる（更新ファイルはその横に作る）。
+4. 終了コード 2 のときは、作っている間に SSP のエラーログに Error か Critical が増えている。表示された内容を作者に伝える。
+5. 作者が望んだときだけ `-Install` を付けて SSP にインストールする。SSP 側の同じゴーストが上書きされるので、必ず先に確認を取る。
+6. ネットワーク更新では、ゴーストのファイルと一緒に `updates2.dau` と `updates.txt` をサーバーのゴーストのルート（`On_homeurl` の URL）に置く。アップロードは作者に任せる（エージェントが行うときは、先に確認を取る）。
 
 ## 関連
 

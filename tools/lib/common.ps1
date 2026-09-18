@@ -10,8 +10,11 @@ $DevkitUtf8 = New-Object System.Text.UTF8Encoding($false)
 $DevkitSspDiagnosticsVersion = New-Object System.Version(2, 8, 94)
 # SSP version with "--option readonly" and "--sstp-listen", used by tools/run-ssp.ps1 for an isolated SSP.
 $DevkitSspIsolatedVersion = New-Object System.Version(2, 8, 97)
+# SSP version whose \![execute,createnar,<file>] and \![execute,createupdatedata,<file>] take an output file,
+# required by tools/build-nar.ps1 outside CI.
+$DevkitSspNarVersion = New-Object System.Version(2, 8, 98)
 # SSP version that the kit is written for (tools/doctor.ps1 reports older versions): all of the above.
-$DevkitSspRecommendedVersion = $DevkitSspIsolatedVersion
+$DevkitSspRecommendedVersion = $DevkitSspNarVersion
 # Folders of the system dictionary (yaya-dic), relative to ghost/master, in the order they are looked for.
 # Most ghosts keep it in dic/system; some keep it in system.
 $DevkitSystemDicDirs = @('dic/system', 'system')

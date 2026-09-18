@@ -14,7 +14,7 @@ git で管理しているフォルダでも、nar を SSP にインストール�
 - `docs/agents/` : `AGENTS.md` から分けた資料（開発コマンドの一覧、ディレクトリ構成、キットのファイルの持ち主、独立ゴーストにするときのチェックリスト）と、`workflows/` の作業手順書。エージェントは必要になったときに読みます
 - `GHOST.md` : このゴーストに固有の情報（キャラクター、サーフェス、ライセンス、辞書の構成）。エージェントは作業の前に必ず読みます
 - `CLAUDE.md` / `.claude/` / `.mcp.json` : Claude Code 用の設定（編集後の自動チェック、起動時の診断、仕様調査用サブエージェント、ドキュメント検索 MCP）
-- `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、エージェントが表情を目で確かめるためのサーフェスの画像化（SSP）、辞書の lint（システム辞書の `SHIORI3FW.Lint` を tamac で実行）、SSP を使わない SHIORI リクエストの送信と YAYA のコードの評価（tamac）、SSTP での実機確認と SSP のログ取得、nar 作成、yaya.dll・システム辞書と開発キットの更新のスクリプト
+- `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、エージェントが表情を目で確かめるためのサーフェスの画像化（SSP）、辞書の lint（システム辞書の `SHIORI3FW.Lint` を tamac で実行）、SSP を使わない SHIORI リクエストの送信と YAYA のコードの評価（tamac）、SSTP での実機確認と SSP のログ取得、nar とネットワーク更新ファイルの作成（SSP）、yaya.dll・システム辞書と開発キットの更新のスクリプト
 
 AI エージェントを使わずに、`tools/` のスクリプトだけを使うこともできます。
 
@@ -28,7 +28,7 @@ AI エージェントを使わずに、`tools/` のスクリプトだけを使�
 |---|---|---|---|
 | AI コーディングエージェント | AI に頼むなら必須 | Claude Code、Codex、GitHub Copilot など。キットの指示書と手順書に沿って、開発を手伝います | 各ツールの案内に従ってください |
 | PowerShell | 必須 | `tools/` のスクリプト | Windows には最初から入っています（Windows PowerShell 5.1）。mac・Linux は下の「mac・Linux で使う場合」 |
-| SSP 2.8.97 以降 | 推奨 | シェルのチェック、実際のゴーストでの確認。ふだん使っている SSP の設定を変えない試験用の SSP でゴーストを動かします。古い版でも動きますが、ゴーストはふだんの SSP で動き、2.8.94 より古いと、シェルの問題の位置（ファイル名と行番号）、再生したスクリプトの検査、トークが終わるのを待ってからのログの確認も使えません | https://ssp.shillest.net/ |
+| SSP 2.8.98 以降 | 推奨 | シェルのチェック、実際のゴーストでの確認、nar とネットワーク更新ファイルの作成。ふだん使っている SSP の設定を変えない試験用の SSP でゴーストを動かします。2.8.98 より古いと nar を作れません（`tools/build-nar.ps1 -Builtin` なら作れますが、更新ファイルは作れません）。チェックと確認は古い版でも動きますが、2.8.97 より古いとゴーストはふだんの SSP で動き、2.8.94 より古いと、シェルの問題の位置（ファイル名と行番号）、再生したスクリプトの検査、トークが終わるのを待ってからのログの確認も使えません | https://ssp.shillest.net/ |
 | Git | 推奨 | 変更履歴、GitHub での自動チェック、システム辞書（submodule）の取得 | https://git-scm.com/ |
 
 Windows で最初に入れておく必要があるのは、AI エージェントだけです。SSP と Git は、AI エージェントに「セットアップして」と頼めば、足りないものを調べて入手方法を案内します（インストールは確認を取ってから行います）。
@@ -39,8 +39,8 @@ PowerShell 7 を入れてください。mac は、Microsoft の案内（https://
 
 ただし、mac・Linux で使えるのは開発キットの一部だけです。
 
-- 使えるもの: `AGENTS.md` と `GHOST.md` に沿った AI エージェントでの辞書の編集、開発キットの導入と更新（`tools/update-devkit.ps1`）、nar の作成（`tools/build-nar.ps1`）
-- 使えないもの: 辞書・シェルのチェックと lint（`tools/check.ps1` など）、サーフェスの画像化（`tools/dump-surface.ps1`）、SSP を使わない SHIORI リクエストの送信（`tools/shiori.ps1`）、SSP での起動と確認（`tools/run-ssp.ps1`、`tools/sstp.ps1`、`tools/ssp-log.ps1`）、チェック用ツールの取得（`tools/setup.ps1`。取得するツールが Windows 用）、yaya.dll とシステム辞書の更新（`tools/update-yaya.ps1`）
+- 使えるもの: `AGENTS.md` と `GHOST.md` に沿った AI エージェントでの辞書の編集、開発キットの導入と更新（`tools/update-devkit.ps1`）、nar の作成（`tools/build-nar.ps1 -Builtin`。git が追跡しているファイルだけを入れる）
+- 使えないもの: 辞書・シェルのチェックと lint（`tools/check.ps1` など）、サーフェスの画像化（`tools/dump-surface.ps1`）、SSP を使わない SHIORI リクエストの送信（`tools/shiori.ps1`）、SSP での起動と確認（`tools/run-ssp.ps1`、`tools/sstp.ps1`、`tools/ssp-log.ps1`）、チェック用ツールの取得（`tools/setup.ps1`。取得するツールが Windows 用）、yaya.dll とシステム辞書の更新（`tools/update-yaya.ps1`）、SSP でのネットワーク更新ファイルの作成（`tools/build-nar.ps1` の既定の動作）
 - Claude Code の編集後の自動チェックと起動時の診断（hooks）は Windows PowerShell（`powershell.exe`）を呼ぶので、mac・Linux ではエラーが表示されます。
 - `tools/doctor.ps1` は、Windows と Windows PowerShell が無いことを「必須が足りない」と表示します。
 - このファイルのコマンドにある `powershell -NoProfile -ExecutionPolicy Bypass -File` は、`pwsh -NoProfile -File` に読み替えてください。

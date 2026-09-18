@@ -23,7 +23,7 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 | 「セットアップして」「始めたい」「足りないものを入れて」 | `docs/agents/workflows/setup.md` |
 | 「チェックして」「エラーが出ていないか見て」「辞書のエラーを直して」 | `docs/agents/workflows/check.md` |
 | 「SSP で試して」「動かして見せて」「このトークを再生して」 | `docs/agents/workflows/try-in-ssp.md` |
-| 「nar を作って」「配布用のファイルを作って」「リリースしたい」 | `docs/agents/workflows/build-nar.md` |
+| 「nar を作って」「配布用のファイルを作って」「リリースしたい」「更新ファイルを作って」 | `docs/agents/workflows/build-nar.md` |
 | 「YAYA を更新して」「yaya.dll を更新して」「システム辞書を更新して」「yaya-dic を更新して」 | `docs/agents/workflows/update-yaya.md` |
 | 「開発キットを更新して」「別のゴーストにキットを入れて」 | `docs/agents/workflows/update-devkit.md` |
 | 「自分のゴーストを作りたい」「テンプレートから独立させたい」 | `docs/agents/workflows/new-ghost.md` |

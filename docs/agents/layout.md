@@ -17,7 +17,7 @@
 | `shell/master/surfacetable.txt` | サーフェス番号と表情名の一覧 |
 | `shell/master/descript.txt` | シェルの情報、メニューや吹き出し位置の設定 |
 | `install.txt` | インストール設定（名前とインストール先フォルダ名） |
-| `.narignore` / `.updateignore` | nar / ネットワーク更新から除外するファイル。書き方は `.gitignore` と同じで、`include:ファイル名` で別のファイルを取り込める（パスはその行を書いたファイルのフォルダからの相対。取り込んだ先でも `include:` を書け、3 段まで）。キット用の除外は `tools/devkit.narignore` を取り込んでいる。SSP と `tools/build-nar.ps1` の両方が使い、どちらもルートに置いたものだけを読む（サブフォルダに置いても効かない）。古い形式の `developer_options.txt` は、併用すると両方が処理されて紛らわしいので作らない |
+| `.narignore` / `.updateignore` | nar / ネットワーク更新から除外するファイル。書き方は `.gitignore` と同じで、`include:ファイル名` で別のファイルを取り込める（パスはその行を書いたファイルのフォルダからの相対。取り込んだ先でも `include:` を書け、3 段まで）。キット用の除外は `tools/devkit.narignore` を取り込んでいる。SSP が使い（`tools/build-nar.ps1` も SSP に作らせる。`-ListOnly` と `-Builtin` では `.narignore` を SSP と同じように自分で解釈する）、どちらもルートに置いたものだけを読む（サブフォルダに置いても効かない）。古い形式の `developer_options.txt` は、併用すると両方が処理されて紛らわしいので作らない |
 | `delete.txt` | ネットワーク更新のときに削除するファイル |
 | `tools/` | 開発用スクリプト（一覧は `docs/agents/commands.md`） |
 | `DEVKIT-GUIDE.md` | 開発キットの使い方（作者向け）。キットについて作者に説明するときは、ここを案内する |

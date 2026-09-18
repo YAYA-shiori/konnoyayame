@@ -120,8 +120,12 @@ if ($ssp) {
     $sspDetail = "$($ssp.Path) $(if ($sspVersion) { $sspVersion } else { '(version unknown)' }) (found via $($ssp.Source))"
     if ($sspVersion -and $sspVersion -lt $DevkitSspRecommendedVersion) {
         $sspOk = $false
-        $sspDetail += "; $DevkitSspRecommendedVersion or later is needed for running the ghost in a separate SSP that saves nothing (tools/run-ssp.ps1)$(if ($sspVersion -lt $DevkitSspDiagnosticsVersion) { ", and $DevkitSspDiagnosticsVersion or later for the file and line of shell problems, script checks (Option: strict) and waiting for talks to end (GetStatus)" })"
-        $sspFix = "Update SSP to $DevkitSspRecommendedVersion or later (https://ssp.shillest.net/ , or the network update of SSP itself). The scripts still work with this version, with less information."
+        $needs = New-Object System.Collections.Generic.List[string]
+        if ($sspVersion -lt $DevkitSspNarVersion) { $needs.Add("$DevkitSspNarVersion or later for building the nar and the network update files (tools/build-nar.ps1)") }
+        if ($sspVersion -lt $DevkitSspIsolatedVersion) { $needs.Add("$DevkitSspIsolatedVersion or later for running the ghost in a separate SSP that saves nothing (tools/run-ssp.ps1)") }
+        if ($sspVersion -lt $DevkitSspDiagnosticsVersion) { $needs.Add("$DevkitSspDiagnosticsVersion or later for the file and line of shell problems, script checks (Option: strict) and waiting for talks to end (GetStatus)") }
+        $sspDetail += '; ' + ($needs -join ', ')
+        $sspFix = "Update SSP to $DevkitSspRecommendedVersion or later (https://ssp.shillest.net/ , or the network update of SSP itself). The checks and tests still work with this version, with less information, but tools/build-nar.ps1 does not (except with -Builtin)."
     }
 } else {
     $local = Get-DevkitLocalConfig
@@ -130,7 +134,7 @@ if ($ssp) {
     }
 }
 Add-DoctorItem -Id 'ssp' -Name "SSP $DevkitSspRecommendedVersion+" -Level 'recommended' -Ok $sspOk `
-    -Purpose 'Shell check (tools/check-shell.ps1), running the ghost (tools/run-ssp.ps1), trying talks (tools/sstp.ps1) and reading its logs (tools/ssp-log.ps1)' `
+    -Purpose 'Shell check (tools/check-shell.ps1), running the ghost (tools/run-ssp.ps1), trying talks (tools/sstp.ps1) and reading its logs (tools/ssp-log.ps1), building the nar and network update files (tools/build-nar.ps1)' `
     -Detail $sspDetail `
     -Fix $sspFix
 
