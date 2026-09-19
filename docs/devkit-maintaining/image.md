@@ -1,0 +1,21 @@
+# 画像の編集
+
+- `tools/image.ps1` は入口だけで、処理は `tools/lib/image.cs`（C#）にある。
+  - `Add-Type` で一時フォルダの `ghost-devkit/image/engine-<エディション>-<ハッシュ>.dll` にコンパイルし、次からはそれを読む（5.1 で毎回コンパイルすると 1〜2 秒かかるため）。ハッシュはソースとエディション（`desktop` / `core<版>`）から作るので、ソースを変えれば作り直され、古い DLL はそのときに消す（読み込み中のものは消えずに残る）。一時フォルダに書けなければ、その回だけメモリ上でコンパイルする。
+  - Windows PowerShell 5.1 は .NET Framework のコンパイラで C# 5 までしか通らない。文字列補間（`$"..."`）、`?.`、`nameof`、式形式のメンバー、`out var`、タプルを使わない。ファイルは ASCII だけで書く。
+  - PowerShell 7 では、System.Drawing の一部が参照アセンブリの無いアセンブリに分かれている（.NET 10 の `System.Private.Windows.GdiPlus`）。名前を並べるだけでは `CS0012` になるので、`[System.Drawing.Bitmap].Assembly` が参照している `System.Private.Windows*` を場所で足している。実装側のアセンブリをすべて足すと、今度は `System.Private.CoreLib` との衝突（`CS1069`）になる。
+  - PowerShell から .NET のメソッドの `string` 引数に `$null` を渡すと空文字列になる。C# 側では「省略」を `string.IsNullOrEmpty` で見る。
+- PNG の読み書きは自前で行う（GDI+ に任せない）。
+  - 書き出しを 8bit RGBA（カラータイプ 6）に固定するため。GDI+ の `Save` は元のピクセル形式に引きずられる。
+  - 読み込みは、すべてのカラータイプとビット深度（1/2/4/8/16）、インターレース、tRNS に対応する。検証では、Python で全組み合わせ（5 種類のフィルタを行ごとに混ぜ、IDAT を分割）を作って期待値と突き合わせ、konnoyayame のシェル画像では GDI+ の読み込み結果とも一致させた。gAMA などの補助チャンクは読まない（SSP のシェルでガンマを当てる例は無いため）。
+  - 完全に透明な画素は `#00000000` にして書く。見えない色で、圧縮も効く。
+  - BMP、JPEG、GIF の読み込みと、図形・文字の描画には GDI+ を使う。描画は GDI+ に白で描かせて覆い具合（カバレッジ）だけを取り出し、色の合成は自前で行う（`mode=over / replace / erase` を同じ式で扱うため）。`PixelOffsetMode.Half` で、画素 (x, y) を (x, y)〜(x+1, y+1) の正方形として描く。
+- 色はストレート（乗算済みでない）RGBA で持つ。拡大縮小、回転、ぼかしは乗算済みにして計算し、透明な画素の色がにじまないようにする。
+- SSP の透過の扱い（UKADOC の descript_shell「seriko.use_self_alpha」と dev_shell「半透明のサーフェスについて」）:
+  - `seriko.use_self_alpha` が無い（0）と、アルファ付き PNG でもアルファは使われず、左上の画素の色が透過色になる。SSP 2.8.98 の `--offline-dump`（`tools/dump-surface.ps1`）で、このツールが書いた画像を合成させて確かめた。完全に透明な画素は黒く出る。
+  - `1` でアルファ付き PNG と `.pna` のある画像はそれを使い、どちらも無い画像は左上の色になる。`full` ではアルファの無い画像も不透明になる。
+  - アルファ付き PNG と `.pna` が両方あるときにどちらが使われるかは、資料に書かれていない。ツールは両方ある状態を注意として出すだけにしている。
+  - パレット PNG の tRNS を SSP が使うかどうかも、資料に書かれていない。`info` はそう表示する。
+  - `info` と `edit` の注意は、画像の親フォルダをさかのぼって `descript.txt` を探し、`type,shell` か、親が `shell` という名前のフォルダなら、シェルのものとみなす。
+- `.claude/settings.json` で許可しているのは `info` と `view` だけ。`view` は既定で一時フォルダに書くが、`-Out` を付けるとどこにでも `.png` を書ける。`edit` と `diff -Part` はシェルの画像を上書きしうるので許可していない。
+- `-At` と `-Rect` は `[string[]]` で受けて、カンマでつなぎ直している。PowerShell の中から `-At 1,2` と書くと配列として渡るため。`powershell -File` から渡すと 1 つの文字列のまま届く。`info` と `view` のワイルドカードは、`-File` では展開されないので自分で展開する。

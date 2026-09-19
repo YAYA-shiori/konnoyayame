@@ -23,6 +23,7 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 | 「セットアップして」「始めたい」「足りないものを入れて」 | `docs/agents/workflows/setup.md` |
 | 「チェックして」「エラーが出ていないか見て」「辞書のエラーを直して」 | `docs/agents/workflows/check.md` |
 | 「SSP で試して」「動かして見せて」「このトークを再生して」 | `docs/agents/workflows/try-in-ssp.md` |
+| 「シェルの画像を直して」「画像を編集して」「表情のパーツを作って」「32bit PNG にして」 | `docs/agents/workflows/edit-shell-image.md` |
 | 「nar を作って」「配布用のファイルを作って」「リリースしたい」「更新ファイルを作って」 | `docs/agents/workflows/build-nar.md` |
 | 「YAYA を更新して」「yaya.dll を更新して」「システム辞書を更新して」「yaya-dic を更新して」 | `docs/agents/workflows/update-yaya.md` |
 | 「開発キットを更新して」「別のゴーストにキットを入れて」 | `docs/agents/workflows/update-devkit.md` |
@@ -49,7 +50,7 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 4. 編集しないもの: `ghost/master/dic/system/` または `ghost/master/system/`（システム辞書。submodule のことも普通のファイルのこともある。変更が必要なら上流の yaya-dic に提案する）、`yaya.dll`、実行時に作られるファイル。yaya.dll とシステム辞書の更新は `docs/agents/workflows/update-yaya.md` の手順で行う。
 5. 開発キットのファイル（`docs/agents/devkit-files.md` の表）は、頼まれない限り変えない。`tools/` に自分のスクリプトを足すときは、Windows PowerShell 5.1 でも動くように書き、**ASCII 文字だけで書く**（BOM のないファイルに日本語を書くと 5.1 で文字化けするため）。
 6. 既存のトークや作者が書いた台詞を、頼まれていないのに大量に書き換えたり消したりしない。未使用の関数や変数が見つかっても、報告するだけにする。
-7. シェルの画像は、`GHOST.md` でライセンスを確かめるまで編集しない（改変を禁じているシェルがある）。
+7. シェルの画像は、`GHOST.md` でライセンスを確かめるまで編集しない（改変を禁じているシェルがある）。画像の編集には `tools/image.ps1` を使う（書き出すのは 32bit RGBA PNG。手順は `docs/agents/workflows/edit-shell-image.md`）。
 8. アプリのインストール、SSP へのゴーストのインストール、yaya.dll や開発キットの更新、リリース、ネットワーク更新ファイルのアップロードなど、手元のファイル編集を超える操作は、作者の確認を取ってから行う。
 
 ## YAYA 辞書の書き方の要点

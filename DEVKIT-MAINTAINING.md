@@ -82,6 +82,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 |---|---|
 | `ssp.md` | SSTP（Owned SSTP）、SSP のログ、SSP の版の扱い、使っている機能（`GetStatus`、`Option: strict`、`--dump-error-log`）、試験用 SSP（`tools/run-ssp.ps1`） |
 | `dump-surface.md` | `tools/dump-surface.ps1` と `--offline-dump` の `--dump-surface-list` |
+| `image.md` | `tools/image.ps1` と `tools/lib/image.cs`（コンパイルとキャッシュ、自前の PNG の読み書き、SSP の透過の扱い） |
 | `tamac.md` | tamac.exe の `-r` と `tools/shiori.ps1` |
 | `update-yaya.md` | `tools/update-yaya.ps1` のシステム辞書（yaya-dic）の取得と置き換え |
 | `ignore.md` | `.narignore` / `.updateignore` の解釈（`tools/lib/ignore.ps1`） |

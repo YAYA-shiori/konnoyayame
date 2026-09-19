@@ -7,7 +7,7 @@ end_of_line = lf
 [*.{dic,txt}]
 indent_style = tab
 
-[*.ps1]
+[*.{ps1,cs}]
 indent_style = space
 indent_size = 4
 
