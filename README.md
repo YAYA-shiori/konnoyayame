@@ -42,6 +42,11 @@ https://github.com/YAYA-shiori/konnoyayame
 このゴーストには、AI コーディングエージェント（Claude Code、Codex、GitHub Copilot など）で開発するための開発キットが入っています。
 リポジトリを clone したフォルダでも、nar を SSP にインストールしたフォルダ（`<SSP>/ghost/konnoyayame/`）でも使えます。
 
+開発キットは、Windows と Claude Code の組み合わせで作り、動作を確かめています。おすすめもこの組み合わせです。
+
+- `tools/` のスクリプトの多くは、Windows でしか動きません（辞書やシェルのチェック、SSP での確認など。YAYA、SSP、チェック用ツールが Windows 用のため）。
+- ほかのエージェントでも `AGENTS.md` に沿って使えますが、編集後の自動チェック、起動時の診断、仕様調査用のサブエージェントは、Claude Code でしか自動では動きません。
+
 - [DEVKIT-GUIDE.md](DEVKIT-GUIDE.md) : 開発キットの使い方（あらかじめ入れておくもの、mac・Linux で使う場合、はじめかた、キットの更新、配布物にキットを含めるかどうか、別の YAYA ゴーストへの導入）
 - [AGENTS.md](AGENTS.md) : エージェント向けの指示書（作業のルール、YAYA とさくらスクリプトの要点、依頼の言い回しと手順書の対応）。開発コマンド、構成、独立ゴーストにするときのチェックリスト、作業の手順書は `docs/agents/` にあります
 - [GHOST.md](GHOST.md) : このゴーストに固有の情報（キャラクター、サーフェス、ライセンス、辞書の構成）。自分のゴーストを作ったら、その内容に書き直します
