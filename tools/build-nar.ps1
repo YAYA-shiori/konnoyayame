@@ -2,7 +2,7 @@
 .SYNOPSIS
     Builds a distributable .nar archive of the ghost, and the network update files, with SSP.
 .DESCRIPTION
-    By default, SSP 2.8.98 or later builds everything: the ghost is run in the isolated SSP of
+    By default, SSP builds everything: the ghost is run in the isolated SSP of
     tools/run-ssp.ps1 (an isolated SSP already running for this folder is reused, one started here is closed
     again), and an Owned SSTP request plays \![execute,createupdatedata,<file>] and \![execute,createnar,<file>].
     SSP packs the folder as it is, so untracked files of a git working copy are shipped too, and it reads
@@ -16,7 +16,7 @@
     (gitignore syntax with "include:") are excluded, as are .git metadata and profile folders. .narinclude
     and the network update files are not supported there.
     -ListOnly prints the files that .narignore includes and excludes, as this script reads it.
-    Exit codes: 0 = OK, 1 = failed (also: SSP older than 2.8.98), 2 = built, but SSP logged Error or
+    Exit codes: 0 = OK, 1 = failed, 2 = built, but SSP logged Error or
     Critical entries meanwhile, 3 = ssp.exe was not found.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-nar.ps1 -ListOnly
@@ -196,11 +196,6 @@ $ssp = Resolve-SspPath $SspPath
 if (-not $ssp) {
     Write-Host 'build-nar: ssp.exe was not found. Set the SSP_PATH environment variable or create tools/local.json (see tools/local.example.json).'
     exit 3
-}
-$sspVersion = Get-DevkitSspVersion $ssp.Path
-if (-not $sspVersion -or $sspVersion -lt $DevkitSspNarVersion) {
-    Write-Host "build-nar: FAILED - SSP $sspVersion is older than $DevkitSspNarVersion, which is needed to build the nar and the update files. Update SSP: $($ssp.Path)"
-    exit 1
 }
 
 # Output files, in the order SSP writes them. The update files are made first, so that they describe the same

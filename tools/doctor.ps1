@@ -120,12 +120,8 @@ if ($ssp) {
     $sspDetail = "$($ssp.Path) $(if ($sspVersion) { $sspVersion } else { '(version unknown)' }) (found via $($ssp.Source))"
     if ($sspVersion -and $sspVersion -lt $DevkitSspRecommendedVersion) {
         $sspOk = $false
-        $needs = New-Object System.Collections.Generic.List[string]
-        if ($sspVersion -lt $DevkitSspNarVersion) { $needs.Add("$DevkitSspNarVersion or later for building the nar and the network update files (tools/build-nar.ps1)") }
-        if ($sspVersion -lt $DevkitSspIsolatedVersion) { $needs.Add("$DevkitSspIsolatedVersion or later for running the ghost in a separate SSP that saves nothing (tools/run-ssp.ps1)") }
-        if ($sspVersion -lt $DevkitSspDiagnosticsVersion) { $needs.Add("$DevkitSspDiagnosticsVersion or later for the file and line of shell problems, script checks (Option: strict) and waiting for talks to end (GetStatus)") }
-        $sspDetail += '; ' + ($needs -join ', ')
-        $sspFix = "Update SSP to $DevkitSspRecommendedVersion or later (https://ssp.shillest.net/ , or the network update of SSP itself). The checks and tests still work with this version, with less information, but tools/build-nar.ps1 does not (except with -Builtin)."
+        $sspDetail += "; older than $DevkitSspRecommendedVersion"
+        $sspFix = "Update SSP to $DevkitSspRecommendedVersion or later (https://ssp.shillest.net/ , or the network update of SSP itself). The scripts in tools/ are written for it, and may fail or miss problems with older versions."
     }
 } else {
     $local = Get-DevkitLocalConfig

@@ -6,15 +6,9 @@ $DevkitRoot = [IO.Path]::GetFullPath((Join-Path (Join-Path $PSScriptRoot '..') '
 $DevkitToolsDir = Join-Path $DevkitRoot 'tools'
 $DevkitBinDir = Join-Path $DevkitToolsDir 'bin'
 $DevkitUtf8 = New-Object System.Text.UTF8Encoding($false)
-# SSP version with GetStatus, Option: strict, SERIKO error places and --dump-error-log exit codes.
-$DevkitSspDiagnosticsVersion = New-Object System.Version(2, 8, 94)
-# SSP version with "--option readonly" and "--sstp-listen", used by tools/run-ssp.ps1 for an isolated SSP.
-$DevkitSspIsolatedVersion = New-Object System.Version(2, 8, 97)
-# SSP version whose \![execute,createnar,<file>] and \![execute,createupdatedata,<file>] take an output file,
-# required by tools/build-nar.ps1 outside CI.
-$DevkitSspNarVersion = New-Object System.Version(2, 8, 98)
-# SSP version that the kit is written for (tools/doctor.ps1 reports older versions): all of the above.
-$DevkitSspRecommendedVersion = $DevkitSspNarVersion
+# SSP version that the kit is written for. The scripts assume it and do not branch on the version of SSP;
+# only tools/doctor.ps1 checks it and reports older versions.
+$DevkitSspRecommendedVersion = New-Object System.Version(2, 8, 98)
 # Folders of the system dictionary (yaya-dic), relative to ghost/master, in the order they are looked for.
 # Most ghosts keep it in dic/system; some keep it in system.
 $DevkitSystemDicDirs = @('dic/system', 'system')
@@ -323,7 +317,7 @@ function Invoke-DevkitProcess {
 }
 
 # Rewrites absolute paths under $Base into root-relative paths with forward slashes.
-# SSP 2.8.94 or later adds places such as "shell\master\surfaces.txt:Line=12" to SERIKO messages (absolute with
+# SSP adds places such as "shell\master\surfaces.txt:Line=12" to SERIKO messages (absolute with
 # --offline-dump, relative to the ghost folder otherwise); their backslashes are turned into slashes as well.
 function ConvertTo-DevkitRelativeText([string]$Text, [string]$Base = $DevkitRoot) {
     if ([string]::IsNullOrEmpty($Text)) { return $Text }

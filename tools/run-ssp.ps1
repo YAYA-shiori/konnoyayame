@@ -3,17 +3,17 @@
     Starts SSP with this ghost folder ("ssp.exe --ghost <folder>") and waits until the ghost answers SSTP.
 .DESCRIPTION
     Runs the working folder directly, without installing the ghost into SSP.
-    With SSP 2.8.97 or later, a separate SSP for testing is started with "--option readonly" and
+    A separate SSP for testing is started with "--option readonly" and
     "--sstp-listen <port>": it saves no settings, history or cache of the author's SSP, does not hand the
     ghost over to an SSP that is already running, and does not delete the folder on vanish. The port is the
     first free one from 9822 to 10999 (or -Port), and it is recorded under the temporary folder, so that
     tools/sstp.ps1 and tools/ssp-log.ps1 send to this SSP while it runs. When it is already running, it is
     left as it is (reload the ghost with "tools/sstp.ps1 -Reload ghost"). -Stop closes it.
-    With -Shared, or with older SSP versions, the ghost is handed to the author's SSP instead (port 9801).
+    With -Shared, the ghost is handed to the author's SSP instead (port 9801).
     Readiness is checked with "EXECUTE GetName", which must return sakura.name of ghost/master/descript.txt.
     Then the entries that SSP added to its error log while starting are shown (SSP with developer.log
-    properties only; see also tools/ssp-log.ps1). With SSP 2.8.94 or later, the log is read after the ghost
-    has finished its boot talk ("EXECUTE GetStatus"); older versions get a fixed wait of 2 seconds.
+    properties only; see also tools/ssp-log.ps1). The log is read after the ghost has finished its boot talk
+    ("EXECUTE GetStatus"), or after a fixed wait of 2 seconds when GetStatus does not answer.
     Exit codes: 0 = the ghost is running (or -Stop closed the SSP or found none), 1 = it did not answer in time
     or the SSP could not be started, 2 = the ghost is running but SSP logged Error or Critical entries,
     3 = ssp.exe was not found.
@@ -75,8 +75,7 @@ if (-not $ssp) {
     Write-Host 'run-ssp: ssp.exe was not found. Set the SSP_PATH environment variable or create tools/local.json (see tools/local.example.json).'
     exit 3
 }
-$sspVersion = Get-DevkitSspVersion $ssp.Path
-$isolated = (-not $Shared) -and $sspVersion -and $sspVersion -ge $DevkitSspIsolatedVersion
+$isolated = -not $Shared
 
 $process = $null
 if ($isolated) {
@@ -108,9 +107,6 @@ if ($isolated) {
     Save-DevkitSspSession -Process $process -Port $Port -Root $Root -SspPath $ssp.Path
     Write-Host "run-ssp: started an isolated SSP (readonly, SSTP port $Port): $($ssp.Path) --ghost $Root"
 } else {
-    if (-not $Shared -and $sspVersion) {
-        Write-Host "run-ssp: note - SSP $sspVersion is older than $DevkitSspIsolatedVersion, so the ghost runs in your SSP. Update SSP to test it in a separate SSP that saves nothing."
-    }
     if ($Port -le 0) { $Port = $DevkitSspDefaultPort }
     # When SSP is already running, only the error log entries added from now on are of interest.
     $marker = New-DevkitSspLogMarker -Kind 'error' -Port $Port

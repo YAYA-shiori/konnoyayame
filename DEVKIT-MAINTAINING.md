@@ -80,7 +80,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 
 | ファイル | 中身 |
 |---|---|
-| `ssp.md` | SSTP（Owned SSTP）、SSP のログ、SSP の版ごとの機能（2.8.94 の `GetStatus`、`Option: strict`、`--dump-error-log`）、試験用 SSP（`tools/run-ssp.ps1`） |
+| `ssp.md` | SSTP（Owned SSTP）、SSP のログ、SSP の版の扱い、使っている機能（`GetStatus`、`Option: strict`、`--dump-error-log`）、試験用 SSP（`tools/run-ssp.ps1`） |
 | `dump-surface.md` | `tools/dump-surface.ps1` と `--offline-dump` の `--dump-surface-list` |
 | `tamac.md` | tamac.exe の `-r` と `tools/shiori.ps1` |
 | `update-yaya.md` | `tools/update-yaya.ps1` のシステム辞書（yaya-dic）の取得と置き換え |

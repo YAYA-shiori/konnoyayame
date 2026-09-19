@@ -7,11 +7,11 @@
     For -Script, -Event and -Reload, the entries that SSP added to its error log in the meantime
     (dictionary errors reported by YAYA, script errors, ...) are shown afterwards. This needs an SSP
     that has the developer.log properties; -NoLog skips it. See also tools/ssp-log.ps1.
-    -Script and -Event send "Option: strict", so SSP 2.8.94 or later logs each tag of the played script that
+    -Script and -Event send "Option: strict", so SSP logs each tag of the played script that
     it could not interpret as "[GHOST/Script] reason (detail) at position n : excerpt".
-    SSP answers before the script is played. With SSP 2.8.94 or later, the log is read after the ghost has
-    stopped talking ("EXECUTE GetStatus"; up to -TimeoutSeconds), so errors late in a long script are included.
-    Older SSP versions get a fixed short wait instead.
+    SSP answers before the script is played. The log is read after the ghost has stopped talking
+    ("EXECUTE GetStatus"; up to -TimeoutSeconds), so errors late in a long script are included. When GetStatus
+    does not answer (for example while the ghost is being loaded), a fixed short wait is used instead.
     Exit codes: 0 = 2xx response, 1 = error response, 2 = 2xx response but SSP logged Error or Critical
     entries, 3 = could not connect (SSP is not running).
     While the isolated SSP started by tools/run-ssp.ps1 runs, requests go to its port unless -Port is given.
@@ -91,7 +91,7 @@ $headers.Add('Charset: UTF-8')
 $headers.Add('Sender: ghost-devkit')
 if ($mode -ne 'Execute' -and -not $AnyGhost -and $Ghost) { $headers.Add('ReceiverGhostName: ' + $Ghost) }
 if ($ghostId) { $headers.Add('ID: ' + $ghostId) }
-# SSP 2.8.94 or later logs the places of the script that it could not interpret. Older versions ignore it.
+# SSP logs the places of the script that it could not interpret.
 if ($mode -eq 'Script' -or $mode -eq 'Event') { $headers.Add('Option: strict') }
 switch ($mode) {
     'Execute' { $headers.Add('Command: ' + $Execute) }
@@ -140,7 +140,7 @@ if ($watchLog -and -not $marker) {
     Write-Host 'sstp: the SSP error log cannot be read (this SSP has no developer.log properties; update SSP to see it)'
 } elseif ($watchLog) {
     if ($statusAvailable -and $exitCode -eq 0) {
-        # SSP 2.8.94 or later: wait for the reload and for the talk, so that every error of the script is in the log.
+        # Wait for the reload and for the talk, so that every error of the script is in the log.
         if ($mode -eq 'Reload') {
             $wait = Wait-DevkitSspReload -TimeoutSeconds $TimeoutSeconds -Port $Port
         } else {
@@ -149,7 +149,7 @@ if ($watchLog -and -not $marker) {
         if ($wait -eq 'timeout') { Write-Host "sstp: the ghost is still talking after $TimeoutSeconds seconds; reading the log anyway" }
         Start-Sleep -Milliseconds 300
     } elseif ($mode -eq 'Reload') {
-        # Older SSP: the reload runs after the response. Wait until SSP answers again, then give the ghost time to boot.
+        # GetStatus did not answer: the reload runs after the response. Wait until SSP answers again, then give the ghost time to boot.
         Start-Sleep -Milliseconds 1000
         $deadline = (Get-Date).AddSeconds(30)
         while ((Get-Date) -lt $deadline) {

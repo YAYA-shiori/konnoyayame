@@ -167,10 +167,10 @@ function Get-DevkitSspGhostId([string]$GhostRoot, [string]$SakuraName, [int]$Por
     return $null
 }
 
-# Reads the state of the running ghost with "EXECUTE GetStatus" (SSP 2.8.94 or later). States are the same as the
+# Reads the state of the running ghost with "EXECUTE GetStatus". States are the same as the
 # SHIORI/3.0 Status header, for example talking, choosing, online, opening(input) or balloon(0=0).
 # Returns an object whose States is the list (empty when no state applies), or $null when SSP did not answer 200:
-# SSP is not running, it is older than 2.8.94, or the ghost is being loaded (SSP answers 400 meanwhile).
+# SSP is not running, or the ghost is being loaded (SSP answers 400 meanwhile).
 function Get-DevkitSspStatus([int]$Port = 9801) {
     $response = Invoke-DevkitSstp -Lines @('EXECUTE SSTP/1.1', 'Charset: UTF-8', 'Sender: ghost-devkit', 'Command: GetStatus') -Port $Port -TimeoutSeconds 5
     if ($response.Status -ne 200) { return $null }
