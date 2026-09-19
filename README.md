@@ -1,4 +1,4 @@
-# 「YAYA」テンプレートゴースト 紺野ややめ
+# テンプレートゴースト 紺野ややめ ＋ バイブコーディング道具箱(YAYA/Win版)
 
 - original author : umeici
 - change by : ukiya
