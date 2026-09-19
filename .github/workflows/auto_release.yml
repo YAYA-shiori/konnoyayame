@@ -14,6 +14,10 @@ jobs:
     name: auto release
     runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: write
+    env:
+      NAR_NAME: ${{ github.event.repository.name }}.nar
     steps:
       - name: checkout
         uses: actions/checkout@v4
@@ -43,7 +47,7 @@ jobs:
       - name: build nar
         # Files to exclude are listed in .narignore
         shell: pwsh
-        run: ./tools/build-nar.ps1 -OutFile yayame.nar
+        run: ./tools/build-nar.ps1 -OutFile $env:NAR_NAME
       
       - name: Create and upload release
         uses: softprops/action-gh-release@v2
@@ -54,8 +58,8 @@ jobs:
           name: 自動リリース
           body: |
             - エラーチェックで引っかからなかった時の最新版の自動リリースです
-            - 下記のうち **yayame.nar** のみをダウンロードしてください。Source Codeは不要です。
+            - 下記のうち **${{ env.NAR_NAME }}** のみをダウンロードしてください。Source Codeは不要です。
           draft: false
           prerelease: false
           files: |
-            yayame.nar
+            ${{ env.NAR_NAME }}
