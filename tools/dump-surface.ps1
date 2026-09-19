@@ -9,6 +9,8 @@
     folder; its PNG files are removed before each run), because the license of a shell may forbid
     redistributing modified images. Do not commit the output or put it into the ghost folder.
     -Backlog writes the area around the face (the backlog image, about 80x80) instead of the whole surface.
+    -Collision draws the collision areas (their shapes and names) on the images, for checking where
+    the Head, Bust and other areas of surfaces.txt are.
     -Sheet also writes sheet.png, which puts every image in one picture with its number, for comparing
     expressions at a glance (needs System.Drawing, which Windows has).
     Messages of SSP at Warning or above are shown; use tools/check-shell.ps1 to check the shell itself.
@@ -19,6 +21,8 @@
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0,5,10
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0-7 -Backlog -Sheet
+.EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0,10 -Collision
 #>
 [CmdletBinding()]
 param(
@@ -31,6 +35,8 @@ param(
     [string]$Shell,
     # Write only the area around the face (--dump-surface-option backlog).
     [switch]$Backlog,
+    # Draw the collision areas with their names (--dump-surface-option collision).
+    [switch]$Collision,
     # Also write sheet.png with every image and its number.
     [switch]$Sheet,
     # Output folder (default: a folder in the temp folder). Existing files with the same names are replaced.
@@ -102,7 +108,11 @@ $prefix = if ($Backlog) { 'backlog' } else { 'surface' }
 $arguments = @('--offline-dump', $Root, '--dump-surface-list', ($ids -join ','), '--dump-scope', [string]$Scope,
     '--dump-output-dir', $work, '--dump-output-prefix', $prefix, '--dump-error-log', $log)
 if ($Shell) { $arguments += @('--dump-shell', $Shell) }
-if ($Backlog) { $arguments += @('--dump-surface-option', 'backlog') }
+# SSP reads only the last --dump-surface-option, so the options are given as one comma-separated value.
+$options = @()
+if ($Backlog) { $options += 'backlog' }
+if ($Collision) { $options += 'collision' }
+if ($options.Count -gt 0) { $arguments += @('--dump-surface-option', ($options -join ',')) }
 
 try {
     $result = Invoke-DevkitProcess -FilePath $ssp.Path -Arguments $arguments -TimeoutSeconds 180

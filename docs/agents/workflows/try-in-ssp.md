@@ -26,7 +26,7 @@
      `tools/sstp.ps1 -Script '\0\s[0]テストだよ。\w8\1\s[10]おう。\e'`
    - イベントを発生させる:
      - ランダムトーク: `tools/sstp.ps1 -Event OnAiTalk`
-     - つつき反応（`MouseDoubleClick0Head` など）: `tools/sstp.ps1 -Event OnMouseDoubleClick -Reference '0,0,0,0,Head'`（Reference3 がスコープ、Reference4 が当たり判定の名前）
+     - つつき反応（`MouseDoubleClick0Head` など）: `tools/sstp.ps1 -Event OnMouseDoubleClick -Reference '0,0,0,0,Head'`（Reference3 がスコープ、Reference4 が当たり判定の名前。名前と位置は `tools/dump-surface.ps1 -Surface 0 -Collision` の画像で見られる）
    - 特定の関数の中身を試すときは、その関数のトークを `-Script` に貼って再生する。
    - `-Event` の応答の `Script:` ヘッダーには、ゴーストが実際に返したスクリプトが入る。どの候補が選ばれたか、`%()` がどう展開されたかをここで確かめられる。
    - どの場合も、送った後に SSP のエラーログに増えた Warning 以上が表示される（Info と Notice は件数だけ）。SSP 2.8.94 以降では、ゴーストが話し終わるのを待ってから読む（`\x` のクリック待ちなどで話し終わらないときは `-TimeoutSeconds` 秒で打ち切る）。
