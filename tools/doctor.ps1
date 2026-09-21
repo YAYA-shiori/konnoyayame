@@ -117,11 +117,12 @@ $sspFix = 'Get SSP from https://ssp.shillest.net/ . If it is already installed, 
 $sspDetail = 'not found'
 if ($ssp) {
     $sspVersion = Get-DevkitSspVersion $ssp.Path
-    $sspDetail = "$($ssp.Path) $(if ($sspVersion) { $sspVersion } else { '(version unknown)' }) (found via $($ssp.Source))"
+    $sspDetail = "$($ssp.Path) $(if ($sspVersion) { Format-DevkitSspVersion $sspVersion } else { '(version unknown)' }) (found via $($ssp.Source))"
+    $sspRecommended = Format-DevkitSspVersion $DevkitSspRecommendedVersion
     if ($sspVersion -and $sspVersion -lt $DevkitSspRecommendedVersion) {
         $sspOk = $false
-        $sspDetail += "; older than $DevkitSspRecommendedVersion"
-        $sspFix = "Update SSP to $DevkitSspRecommendedVersion or later (https://ssp.shillest.net/ , or the network update of SSP itself). The scripts in tools/ are written for it, and may fail or miss problems with older versions."
+        $sspDetail += "; older than $sspRecommended"
+        $sspFix = "Update SSP to $sspRecommended or later (https://ssp.shillest.net/ , or the network update of SSP itself). The scripts in tools/ are written for it, and may fail or miss problems with older versions."
     }
 } else {
     $local = Get-DevkitLocalConfig
@@ -129,7 +130,7 @@ if ($ssp) {
         $sspDetail = 'not found; the path in SSP_PATH or tools/local.json does not exist'
     }
 }
-Add-DoctorItem -Id 'ssp' -Name "SSP $DevkitSspRecommendedVersion+" -Level 'recommended' -Ok $sspOk `
+Add-DoctorItem -Id 'ssp' -Name "SSP $(Format-DevkitSspVersion $DevkitSspRecommendedVersion)+" -Level 'recommended' -Ok $sspOk `
     -Purpose 'Shell check (tools/check-shell.ps1), running the ghost (tools/run-ssp.ps1), trying talks (tools/sstp.ps1) and reading its logs (tools/ssp-log.ps1), building the nar and network update files (tools/build-nar.ps1)' `
     -Detail $sspDetail `
     -Fix $sspFix

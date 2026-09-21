@@ -8,7 +8,7 @@ $DevkitBinDir = Join-Path $DevkitToolsDir 'bin'
 $DevkitUtf8 = New-Object System.Text.UTF8Encoding($false)
 # SSP version that the kit is written for. The scripts assume it and do not branch on the version of SSP;
 # only tools/doctor.ps1 checks it and reports older versions.
-$DevkitSspRecommendedVersion = New-Object System.Version(2, 8, 98)
+$DevkitSspRecommendedVersion = New-Object System.Version(2, 9, 1)
 # Folders of the system dictionary (yaya-dic), relative to ghost/master, in the order they are looked for.
 # Most ghosts keep it in dic/system; some keep it in system.
 $DevkitSystemDicDirs = @('dic/system', 'system')
@@ -242,6 +242,11 @@ function Get-DevkitSspVersion([string]$Path) {
         if ($info.FileMajorPart -gt 0) { return (New-Object System.Version($info.FileMajorPart, $info.FileMinorPart, $info.FileBuildPart)) }
     } catch { }
     return $null
+}
+
+# Formats an SSP version the way SSP names its releases, with a two-digit build number (2.9.1 -> "2.9.01").
+function Format-DevkitSspVersion([System.Version]$Version) {
+    return ('{0}.{1}.{2:D2}' -f $Version.Major, $Version.Minor, $Version.Build)
 }
 
 # Quotes arguments for ProcessStartInfo.Arguments (MSVCRT rules).

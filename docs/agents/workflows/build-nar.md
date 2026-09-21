@@ -8,7 +8,7 @@
 
 ## 前提
 
-- SSP 2.8.98 以降が要る。`tools/build-nar.ps1` は試験用 SSP（`tools/run-ssp.ps1` と同じもの）でこのゴーストを起動し、SSP の `\![execute,createupdatedata,<ファイル>]` と `\![execute,createnar,<ファイル>]` に作らせて、終わったら閉じる。試験用 SSP がこのフォルダで動いていれば、それを使い、閉じずに残す。
+- SSP 2.9.01 以降が要る。`tools/build-nar.ps1` は `ssp.exe --offline-tool` で作る。ゴーストは起動せず、SSP が動いていてもいなくても同じように作れる。
 - SSP が古いと失敗する（終了コード 1）。SSP の更新を作者に勧める。
 - GitHub Actions（`GITHUB_ACTIONS=true`）と `-Builtin` のときだけは、SSP を使わずにスクリプト自身が nar を作る（更新ファイルは作れない）。
 
@@ -23,9 +23,8 @@
    - nar を頼まれたとき: `tools/build-nar.ps1` で、`build/<install.txt の directory>.nar` と、同じフォルダに `updates2.dau` と `updates.txt` を作る。
    - 更新ファイルだけを頼まれたとき: `tools/build-nar.ps1 -UpdateOnly` で、`build/updates2.dau` と `build/updates.txt` だけを作る。
    - 出力先は `-OutFile <nar のパス>` で変えられる（更新ファイルはその横に作る）。
-4. 終了コード 2 のときは、作っている間に SSP のエラーログに Error か Critical が増えている。表示された内容を作者に伝える。
-5. 作者が望んだときだけ `-Install` を付けて SSP にインストールする。SSP 側の同じゴーストが上書きされるので、必ず先に確認を取る。
-6. ネットワーク更新では、ゴーストのファイルと一緒に `updates2.dau` と `updates.txt` をサーバーのゴーストのルート（`On_homeurl` の URL）に置く。アップロードは作者に任せる（エージェントが行うときは、先に確認を取る）。
+4. 作者が望んだときだけ `-Install` を付けて SSP にインストールする。SSP 側の同じゴーストが上書きされるので、必ず先に確認を取る。
+5. ネットワーク更新では、ゴーストのファイルと一緒に `updates2.dau` と `updates.txt` をサーバーのゴーストのルート（`On_homeurl` の URL）に置く。アップロードは作者に任せる（エージェントが行うときは、先に確認を取る）。
 
 ## 関連
 

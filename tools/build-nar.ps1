@@ -2,9 +2,8 @@
 .SYNOPSIS
     Builds a distributable .nar archive of the ghost, and the network update files, with SSP.
 .DESCRIPTION
-    By default, SSP builds everything: the ghost is run in the isolated SSP of
-    tools/run-ssp.ps1 (an isolated SSP already running for this folder is reused, one started here is closed
-    again), and an Owned SSTP request plays \![execute,createupdatedata,<file>] and \![execute,createnar,<file>].
+    By default, SSP builds everything with "ssp.exe --offline-tool updatedata|nar" (SSP 2.9.01 or later), which
+    writes the files and exits without starting the ghost or talking to a running SSP.
     SSP packs the folder as it is, so untracked files of a git working copy are shipped too, and it reads
     .narignore / .updateignore (and .narinclude) itself.
     The nar goes to build/<directory in install.txt>.nar (or -OutFile), and updates2.dau and updates.txt to the
@@ -16,8 +15,7 @@
     (gitignore syntax with "include:") are excluded, as are .git metadata and profile folders. .narinclude
     and the network update files are not supported there.
     -ListOnly prints the files that .narignore includes and excludes, as this script reads it.
-    Exit codes: 0 = OK, 1 = failed, 2 = built, but SSP logged Error or
-    Critical entries meanwhile, 3 = ssp.exe was not found.
+    Exit codes: 0 = OK, 1 = failed, 3 = ssp.exe was not found.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/build-nar.ps1 -ListOnly
 .EXAMPLE
@@ -42,13 +40,12 @@ param(
     # Ask SSP to install the archive after building it.
     [switch]$Install,
     [string]$SspPath,
-    # Seconds to wait for SSP to write the files.
+    # Seconds to wait for SSP to write each file.
     [int]$TimeoutSeconds = 300
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/common.ps1')
 . (Join-Path $PSScriptRoot 'lib/ignore.ps1')
-. (Join-Path $PSScriptRoot 'lib/sstp.ps1')
 Initialize-DevkitConsole
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -199,118 +196,37 @@ if (-not $ssp) {
 }
 
 # Output files, in the order SSP writes them. The update files are made first, so that they describe the same
-# folder as the nar.
-$updateFiles = @((Join-Path $outDir 'updates2.dau'), (Join-Path $outDir 'updates.txt'))
-$targets = @($updateFiles)
-if (-not $UpdateOnly) { $targets += $OutFile }
+# folder as the nar. "ssp.exe --offline-tool" writes one file per run without starting the ghost.
+$jobs = @(
+    @{ Kind = 'updatedata'; Path = (Join-Path $outDir 'updates2.dau') },
+    @{ Kind = 'updatedata'; Path = (Join-Path $outDir 'updates.txt') }
+)
+if (-not $UpdateOnly) { $jobs += @{ Kind = 'nar'; Path = $OutFile } }
 
-# Arguments of \![...] are separated by commas; a quoted argument may contain them.
-function ConvertTo-SakuraArgument([string]$Value) {
-    if ($Value.Contains('"')) { throw "a path with a double quote cannot be passed to SSP: $Value" }
-    if ($Value.IndexOfAny([char[]]@(',', ']')) -ge 0) { return '"' + $Value + '"' }
-    return $Value
-}
-$script = ''
-foreach ($file in $updateFiles) { $script += '\![execute,createupdatedata,' + (ConvertTo-SakuraArgument $file) + ']' }
-if (-not $UpdateOnly) { $script += '\![execute,createnar,' + (ConvertTo-SakuraArgument $OutFile) + ']' }
-
-# Waits until every file exists, has kept its size for one poll and can be opened exclusively.
-function Wait-OutputFiles([string[]]$Paths, [int]$Seconds) {
-    $deadline = (Get-Date).AddSeconds($Seconds)
-    $sizes = @{}
-    while ((Get-Date) -lt $deadline) {
-        $ready = $true
-        foreach ($path in $Paths) {
-            if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { $ready = $false; continue }
-            $size = (Get-Item -LiteralPath $path).Length
-            if (-not $sizes.ContainsKey($path) -or $sizes[$path] -ne $size) { $ready = $false }
-            $sizes[$path] = $size
-            try {
-                $stream = [IO.File]::Open($path, [IO.FileMode]::Open, [IO.FileAccess]::Read, [IO.FileShare]::None)
-                $stream.Dispose()
-            } catch {
-                $ready = $false
-            }
+$exitCode = 0
+foreach ($job in $jobs) {
+    $arguments = @('--offline-tool', $job.Kind, '--target-dir', $root, '--output', $job.Path)
+    $result = Invoke-DevkitProcess -FilePath $ssp.Path -Arguments $arguments -TimeoutSeconds $TimeoutSeconds
+    if ($result.TimedOut) {
+        Write-Host "build-nar: FAILED - SSP did not finish $($job.Path) within $TimeoutSeconds seconds"
+        $exitCode = 1
+        break
+    }
+    if ($result.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $job.Path -PathType Leaf)) {
+        # ssp.exe --offline-tool: 1 = bad arguments (or an SSP without the option), 2 = could not be written.
+        Write-Host "build-nar: FAILED - SSP could not write $($job.Path) (ssp.exe exit code $($result.ExitCode))"
+        if ($result.ExitCode -eq 1) {
+            Write-Host "build-nar: --offline-tool needs SSP $(Format-DevkitSspVersion $DevkitSspRecommendedVersion) or later ($($ssp.Path))"
         }
-        if ($ready) { return $true }
-        Start-Sleep -Milliseconds 500
+        $exitCode = 1
+        break
     }
-    return $false
+    $sizeKb = [math]::Round((Get-Item -LiteralPath $job.Path).Length / 1KB)
+    Write-Host "build-nar: wrote $($job.Path) ($sizeKb KB)"
 }
-
-$session = Get-DevkitSspSession
-$started = $false
-if ($session) {
-    if ([string]$session.root -ine $root) {
-        Write-Host "build-nar: FAILED - an isolated SSP for another folder is running (port $($session.port)): $($session.root)"
-        Write-Host 'build-nar: close it first with tools/run-ssp.ps1 -Stop'
-        exit 1
-    }
-    Write-Host "build-nar: using the isolated SSP that is already running (SSTP port $($session.port))"
-} else {
-    & (Join-Path $PSScriptRoot 'run-ssp.ps1') -SspPath $ssp.Path -Root $root
-    $runExit = $LASTEXITCODE
-    $session = Get-DevkitSspSession
-    if ($session) { $started = $true }
-    if (($runExit -ne 0 -and $runExit -ne 2) -or -not $session) {
-        Write-Host 'build-nar: FAILED - the ghost could not be started in an isolated SSP'
-        if ($started) { & (Join-Path $PSScriptRoot 'run-ssp.ps1') -Stop | Out-Null }
-        exit 1
-    }
+if ($exitCode -ne 0) { exit $exitCode }
+if ($untrackedIncluded.Count -gt 0) {
+    Write-Host "build-nar: note - $($untrackedIncluded.Count) file(s) not tracked by git were included (SSP packs the folder as it is; see -ListOnly)"
 }
-$port = [int]$session.port
-
-function Invoke-SspBuild {
-    foreach ($path in $targets) {
-        if (Test-Path -LiteralPath $path) { Remove-Item -LiteralPath $path -Force }
-    }
-    $sakuraName = Get-DevkitDescriptValue (Join-Path $root 'ghost/master/descript.txt') 'sakura.name'
-    # Owned SSTP: without the ID header, SSP ignores \![execute,...] from another program.
-    $ghostId = Get-DevkitSspGhostId -GhostRoot $root -SakuraName $sakuraName -Port $port
-    if (-not $ghostId) {
-        Write-Host "build-nar: FAILED - the ghost was not found in the SSP on port $port"
-        return 1
-    }
-    $marker = New-DevkitSspLogMarker -Kind 'error' -Port $port
-    $lines = @('SEND SSTP/1.4', 'Charset: UTF-8', 'Sender: ghost-devkit', ('ID: ' + $ghostId), ('Script: ' + $script))
-    $response = Invoke-DevkitSstp -Lines $lines -Port $port -TimeoutSeconds 30
-    if ($response.Status -lt 200 -or $response.Status -ge 300) {
-        Write-Host "build-nar: FAILED - SSP did not accept the request: $($response.StatusLine)"
-        return 1
-    }
-    Write-Host "build-nar: asked SSP to write $(($targets | ForEach-Object { Split-Path $_ -Leaf }) -join ', ')"
-    Wait-DevkitSspTalkEnd -StartSeconds 1 -TimeoutSeconds 60 -Port $port | Out-Null
-    $written = Wait-OutputFiles $targets $TimeoutSeconds
-    foreach ($path in $targets) {
-        if (Test-Path -LiteralPath $path -PathType Leaf) {
-            $sizeKb = [math]::Round((Get-Item -LiteralPath $path).Length / 1KB)
-            Write-Host "build-nar: wrote $path ($sizeKb KB)"
-        } else {
-            Write-Host "build-nar: FAILED - SSP did not write $path within $TimeoutSeconds seconds"
-        }
-    }
-    $result = 0
-    if (-not $written) { $result = 1 }
-    if ($marker) {
-        $log = Get-DevkitSspLog -Kind 'error' -Since $marker -Max 30 -Port $port
-        if ((Write-DevkitSspLogSummary 'build-nar' $log 30 -Base $root) -and $result -eq 0) { $result = 2 }
-    }
-    if ($untrackedIncluded.Count -gt 0) {
-        Write-Host "build-nar: note - $($untrackedIncluded.Count) file(s) not tracked by git were included (SSP packs the folder as it is; see -ListOnly)"
-    }
-    return $result
-}
-
-$exitCode = 1
-try {
-    $exitCode = Invoke-SspBuild
-} finally {
-    if ($started) { & (Join-Path $PSScriptRoot 'run-ssp.ps1') -Stop }
-}
-
-if ($exitCode -eq 1) { exit 1 }
-if ($Install -and -not $UpdateOnly) {
-    $installExit = Install-Nar
-    if ($installExit -ne 0) { exit $installExit }
-}
-exit $exitCode
+if ($Install -and -not $UpdateOnly) { exit (Install-Nar) }
+exit 0
