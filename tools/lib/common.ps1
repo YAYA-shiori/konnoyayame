@@ -8,7 +8,7 @@ $DevkitBinDir = Join-Path $DevkitToolsDir 'bin'
 $DevkitUtf8 = New-Object System.Text.UTF8Encoding($false)
 # SSP version that the kit is written for. The scripts assume it and do not branch on the version of SSP;
 # only tools/doctor.ps1 checks it and reports older versions.
-$DevkitSspRecommendedVersion = New-Object System.Version(2, 9, 1)
+$DevkitSspRecommendedVersion = New-Object System.Version(2, 9, 2)
 # Folders of the system dictionary (yaya-dic), relative to ghost/master, in the order they are looked for.
 # Most ghosts keep it in dic/system; some keep it in system.
 $DevkitSystemDicDirs = @('dic/system', 'system')

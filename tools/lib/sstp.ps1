@@ -140,6 +140,14 @@ function Invoke-DevkitSstp {
 # the security limits for other programs and silently ignores things such as \![reload,ghost].
 # The ghost is matched by ghostpath (GhostRoot) first, then by name (SakuraName). Returns $null when not found.
 function Get-DevkitSspGhostId([string]$GhostRoot, [string]$SakuraName, [int]$Port = 9801) {
+    $ghost = Get-DevkitSspGhost -GhostRoot $GhostRoot -SakuraName $SakuraName -Port $Port
+    if ($ghost) { return $ghost.Id }
+    return $null
+}
+
+# Same search as Get-DevkitSspGhostId. Returns Id and Fields (the FMO entries of the ghost, such as name,
+# ghostpath (the root folder that contains ghost/ and shell/) and hwnd), or $null when not found.
+function Get-DevkitSspGhost([string]$GhostRoot, [string]$SakuraName, [int]$Port = 9801) {
     $response = Invoke-DevkitSstp -Lines @('EXECUTE SSTP/1.1', 'Charset: UTF-8', 'Sender: ghost-devkit', 'Command: GetFMO') -Port $Port -TimeoutSeconds 10
     if ($response.Status -ne 200) { return $null }
     # Each line is "<32-byte identifier>.<key><byte 1><value>".
@@ -156,12 +164,12 @@ function Get-DevkitSspGhostId([string]$GhostRoot, [string]$SakuraName, [int]$Por
         $root = $GhostRoot.TrimEnd('\', '/')
         foreach ($id in $ghosts.Keys) {
             $path = [string]$ghosts[$id]['ghostpath']
-            if ($path -and $path.TrimEnd('\', '/') -ieq $root) { return $id }
+            if ($path -and $path.TrimEnd('\', '/') -ieq $root) { return [pscustomobject]@{ Id = $id; Fields = $ghosts[$id] } }
         }
     }
     if ($SakuraName) {
         foreach ($id in $ghosts.Keys) {
-            if ($ghosts[$id]['name'] -ceq $SakuraName) { return $id }
+            if ($ghosts[$id]['name'] -ceq $SakuraName) { return [pscustomobject]@{ Id = $id; Fields = $ghosts[$id] } }
         }
     }
     return $null

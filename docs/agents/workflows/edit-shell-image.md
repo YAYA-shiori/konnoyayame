@@ -32,7 +32,7 @@
 6. 確かめる。
    - `tools/check-shell.ps1` を通す。
    - `tools/dump-surface.ps1 -Surface <番号>` で、SSP が合成した姿を見る（当たり判定を動かしたなら `-Collision` も）。`element` の抜けや位置のずれは、チェックが通っても見つからない。
-   - SSP で動かしているなら、`tools/sstp.ps1 -Reload shell` で読み込み直し、`tools/sstp.ps1 -Script '\0\s[<番号>]\e'` で表示する。
+   - SSP で見せるなら、`tools/run-ssp.ps1` で試験用 SSP を立ててから（動いていれば `tools/sstp.ps1 -Reload shell` で読み込み直して）、`tools/sstp.ps1 -Script '\0\s[<番号>]\e'` で表示する。
 7. 変えた画像、足した設定、消したファイルをまとめて報告する。作業前と作業後を `view` で並べた画像のパスも伝え、見た目の最終判断は作者にしてもらう。
 
 ## 関連

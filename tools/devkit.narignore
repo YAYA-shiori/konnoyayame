@@ -9,6 +9,9 @@
 /tools/local.json
 /.claude/settings.local.json
 
+# balloon images of tools/sstp.ps1 -Balloon, left only when the script was stopped midway
+/ghost/master/devkit-balloon-*/
+
 # new versions left by tools/update-devkit.ps1 and tools/update-yaya.ps1, waiting to be merged
 *.devkit-new
 *.yaya-dic-new

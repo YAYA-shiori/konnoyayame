@@ -19,13 +19,14 @@
 | `<ps> tools/sstp.ps1 -Reload ghost` | 起動中の SSP にゴーストを再読み込みさせ、その間に SSP のエラーログに増えた警告・エラー（YAYA の辞書エラーなど）を表示する | 0 / 1 エラー応答 / 2 エラーログに Error か Critical が増えた / 3 SSP に接続できない |
 | `<ps> tools/sstp.ps1 -Script '\0\s[0]テスト\e'` | さくらスクリプトを実際のゴーストで再生する。SSP が解釈できなかったタグ（存在しないサーフェス、閉じていない `[` など）が `[GHOST/Script]` のエラーとして表示され（`Option: strict`）、ログはゴーストが話し終わるのを待ってから読む | 同上 |
 | `<ps> tools/sstp.ps1 -Event OnAiTalk` | イベントを発生させる（この例はランダムトーク）。応答の `Script:` に、ゴーストが実際に返したスクリプトが入る。そのスクリプトも `-Script` と同じように検査する | 同上 |
+| `<ps> tools/sstp.ps1 -Script '...' -Balloon` | `-Script` か `-Event` に付けると、話し終わった後の吹き出しを `\![execute,dumpballoon]` で PNG にし（`\0` なら `balloon0.png`、`\1` なら `balloon1.png`）、そのパスを表示する。画像を読めるエージェントが、吹き出しに収まっているか、どこで折り返したか、改行や空行の見た目を自分で確かめるためのもの。`-BalloonScope 0,1,2` で撮るスコープを変える（既定は 0,1。吹き出しの無いスコープは撮れない）。出力先は一時フォルダの `ghost-devkit/balloons-<ハッシュ>/`（実行のたびに中の PNG を消す）。下の `from ghost-devkit (local)` の行は SSTP で送ったときに SSP が付ける表示で、トークの一部ではない。`-AnyGhost` とは使えない | 上と同じ。ほかに、1 枚も撮れなかったら 2 |
 | `<ps> tools/sstp.ps1 -Execute GetStatus` | ゴーストの今の状態（`talking`、`choosing`、`online`、`opening(...)` などのカンマ区切り。当てはまるものが無ければ空）を表示する | 0 / 1 / 3 |
 | `<ps> tools/ssp-log.ps1` | 起動中の SSP のログを表示する。読み取りのみ。既定はこのゴーストのエラーログで、`-Kind script` で再生されたスクリプト（ほかに `network` / `update`）、`-All` で発信元を問わず全部、`-Json` で機械向けの出力 | 0 / 1 SSP が developer.log に未対応 / 2 Error か Critical がある / 3 SSP に接続できない |
 | `<ps> tools/build-nar.ps1` | SSP で、`build/<directory>.nar` と、ネットワーク更新ファイル `build/updates2.dau`・`build/updates.txt` を作る（`ssp.exe --offline-tool` を使う。ゴーストは起動せず、SSP が動いていても関係なく作れる）。SSP はフォルダの中身をそのまま固めるので、git に追加していないファイルも入る。`-UpdateOnly` で更新ファイルだけ、`-OutFile` で nar の出力先（更新ファイルはその横）、`-ListOnly` で `.narignore` から見た中身の一覧だけを表示する。`-Builtin` と GitHub Actions では SSP を使わず、git が追跡しているファイルからスクリプト自身が nar だけを作る | 0 / 1 失敗 / 3 SSP が見つからない |
 | `<ps> tools/update-yaya.ps1` | yaya.dll を最新リリースに、システム辞書（yaya-dic）を最新のコミットに更新する。システム辞書は、git のチェックアウト（submodule など）なら git で切り替え、普通のファイルなら zip から置き換える（`config.dic` と `_loading_order.txt` は、手元と違えば `<ファイル>.yaya-dic-new` を横に置く）。それぞれの後で辞書チェックを行い、失敗したら元に戻す。`-DryRun` で確認のみ、`-Tag` で yaya.dll の版を指定、`-SkipDll` / `-SkipSystemDic` で片方だけ、`-SystemDicDir dic/system` で新しいフォルダに yaya-dic を置く | 0 / 1 失敗 / 2 システム辞書に手作業が要る（古い構成、手元の変更、`.yaya-dic-new` のマージ待ち） |
 | `<ps> tools/update-devkit.ps1` | 開発キットだけを最新版に更新する（`-DryRun` で確認のみ、`-Ref` で版を指定）。別の YAYA ゴーストにキットを入れるときは `-Target <そのゴーストのフォルダ>` | 0 / 1 失敗 / 2 マージ待ちの `.devkit-new` がある |
 
-`tools/sstp.ps1` と `tools/ssp-log.ps1` は、`run-ssp.ps1` が立てた試験用 SSP が動いている間は、そのポートに送る（ポートは一時フォルダの `ghost-devkit/` に記録される）。それ以外は 9801。`-Port` で指定もできる。
+`tools/sstp.ps1` と `tools/ssp-log.ps1` は、`run-ssp.ps1` が立てた試験用 SSP が動いている間は、そのポートに送る（ポートは一時フォルダの `ghost-devkit/` に記録される）。それ以外は 9801（作者がふだん使っている SSP）。`-Port` で指定もできる。さくらスクリプトやイベントを試すときは、**先に `run-ssp.ps1` で試験用 SSP を立ててから送る**。作者の SSP には、作者に頼まれたとき（`run-ssp.ps1 -Shared`）以外は送らない。
 
 SSP の場所は次の順に探す: `-SspPath` 引数 → 環境変数 `SSP_PATH` → `tools/local.json` の `sspPath`（`tools/local.example.json` を複製して作る）→ SSP にインストールされたフォルダなら `../../ssp.exe` → `.nar` のファイル関連付け。
 

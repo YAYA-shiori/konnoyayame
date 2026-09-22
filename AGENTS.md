@@ -44,7 +44,7 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 
 ## 作業のルール
 
-1. **辞書や `ghost/master/*.txt` を変更したら、必ず `tools/check-dic.ps1` を通す。** エラーが残ったゴーストは緊急モードで起動し、ほとんど話さなくなる。`shell/` を変更したら `tools/check-shell.ps1` も通す。辞書の関数を書いたり直したりしたら、`tools/shiori.ps1 -Eval '関数名'` で呼び出して、返すスクリプトと、実行時のエラー（存在しない関数の呼び出しなど。読み込みのチェックでは見つからない）も確かめる（ファイルの書き込みや外部プログラムの実行をする関数は本当に動くので、中身を読んでから呼ぶ）。SSP で動かして確かめるときは、`tools/sstp.ps1` や `tools/run-ssp.ps1` が表示する SSP のエラーログ（終了コード 2）も見る。書いたトークを `tools/sstp.ps1 -Script` や `-Event` で再生すると、解釈できなかったタグが `[GHOST/Script]` のエラーとして出るので、それも直す。
+1. **辞書や `ghost/master/*.txt` を変更したら、必ず `tools/check-dic.ps1` を通す。** エラーが残ったゴーストは緊急モードで起動し、ほとんど話さなくなる。`shell/` を変更したら `tools/check-shell.ps1` も通す。辞書の関数を書いたり直したりしたら、`tools/shiori.ps1 -Eval '関数名'` で呼び出して、返すスクリプトと、実行時のエラー（存在しない関数の呼び出しなど。読み込みのチェックでは見つからない）も確かめる（ファイルの書き込みや外部プログラムの実行をする関数は本当に動くので、中身を読んでから呼ぶ）。SSP で動かして確かめるときは、**先に `tools/run-ssp.ps1` で試験用の SSP（readonly）を立ててから** `tools/sstp.ps1` で送り（立てていないと、作者がふだん使っている SSP に送ってしまう）、`tools/sstp.ps1` や `tools/run-ssp.ps1` が表示する SSP のエラーログ（終了コード 2）も見る。書いたトークを `tools/sstp.ps1 -Script` や `-Event` で再生すると、解釈できなかったタグが `[GHOST/Script]` のエラーとして出るので、それも直す。
 2. 仕様（さくらスクリプトのタグ、SHIORI イベントの名前と Reference、YAYA の関数、descript.txt や surfaces.txt の項目）を**推測で書かない**。確かでないときは「仕様の調べ方」に従って確かめる。
 3. 文字コードは UTF-8（BOM なし）、改行は LF、辞書のインデントはタブ（`.editorconfig` 参照）。ただし `readme-aya.txt` と `readme-yaya.txt` は Shift_JIS なので、文字コードを変えない。
 4. 編集しないもの: `ghost/master/dic/system/` または `ghost/master/system/`（システム辞書。submodule のことも普通のファイルのこともある。変更が必要なら上流の yaya-dic に提案する）、`yaya.dll`、実行時に作られるファイル。yaya.dll とシステム辞書の更新は `docs/agents/workflows/update-yaya.md` の手順で行う。
@@ -80,7 +80,7 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 
 AI がやりがちな失敗:
 
-- 1 つの台詞が長すぎる。吹き出しの幅はバルーンによって違うので、全角 20〜25 字くらいを目安に `\n` で区切り、仕上がりは `tools/sstp.ps1` を使って実際の画面で確かめてもらう。
+- 1 つの台詞が長すぎる。吹き出しの幅はバルーンによって違うので、全角 20〜25 字くらいを目安に `\n` で区切る。画像を読めるなら、試験用の SSP で `tools/sstp.ps1 -Script '...' -Balloon` と再生して、吹き出しの画像で折り返しを自分で確かめる（`docs/agents/workflows/try-in-ssp.md`）。表情やテンポは作者の画面で確かめてもらう。
 - 存在しないサーフェス番号を使う。表情を増やすにはシェルの画像が必要になる。
 - `'...'` の中に `%(変数)` を書いて、展開されない（`RandomTalkEx` は例外）。
 - 話し手の口調が混ざる（`GHOST.md` の人物像と違う一人称や口調で話す）。
