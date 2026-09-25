@@ -1,7 +1,7 @@
 # 画像の編集
 
-- `tools/image.ps1` は入口だけで、処理は `tools/lib/image.cs`（C#）にある。
-  - `Add-Type` で一時フォルダの `ghost-devkit/image/engine-<エディション>-<ハッシュ>.dll` にコンパイルし、次からはそれを読む（5.1 で毎回コンパイルすると 1〜2 秒かかるため）。ハッシュはソースとエディション（`desktop` / `core<版>`）から作るので、ソースを変えれば作り直され、古い DLL はそのときに消す（読み込み中のものは消えずに残る）。一時フォルダに書けなければ、その回だけメモリ上でコンパイルする。
+- `tools/image.ps1` は入口だけで、処理は `tools/lib/image.cs`（C#）にある。`tools/dump-surface.ps1` の `-Compare` も同じエンジンを使う。
+  - エンジンの読み込みは `tools/lib/image-engine.ps1` の `Import-DevkitImageEngine` にまとめ、両方のスクリプトが読む。`Add-Type` で一時フォルダの `ghost-devkit/image/engine-<エディション>-<ハッシュ>.dll` にコンパイルし、次からはそれを読む（5.1 で毎回コンパイルすると 1〜2 秒かかるため）。ハッシュはソースとエディション（`desktop` / `core<版>`）から作るので、ソースを変えれば作り直され、古い DLL はそのときに消す（読み込み中のものは消えずに残る）。一時フォルダに書けなければ、その回だけメモリ上でコンパイルする。
   - Windows PowerShell 5.1 は .NET Framework のコンパイラで C# 5 までしか通らない。文字列補間（`$"..."`）、`?.`、`nameof`、式形式のメンバー、`out var`、タプルを使わない。ファイルは ASCII だけで書く。
   - PowerShell 7 では、System.Drawing の一部が参照アセンブリの無いアセンブリに分かれている（.NET 10 の `System.Private.Windows.GdiPlus`）。名前を並べるだけでは `CS0012` になるので、`[System.Drawing.Bitmap].Assembly` が参照している `System.Private.Windows*` を場所で足している。実装側のアセンブリをすべて足すと、今度は `System.Private.CoreLib` との衝突（`CS1069`）になる。
   - PowerShell から .NET のメソッドの `string` 引数に `$null` を渡すと空文字列になる。C# 側では「省略」を `string.IsNullOrEmpty` で見る。
