@@ -4,11 +4,16 @@
 .DESCRIPTION
     Subcommands:
       info FILE...         size, how the file stores transparency, visible area, pixel values (-At x,y).
+                           Also how partial the alpha is and the separate islands of visible pixels (stray
+                           pixels of a part). With -Base, what the file changes when it is laid over that
+                           image at -Offset x,y (as an element or animation part of surfaces.txt).
                            info and view accept wildcards (shell/master/*.png).
                            For a file in a shell folder, also tells what SSP uses as transparency there
                            (seriko.use_self_alpha of the shell's descript.txt).
       edit INPUT OPS...    applies the operations in order and writes -Out. INPUT is a file or new:WxH[:#color].
       view FILE...         writes a magnified preview with pixel rulers (and the images side by side) to look at.
+                           Several backgrounds (-Background white,black,checker) give each file a row, one
+                           panel per background, to find halos, holes and stray pixels.
       diff A B             compares two images; -Part writes the differing pixels of B as a part to paste.
     Each operation is one argument: its name, then positional values and key=value options, separated by
     spaces ('crop 10,20,100,80', 'resize 200x filter=lanczos', "text 'Hello' 5,5 size=12 color=#ff0000").
@@ -22,9 +27,13 @@
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/image.ps1 info shell/master/surface0000.png -At 10,20
 .EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools/image.ps1 info shell/master/surface1000.png -Base shell/master/surface0000.png -Offset 112,100
+.EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/image.ps1 edit shell/master/surface0000.png -Out work/s0.png colorkey 'crop 80,40,100,100'
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/image.ps1 view work/s0.png -Rect 90,90,60,40 -Zoom 8
+.EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools/image.ps1 view shell/master/surface0000.png -Background white,black,checker
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/image.ps1 diff surface0000.png surface0001.png -Part work/face1.png
 #>
@@ -40,14 +49,20 @@ param(
     [string]$Out,
     # info: pixels to print, as x,y pairs (several: -At 1,2,3,4).
     [string[]]$At,
+    # info: an image to lay the file over, to see what the file changes there.
+    [string]$Base,
+    # info -Base: where the file is laid, as x,y in the base image (default 0,0).
+    [string[]]$Offset,
     # view: only this area x,y,w,h of each image.
     [string[]]$Rect,
     # view: magnification (default: fits about 480 pixels).
     [int]$Zoom = 0,
     # view: grid and ruler step in image pixels (default: chosen from the magnification).
     [int]$Grid = 0,
-    # view: checker, white, black, #rrggbb, alpha (the alpha channel as gray) or opaque (colors without alpha).
-    [string]$Background = 'checker',
+    # view: checker, white, black, #rrggbb, alpha (the alpha channel as gray), opaque (colors without alpha)
+    # or faint (the checker, with the almost invisible pixels, alpha 1-15, in magenta).
+    # Several, separated by commas, show each file once per background.
+    [string[]]$Background = @('checker'),
     # diff: largest difference per channel that still counts as equal.
     [int]$Tolerance = 0,
     # diff: write the differing pixels of the second image, cropped, to this PNG.
@@ -57,57 +72,8 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/common.ps1')
+. (Join-Path $PSScriptRoot 'lib/image-engine.ps1')
 Initialize-DevkitConsole
-
-# Compiles tools/lib/image.cs once per source and PowerShell edition, into the temp folder.
-function Import-DevkitImageEngine {
-    $source = Join-Path $PSScriptRoot 'lib/image.cs'
-    $code = [IO.File]::ReadAllText($source)
-    $core = $PSVersionTable.PSEdition -eq 'Core'
-    $edition = if ($core) { 'core' + $PSVersionTable.PSVersion.Major + '.' + $PSVersionTable.PSVersion.Minor } else { 'desktop' }
-    $sha = [Security.Cryptography.SHA256]::Create()
-    try {
-        $bytes = $sha.ComputeHash($DevkitUtf8.GetBytes($code + "`n" + $edition))
-    } finally {
-        $sha.Dispose()
-    }
-    $hash = -join ($bytes[0..7] | ForEach-Object { $_.ToString('x2') })
-    $dir = Join-Path (Join-Path ([IO.Path]::GetTempPath()) 'ghost-devkit') 'image'
-    $dll = Join-Path $dir "engine-$edition-$hash.dll"
-    $references = @('System.Drawing')
-    if ($core) {
-        # PowerShell 7 moves parts of System.Drawing into assemblies that have no reference assembly and differ
-        # between .NET versions (System.Private.Windows.GdiPlus since .NET 10); reference those by location.
-        Add-Type -AssemblyName System.Drawing
-        $references = @('System.Drawing.Common', 'System.Drawing.Primitives', 'System.IO.Compression', 'System.Collections', 'System.Runtime.InteropServices', 'System.ComponentModel.TypeConverter')
-        foreach ($name in [System.Drawing.Bitmap].Assembly.GetReferencedAssemblies()) {
-            if ($name.Name -notlike 'System.Private.Windows*') { continue }
-            try {
-                $location = [Reflection.Assembly]::Load($name).Location
-                if ($location) { $references += $location }
-            } catch { }
-        }
-    }
-    if (-not (Test-Path -LiteralPath $dll)) {
-        New-Item -ItemType Directory -Force -Path $dir | Out-Null
-        $temp = Join-Path $dir ("engine-" + [guid]::NewGuid().ToString('N') + '.dll')
-        try {
-            Add-Type -TypeDefinition $code -ReferencedAssemblies $references -OutputAssembly $temp -OutputType Library
-            if (-not (Test-Path -LiteralPath $dll)) { Move-Item -LiteralPath $temp -Destination $dll }
-            # Remove the engines built from older sources (one that is in use cannot be removed; it stays).
-            Get-ChildItem -LiteralPath $dir -Filter "engine-$edition-*.dll" -File | Where-Object { $_.FullName -ne $dll } |
-                Remove-Item -Force -ErrorAction SilentlyContinue
-        } catch {
-            # The cache could not be written: compile in memory for this run.
-            Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue
-            Add-Type -TypeDefinition $code -ReferencedAssemblies $references
-            return
-        } finally {
-            Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue
-        }
-    }
-    Add-Type -Path $dll
-}
 
 # Returns the value of seriko.use_self_alpha for an image in a shell folder ('0' when it is not set),
 # or $null when the image is not in a shell folder. Also returns the path of that descript.txt.
@@ -184,7 +150,7 @@ try {
                     $shell = Get-ShellSelfAlpha (Resolve-ImagePath $file)
                     if ($shell) { $selfAlpha = $shell.Value }
                 }
-                foreach ($line in [GhostDevkit.Imaging.Commands]::Info($here, $file, [string[]]$points, $selfAlpha)) { Write-Host $line }
+                foreach ($line in [GhostDevkit.Imaging.Commands]::Info($here, $file, [string[]]$points, $selfAlpha, $Base, (Join-Numbers $Offset))) { Write-Host $line }
             }
         }
         'edit' {
@@ -207,7 +173,7 @@ try {
         'view' {
             if ($Arguments.Count -eq 0) { throw [GhostDevkit.Imaging.ImageException]::new('view: give one or more image files') }
             if (-not $Out) { $Out = Join-Path $imageDir 'view.png' }
-            foreach ($line in [GhostDevkit.Imaging.View]::Files($here, [string[]]@(Expand-ImageFiles $Arguments), (Join-Numbers $Rect), $Zoom, $Grid, $Background, $Out)) { Write-Host "view: $line" }
+            foreach ($line in [GhostDevkit.Imaging.View]::Files($here, [string[]]@(Expand-ImageFiles $Arguments), (Join-Numbers $Rect), $Zoom, $Grid, (Join-Numbers $Background), $Out)) { Write-Host "view: $line" }
         }
         'diff' {
             if ($Arguments.Count -ne 2) { throw [GhostDevkit.Imaging.ImageException]::new('diff: give two image files') }

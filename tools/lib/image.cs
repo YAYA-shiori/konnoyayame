@@ -1749,7 +1749,9 @@ namespace GhostDevkit.Imaging
 
         // selfAlpha: seriko.use_self_alpha of the shell that holds the file ("0" when not set), or null / empty when
         // the file is not in a shell folder. (PowerShell passes $null to a string parameter as an empty string.)
-        public static string[] Info(string baseDir, string file, string[] points, string selfAlpha)
+        // baseFile / offset: an image the file is laid over at x,y (as an element or animation part), to check
+        // what the file changes there; null / empty to skip.
+        public static string[] Info(string baseDir, string file, string[] points, string selfAlpha, string baseFile, string offset)
         {
             string path;
             RgbaImage img = Open(baseDir, file, out path);
@@ -1765,6 +1767,17 @@ namespace GhostDevkit.Imaging
                 if (colors.Count <= 65536) colors.Add(p[i + 3] == 0 ? 0 : (p[i] << 24) | (p[i + 1] << 16) | (p[i + 2] << 8) | p[i + 3]);
             }
             lines.Add("  alpha: transparent " + transparent + ", partial " + partial + ", opaque " + opaque + " (pixels)");
+            if (partial > 0)
+            {
+                int[] bands = new int[4];
+                for (int i = 3; i < p.Length; i += 4)
+                {
+                    int a = p[i];
+                    if (a == 0 || a == 255) continue;
+                    bands[a < 16 ? 0 : a < 128 ? 1 : a < 240 ? 2 : 3]++;
+                }
+                lines.Add("  partial alpha: 1-15 (almost invisible) " + bands[0] + ", 16-127 " + bands[1] + ", 128-239 " + bands[2] + ", 240-254 (almost opaque) " + bands[3] + " (pixels)");
+            }
             lines.Add("  colors: " + (colors.Count > 65536 ? "more than 65536" : colors.Count.ToString()) + " distinct (RGBA)");
             Rgba topLeft = Rgba.At(img, 0, 0);
             lines.Add("  top-left pixel: " + topLeft);
@@ -1797,10 +1810,20 @@ namespace GhostDevkit.Imaging
             }
             IntRect? bounds = Px.Bounds(img, 0);
             lines.Add("  visible area (alpha > 0): " + (bounds == null ? "none" : bounds.Value + " (x,y,w,h)"));
+            // Without an alpha channel every pixel counts as visible here; SSP cuts such images by the top-left color.
+            if (bounds != null && img.HasAlphaChannel) lines.AddRange(Inspect.Islands(img));
             foreach (string pt in points)
             {
                 int[] xy = Parse.Ints(pt, 2, "point x,y");
                 lines.Add("  pixel " + xy[0] + "," + xy[1] + ": " + (img.Contains(xy[0], xy[1]) ? Rgba.At(img, xy[0], xy[1]).ToString() : "outside the image"));
+            }
+            if (!string.IsNullOrEmpty(baseFile))
+            {
+                string basePath;
+                RgbaImage baseImg = Open(baseDir, baseFile, out basePath);
+                int[] at = string.IsNullOrEmpty(offset) ? new int[] { 0, 0 } : Parse.Ints(offset, 2, "offset x,y");
+                lines.Add("  over " + (basePath == null ? baseFile : Path.GetFileName(basePath)) + " at " + at[0] + "," + at[1] + " (coordinates of the base):");
+                lines.AddRange(Inspect.OverBase(img, baseImg, at[0], at[1]));
             }
             return lines.ToArray();
         }
@@ -1812,6 +1835,21 @@ namespace GhostDevkit.Imaging
         {
             string pathA, pathB;
             RgbaImage a = Open(baseDir, fileA, out pathA), b = Open(baseDir, fileB, out pathB);
+            string partPath = string.IsNullOrEmpty(partOut) ? null : ImageIO.Resolve(baseDir, partOut);
+            return DiffImages(a, b, "A", "B", tolerance, partPath, viewOut, false, out different);
+        }
+
+        // Compares two renderings of the same surface (tools/dump-surface.ps1 -Compare). Returns one line; when
+        // they differ and viewOut is given, writes a magnified view of the changed area there.
+        public static string Compare(string fileA, string fileB, string labelA, string labelB, string viewOut, out bool different)
+        {
+            RgbaImage a = ImageIO.Load(fileA), b = ImageIO.Load(fileB);
+            return string.Join("; ", DiffImages(a, b, labelA, labelB, 0, null, viewOut, true, out different));
+        }
+
+        // cropView: show only the changed area (with a margin), magnified, instead of the whole images.
+        static string[] DiffImages(RgbaImage a, RgbaImage b, string labelA, string labelB, int tolerance, string partPath, string viewOut, bool cropView, out bool different)
+        {
             List<string> lines = new List<string>();
             different = false;
             if (a.Width != b.Width || a.Height != b.Height)
@@ -1820,13 +1858,21 @@ namespace GhostDevkit.Imaging
                 lines.Add("sizes differ: " + a.Width + "x" + a.Height + " and " + b.Width + "x" + b.Height + " (only images of the same size are compared)");
                 return lines.ToArray();
             }
-            int w = a.Width, h = a.Height, count = 0;
-            bool[] diff = new bool[w * h];
+            // clear: differences above this on a channel are easy to see; smaller ones are not.
+            const int clearStep = 32;
+            int w = a.Width, h = a.Height, count = 0, largest = 0, clear = 0;
+            bool[] diff = new bool[w * h], big = new bool[w * h];
             for (int n = 0; n < w * h; n++)
             {
                 int i = n * 4;
                 bool same = Px.Similar(a.Pixels, i, new Rgba(b.Pixels[i], b.Pixels[i + 1], b.Pixels[i + 2], b.Pixels[i + 3]), tolerance, true);
-                if (!same) { diff[n] = true; count++; }
+                if (same) continue;
+                diff[n] = true;
+                count++;
+                int step = 0;
+                for (int c = 0; c < 4; c++) step = Math.Max(step, Math.Abs(a.Pixels[i + c] - b.Pixels[i + c]));
+                largest = Math.Max(largest, step);
+                if (step > clearStep) { clear++; big[n] = true; }
             }
             if (count == 0)
             {
@@ -1842,8 +1888,8 @@ namespace GhostDevkit.Imaging
                 minX = Math.Min(minX, x); maxX = Math.Max(maxX, x); minY = Math.Min(minY, y); maxY = Math.Max(maxY, y);
             }
             IntRect box = new IntRect(minX, minY, maxX - minX + 1, maxY - minY + 1);
-            lines.Add(count + " pixel(s) differ, within " + box + " (x,y,w,h)");
-            if (!string.IsNullOrEmpty(partOut))
+            lines.Add(count + " pixel(s) differ, within " + box + " (x,y,w,h), " + clear + " of them by more than " + clearStep + ", largest difference " + largest + " (of 255, any channel)");
+            if (partPath != null)
             {
                 RgbaImage part = new RgbaImage(box.W, box.H);
                 for (int y = 0; y < box.H; y++)
@@ -1852,25 +1898,156 @@ namespace GhostDevkit.Imaging
                         int n = (y + box.Y) * w + x + box.X;
                         if (diff[n]) Buffer.BlockCopy(b.Pixels, n * 4, part.Pixels, (y * box.W + x) * 4, 4);
                     }
-                string path = ImageIO.Resolve(baseDir, partOut);
-                ImageIO.Save(part, path);
-                lines.Add("part: " + path + " (" + box.W + "x" + box.H + "; paste it at " + box.X + "," + box.Y + ")");
+                ImageIO.Save(part, partPath);
+                lines.Add("part: " + partPath + " (" + box.W + "x" + box.H + "; paste it at " + box.X + "," + box.Y + ")");
             }
             if (!string.IsNullOrEmpty(viewOut))
             {
-                // A in faded gray, the differing pixels in red.
+                // A in faded gray, the pixels that differ clearly in red, slightly in yellow.
                 RgbaImage mark = new RgbaImage(w, h);
                 for (int n = 0; n < w * h; n++)
                 {
                     int i = n * 4;
-                    if (diff[n]) { mark.Pixels[i] = 255; mark.Pixels[i + 1] = 0; mark.Pixels[i + 2] = 0; mark.Pixels[i + 3] = 255; continue; }
+                    if (diff[n]) { mark.Pixels[i] = 255; mark.Pixels[i + 1] = (byte)(big[n] ? 0 : 200); mark.Pixels[i + 2] = 0; mark.Pixels[i + 3] = 255; continue; }
                     int l = Px.Clamp255(Px.Luma(a.Pixels[i], a.Pixels[i + 1], a.Pixels[i + 2]) * 255);
                     mark.Pixels[i] = mark.Pixels[i + 1] = mark.Pixels[i + 2] = (byte)(l / 2 + 128);
                     mark.Pixels[i + 3] = (byte)(a.Pixels[i + 3] / 2);
                 }
-                lines.Add("view: " + View.Render(new RgbaImage[] { a, b, mark }, new string[] { "A", "B", "differences" }, null, 0, 0, "checker", viewOut));
+                IntRect? rect = null;
+                if (cropView)
+                {
+                    const int margin = 8;
+                    int x0 = Math.Max(0, box.X - margin), y0 = Math.Max(0, box.Y - margin);
+                    int x1 = Math.Min(w, box.X + box.W + margin), y1 = Math.Min(h, box.Y + box.H + margin);
+                    rect = new IntRect(x0, y0, x1 - x0, y1 - y0);
+                }
+                lines.Add("view: " + View.Render(new RgbaImage[] { a, b, mark }, new string[] { labelA, labelB, "differences" }, rect, 0, 0, "checker", viewOut));
             }
             return lines.ToArray();
+        }
+    }
+
+    // ---------------------------------------------------------------- inspection
+
+    public static class Inspect
+    {
+        const int MaxListed = 10;
+
+        // Groups the visible pixels (alpha > 0) that touch each other, diagonally too. A part cut out of a
+        // difference often keeps a few stray pixels away from the rest; the groups are listed smallest first.
+        public static List<string> Islands(RgbaImage img)
+        {
+            int w = img.Width, h = img.Height;
+            byte[] p = img.Pixels;
+            int[] label = new int[w * h];
+            int[] stack = new int[w * h];
+            // Each group: minX, minY, maxX, maxY, pixel count, largest alpha.
+            List<int[]> groups = new List<int[]>();
+            for (int start = 0; start < w * h; start++)
+            {
+                if (label[start] != 0 || p[start * 4 + 3] == 0) continue;
+                int id = groups.Count + 1;
+                int[] g = new int[] { w, h, -1, -1, 0, 0 };
+                int top = 0;
+                stack[top++] = start;
+                label[start] = id;
+                while (top > 0)
+                {
+                    int n = stack[--top];
+                    int x = n % w, y = n / w;
+                    if (x < g[0]) g[0] = x;
+                    if (y < g[1]) g[1] = y;
+                    if (x > g[2]) g[2] = x;
+                    if (y > g[3]) g[3] = y;
+                    g[4]++;
+                    if (p[n * 4 + 3] > g[5]) g[5] = p[n * 4 + 3];
+                    for (int dy = -1; dy <= 1; dy++)
+                        for (int dx = -1; dx <= 1; dx++)
+                        {
+                            int nx = x + dx, ny = y + dy;
+                            if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+                            int m = ny * w + nx;
+                            if (label[m] != 0 || p[m * 4 + 3] == 0) continue;
+                            label[m] = id;
+                            stack[top++] = m;
+                        }
+                }
+                groups.Add(g);
+            }
+            List<string> lines = new List<string>();
+            if (groups.Count == 1)
+            {
+                lines.Add("  islands: 1 (the visible pixels are all connected)");
+                return lines;
+            }
+            groups.Sort(delegate (int[] u, int[] v) { return u[4] != v[4] ? u[4].CompareTo(v[4]) : u[1] != v[1] ? u[1].CompareTo(v[1]) : u[0].CompareTo(v[0]); });
+            int[] big = groups[groups.Count - 1];
+            lines.Add("  islands (groups of touching visible pixels): " + groups.Count + "; the largest has " + big[4] + " pixel(s) within " + Box(big) + ". Smallest first:");
+            for (int k = 0; k < groups.Count && k < MaxListed; k++)
+            {
+                int[] g = groups[k];
+                lines.Add("    " + Box(g) + ": " + g[4] + " pixel(s), alpha up to " + g[5]);
+            }
+            if (groups.Count > MaxListed) lines.Add("    ... and " + (groups.Count - MaxListed) + " larger one(s)");
+            return lines;
+        }
+
+        static string Box(int[] g) { return g[0] + "," + g[1] + "," + (g[2] - g[0] + 1) + "," + (g[3] - g[1] + 1); }
+
+        // A pixel of a part whose alpha is clearly partial (SeamAlphaMin..SeamAlphaMax; below it the base shows,
+        // above it the part does) and whose color differs from the base under it by more than SeamColor on a
+        // channel shows a mix of two different colors; along the edge of a part that makes a seam.
+        const int SeamColor = 48, SeamAlphaMin = 16, SeamAlphaMax = 239;
+
+        // What a part changes when it is laid over the base at ox,oy ("overlay" of surfaces.txt: normal alpha
+        // blending). Coordinates in the result are those of the base.
+        public static List<string> OverBase(RgbaImage part, RgbaImage baseImg, int ox, int oy)
+        {
+            int visible = 0, outside = 0, noEffect = 0, changed = 0, largest = 0, overClear = 0, seams = 0;
+            int[] changedBox = NewBox(), clearBox = NewBox(), seamBox = NewBox();
+            byte[] tmp = new byte[4];
+            byte[] s = part.Pixels, d = baseImg.Pixels;
+            for (int y = 0; y < part.Height; y++)
+                for (int x = 0; x < part.Width; x++)
+                {
+                    int si = (y * part.Width + x) * 4;
+                    int a = s[si + 3];
+                    if (a == 0) continue;
+                    visible++;
+                    int bx = x + ox, by = y + oy;
+                    if (!baseImg.Contains(bx, by)) { outside++; continue; }
+                    int di = (by * baseImg.Width + bx) * 4;
+                    if (d[di + 3] == 0) { overClear++; Grow(clearBox, bx, by); }
+                    Buffer.BlockCopy(d, di, tmp, 0, 4);
+                    Px.Over(tmp, 0, s[si], s[si + 1], s[si + 2], a / 255.0);
+                    int change = 0;
+                    for (int c = 0; c < 4; c++) change = Math.Max(change, Math.Abs(tmp[c] - d[di + c]));
+                    if (change == 0) noEffect++;
+                    else { changed++; largest = Math.Max(largest, change); Grow(changedBox, bx, by); }
+                    if (a >= SeamAlphaMin && a <= SeamAlphaMax && d[di + 3] > 0)
+                    {
+                        int color = Math.Max(Math.Abs(s[si] - d[di]), Math.Max(Math.Abs(s[si + 1] - d[di + 1]), Math.Abs(s[si + 2] - d[di + 2])));
+                        if (color > SeamColor) { seams++; Grow(seamBox, bx, by); }
+                    }
+                }
+            List<string> lines = new List<string>();
+            lines.Add("    changes " + changed + " pixel(s)" + (changed > 0 ? " within " + Box(changedBox) + ", largest change " + largest + " (of 255, any channel)" : ""));
+            if (noEffect > 0) lines.Add("    " + noEffect + " visible pixel(s) change nothing (they could be transparent)");
+            if (overClear > 0) lines.Add("    " + overClear + " visible pixel(s) are over transparent pixels of the base, within " + Box(clearBox) + " (they show outside the base)");
+            if (outside > 0) lines.Add("    " + outside + " visible pixel(s) are outside the base image");
+            if (seams > 0) lines.Add("    " + seams + " pixel(s) with alpha " + SeamAlphaMin + "-" + SeamAlphaMax + " mix a color far from the base (a channel differs by more than " + SeamColor + "), within " + Box(seamBox) + ": look at that edge for a seam");
+            if (visible == 0) lines.Add("    (the part has no visible pixel)");
+            return lines;
+        }
+
+        static int[] NewBox() { return new int[] { int.MaxValue, int.MaxValue, -1, -1 }; }
+
+        static void Grow(int[] box, int x, int y)
+        {
+            if (x < box[0]) box[0] = x;
+            if (y < box[1]) box[1] = y;
+            if (x > box[2]) box[2] = x;
+            if (y > box[3]) box[3] = y;
         }
     }
 
@@ -1880,28 +2057,53 @@ namespace GhostDevkit.Imaging
     {
         const int Ruler = 18, Gap = 16, Title = 20;
 
+        // background: one background, or several separated by commas; with several, each image gets a row with
+        // one panel per background.
         public static string[] Files(string baseDir, string[] files, string rect, int zoom, int grid, string background, string output)
         {
+            string[] backgrounds = background.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+            for (int i = 0; i < backgrounds.Length; i++) backgrounds[i] = backgrounds[i].Trim();
+            if (backgrounds.Length == 0) backgrounds = new string[] { "checker" };
             List<RgbaImage> images = new List<RgbaImage>();
             List<string> labels = new List<string>();
+            List<string> panelBackgrounds = new List<string>();
             foreach (string f in files)
             {
                 string path;
-                images.Add(Commands.Open(baseDir, f, out path));
-                labels.Add(path == null ? f : Path.GetFileName(path));
+                RgbaImage img = Commands.Open(baseDir, f, out path);
+                string label = path == null ? f : Path.GetFileName(path);
+                foreach (string bg in backgrounds)
+                {
+                    images.Add(img);
+                    labels.Add(backgrounds.Length > 1 ? label + " on " + bg : label);
+                    panelBackgrounds.Add(bg);
+                }
             }
             IntRect? r = null;
             if (!string.IsNullOrEmpty(rect)) r = Parse.Rect(rect);
-            return new string[] { Render(images.ToArray(), labels.ToArray(), r, zoom, grid, background, ImageIO.Resolve(baseDir, output)) };
+            int columns = backgrounds.Length > 1 ? backgrounds.Length : images.Count;
+            return new string[] { Render(images.ToArray(), labels.ToArray(), r, zoom, grid, panelBackgrounds.ToArray(), columns, ImageIO.Resolve(baseDir, output)) };
         }
 
-        // Draws the images side by side, magnified with nearest neighbour, on a background, with rulers that give
-        // the pixel coordinates of the original images. Returns a description of the written file.
         public static string Render(RgbaImage[] images, string[] labels, IntRect? rect, int zoom, int grid, string background, string output)
         {
-            string bg = background.ToLowerInvariant();
-            Rgba bgColor = new Rgba(0, 0, 0, 0);
-            if (bg != "checker" && bg != "alpha" && bg != "opaque") bgColor = Parse.Color(background);
+            string[] backgrounds = new string[images.Length];
+            for (int i = 0; i < backgrounds.Length; i++) backgrounds[i] = background;
+            return Render(images, labels, rect, zoom, grid, backgrounds, images.Length, output);
+        }
+
+        // Draws the images in rows of the given number of columns, magnified with nearest neighbour, each on its
+        // background, with rulers that give the pixel coordinates of the original images. Returns a description
+        // of the written file.
+        public static string Render(RgbaImage[] images, string[] labels, IntRect? rect, int zoom, int grid, string[] backgrounds, int columns, string output)
+        {
+            string[] bgs = new string[images.Length];
+            Rgba[] bgColors = new Rgba[images.Length];
+            for (int i = 0; i < images.Length; i++)
+            {
+                bgs[i] = backgrounds[i].ToLowerInvariant();
+                if (bgs[i] != "checker" && bgs[i] != "alpha" && bgs[i] != "opaque" && bgs[i] != "faint") bgColors[i] = Parse.Color(backgrounds[i]);
+            }
             RgbaImage[] views = new RgbaImage[images.Length];
             int ox = 0, oy = 0;
             if (rect != null) { ox = rect.Value.X; oy = rect.Value.Y; }
@@ -1916,20 +2118,34 @@ namespace GhostDevkit.Imaging
             int labelStep = grid;
             while (labelStep * zoom < 30) labelStep += grid;
 
-            int totalW = Gap, totalH = 0;
-            foreach (RgbaImage v in views) { totalW += Ruler + v.Width * zoom + Gap; totalH = Math.Max(totalH, v.Height * zoom); }
-            totalH += Title + Ruler + Gap * 2;
+            if (columns <= 0 || columns > views.Length) columns = views.Length;
+            int rows = (views.Length + columns - 1) / columns;
+            int[] colW = new int[columns], rowH = new int[rows];
+            for (int k = 0; k < views.Length; k++)
+            {
+                colW[k % columns] = Math.Max(colW[k % columns], views[k].Width * zoom);
+                rowH[k / columns] = Math.Max(rowH[k / columns], views[k].Height * zoom);
+            }
+            int totalW = Gap, totalH = Gap;
+            foreach (int cw in colW) totalW += Ruler + cw + Gap;
+            foreach (int rh in rowH) totalH += Title + Ruler + rh + Gap;
             RgbaImage canvas = new RgbaImage(totalW, totalH);
             byte[] c = canvas.Pixels;
             for (int i = 0; i < c.Length; i += 4) { c[i] = 240; c[i + 1] = 240; c[i + 2] = 240; c[i + 3] = 255; }
 
             List<KeyValuePair<string, PointF>> texts = new List<KeyValuePair<string, PointF>>();
-            int left = Gap;
+            int top = Gap;
             for (int k = 0; k < views.Length; k++)
             {
                 RgbaImage v = views[k];
-                int x0 = left + Ruler, y0 = Gap + Title + Ruler;
-                texts.Add(new KeyValuePair<string, PointF>(labels[k] + (rect == null ? "" : " [" + rect.Value + "]") + "  x" + zoom, new PointF(left, Gap)));
+                string bg = bgs[k];
+                Rgba bgColor = bgColors[k];
+                int col = k % columns, row = k / columns;
+                if (col == 0 && row > 0) top += Title + Ruler + rowH[row - 1] + Gap;
+                int left = Gap;
+                for (int j = 0; j < col; j++) left += Ruler + colW[j] + Gap;
+                int x0 = left + Ruler, y0 = top + Title + Ruler;
+                texts.Add(new KeyValuePair<string, PointF>(labels[k] + (rect == null ? "" : " [" + rect.Value + "]") + "  x" + zoom, new PointF(left, top)));
                 for (int y = 0; y < v.Height * zoom; y++)
                     for (int x = 0; x < v.Width * zoom; x++)
                     {
@@ -1938,7 +2154,9 @@ namespace GhostDevkit.Imaging
                         byte[] s = v.Pixels;
                         if (bg == "alpha") { c[di] = c[di + 1] = c[di + 2] = s[si + 3]; continue; }
                         if (bg == "opaque") { c[di] = s[si]; c[di + 1] = s[si + 1]; c[di + 2] = s[si + 2]; continue; }
-                        if (bg == "checker")
+                        // faint: on the checker, pixels that are there but almost invisible (alpha 1-15) in magenta.
+                        if (bg == "faint" && s[si + 3] > 0 && s[si + 3] < 16) { c[di] = 255; c[di + 1] = 0; c[di + 2] = 255; continue; }
+                        if (bg == "checker" || bg == "faint")
                         {
                             byte t = ((x / 8 + y / 8) % 2 == 0) ? (byte)255 : (byte)204;
                             c[di] = c[di + 1] = c[di + 2] = t;
@@ -1969,7 +2187,6 @@ namespace GhostDevkit.Imaging
                     if (grid * zoom >= 6) for (int x = x0; x < x0 + v.Width * zoom; x++) Set(canvas, x, y, 0, 160, 255, major ? 0.55 : 0.3);
                     if (major) texts.Add(new KeyValuePair<string, PointF>(coord.ToString(), new PointF(left, y + 1)));
                 }
-                left += Ruler + v.Width * zoom + Gap;
             }
             try
             {

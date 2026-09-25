@@ -13,6 +13,11 @@
     the Head, Bust and other areas of surfaces.txt are.
     -Sheet also writes sheet.png, which puts every image in one picture with its number, for comparing
     expressions at a glance (needs System.Drawing, which Windows has).
+    -Compare renders the same surfaces from a git revision (HEAD, a commit, a tag) or from another folder of
+    the ghost, and compares each pair pixel by pixel: how many pixels differ, where, and by how much. For each
+    surface that changed it writes compare-<name>.png, a magnified view of the changed area (before, after
+    and the differing pixels in red). The images of the other side go to the compare folder of the output.
+    Use it to confirm that an edit changed only what was meant, down to a single pixel.
     Messages of SSP at Warning or above are shown; use tools/check-shell.ps1 to check the shell itself.
     Exit codes: 0 = every image was written, 1 = failed (no image, bad arguments, ssp.exe failed),
     2 = some images were written, but a surface number was not found or SSP logged an Error or Critical,
@@ -23,6 +28,8 @@
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0-7 -Backlog -Sheet
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0,10 -Collision
+.EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0-30 -Compare HEAD
 #>
 [CmdletBinding()]
 param(
@@ -41,12 +48,15 @@ param(
     [switch]$Sheet,
     # Output folder (default: a folder in the temp folder). Existing files with the same names are replaced.
     [string]$OutDir,
+    # Compare with the surfaces of a git revision (HEAD, a commit, a tag) or of another folder of the ghost.
+    [string]$Compare,
     [string]$SspPath,
     # Ghost root folder that contains ghost/ and shell/ (default: this repository).
     [string]$Root
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'lib/common.ps1')
+. (Join-Path $PSScriptRoot 'lib/image-engine.ps1')
 Initialize-DevkitConsole
 
 if (-not $Root) { $Root = $DevkitRoot }
@@ -96,37 +106,80 @@ if ($defaultOut) {
     $OutDir = Resolve-DevkitFullPath $OutDir
 }
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
+$compareDir = Join-Path $OutDir 'compare'
 if ($defaultOut) {
     Get-ChildItem -LiteralPath $OutDir -Filter '*.png' -File | Remove-Item -Force
+    if (Test-Path -LiteralPath $compareDir) { Get-ChildItem -LiteralPath $compareDir -Filter '*.png' -File | Remove-Item -Force }
 }
 
-# Dump into an empty folder first, so that only the images of this run are reported.
-$work = Join-Path ([IO.Path]::GetTempPath()) ('devkit-dump-' + [guid]::NewGuid().ToString('N'))
-New-Item -ItemType Directory -Path $work | Out-Null
-$log = Join-Path $work 'error.log'
+# Dumps the surfaces of the ghost in $DumpRoot into an empty folder first, so that only the images of this run
+# are reported, then moves them to $Destination.
+function Invoke-SurfaceDump([string]$DumpRoot, [string]$Destination) {
+    $work = Join-Path ([IO.Path]::GetTempPath()) ('devkit-dump-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $work | Out-Null
+    $log = Join-Path $work 'error.log'
+    $arguments = @('--offline-dump', $DumpRoot, '--dump-surface-list', ($ids -join ','), '--dump-scope', [string]$Scope,
+        '--dump-output-dir', $work, '--dump-output-prefix', $prefix, '--dump-error-log', $log)
+    if ($Shell) { $arguments += @('--dump-shell', $Shell) }
+    # SSP reads only the last --dump-surface-option, so the options are given as one comma-separated value.
+    $options = @()
+    if ($Backlog) { $options += 'backlog' }
+    if ($Collision) { $options += 'collision' }
+    if ($options.Count -gt 0) { $arguments += @('--dump-surface-option', ($options -join ',')) }
+    try {
+        $run = Invoke-DevkitProcess -FilePath $ssp.Path -Arguments $arguments -TimeoutSeconds 180
+        $logRows = @()
+        if (Test-Path -LiteralPath $log) {
+            $logRows = @(Import-Csv -LiteralPath $log -Header 'Time', 'Name', 'Level', 'Message' -Encoding UTF8)
+        }
+        $names = @()
+        foreach ($image in @(Get-ChildItem -LiteralPath $work -Filter '*.png' -File)) {
+            Move-Item -LiteralPath $image.FullName -Destination (Join-Path $Destination $image.Name) -Force
+            $names += $image.Name
+        }
+    } finally {
+        Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    return [pscustomobject]@{ Result = $run; Rows = $logRows; Names = $names }
+}
+
+# Returns the folder to compare with and its label: -Compare itself when it is a folder, otherwise the shell
+# and the ghost's descript.txt of that git revision, extracted into a temporary folder ($Temporary = $true).
+function Resolve-CompareRoot([string]$Value) {
+    if (Test-Path -LiteralPath $Value -PathType Container) {
+        $folder = (Resolve-DevkitFullPath $Value).TrimEnd('\', '/')
+        if (-not (Test-Path -LiteralPath (Join-Path $folder 'shell') -PathType Container)) { throw "$folder has no shell folder" }
+        return [pscustomobject]@{ Root = $folder; Label = (Split-Path -Leaf $folder); Temporary = $false }
+    }
+    $git = Get-Command git -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $git) { throw "'$Value' is not a folder, and git was not found to read it as a revision" }
+    $commit = Invoke-DevkitProcess -FilePath $git.Source -Arguments @('-C', $Root, 'rev-parse', '--verify', '--quiet', '--short', "$Value^{commit}") -TimeoutSeconds 60
+    if ($commit.ExitCode -ne 0) { throw "'$Value' is neither a folder nor a git revision of $Root" }
+    # The ghost may be in a subfolder of the repository; archive that subfolder's tree.
+    $prefix = Invoke-DevkitProcess -FilePath $git.Source -Arguments @('-C', $Root, 'rev-parse', '--show-prefix') -TimeoutSeconds 60
+    $tree = $Value + ':' + $prefix.StdOut.Trim()
+    $folder = Join-Path ([IO.Path]::GetTempPath()) ('devkit-compare-' + [guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $folder | Out-Null
+    $zip = Join-Path $folder 'tree.zip'
+    $paths = @('shell')
+    $descript = Invoke-DevkitProcess -FilePath $git.Source -Arguments @('-C', $Root, 'cat-file', '-e', ($tree + 'ghost/master/descript.txt')) -TimeoutSeconds 60
+    if ($descript.ExitCode -eq 0) { $paths += 'ghost/master/descript.txt' }
+    $archive = Invoke-DevkitProcess -FilePath $git.Source -Arguments (@('-C', $Root, 'archive', '--format=zip', '-o', $zip, $tree, '--') + $paths) -TimeoutSeconds 120
+    if ($archive.ExitCode -ne 0) {
+        Remove-Item -LiteralPath $folder -Recurse -Force -ErrorAction SilentlyContinue
+        throw "git archive failed: $($archive.StdErr.Trim())"
+    }
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    [IO.Compression.ZipFile]::ExtractToDirectory($zip, $folder)
+    Remove-Item -LiteralPath $zip -Force
+    return [pscustomobject]@{ Root = $folder; Label = "$Value ($($commit.StdOut.Trim()))"; Temporary = $true }
+}
+
 $prefix = if ($Backlog) { 'backlog' } else { 'surface' }
-$arguments = @('--offline-dump', $Root, '--dump-surface-list', ($ids -join ','), '--dump-scope', [string]$Scope,
-    '--dump-output-dir', $work, '--dump-output-prefix', $prefix, '--dump-error-log', $log)
-if ($Shell) { $arguments += @('--dump-shell', $Shell) }
-# SSP reads only the last --dump-surface-option, so the options are given as one comma-separated value.
-$options = @()
-if ($Backlog) { $options += 'backlog' }
-if ($Collision) { $options += 'collision' }
-if ($options.Count -gt 0) { $arguments += @('--dump-surface-option', ($options -join ',')) }
-
-try {
-    $result = Invoke-DevkitProcess -FilePath $ssp.Path -Arguments $arguments -TimeoutSeconds 180
-    $rows = @()
-    if (Test-Path -LiteralPath $log) {
-        $rows = @(Import-Csv -LiteralPath $log -Header 'Time', 'Name', 'Level', 'Message' -Encoding UTF8)
-    }
-    $images = @(Get-ChildItem -LiteralPath $work -Filter '*.png' -File)
-    foreach ($image in $images) {
-        Move-Item -LiteralPath $image.FullName -Destination (Join-Path $OutDir $image.Name) -Force
-    }
-} finally {
-    Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
-}
+$dump = Invoke-SurfaceDump $Root $OutDir
+$result = $dump.Result
+$rows = $dump.Rows
+$images = @($dump.Names | ForEach-Object { Get-Item -LiteralPath (Join-Path $OutDir $_) })
 
 if ($result.TimedOut) {
     Write-Host 'dump-surface: FAILED - ssp.exe timed out'
@@ -205,6 +258,42 @@ if ($Sheet) {
     } catch {
         Write-Host "dump-surface: note - could not write sheet.png: $($_.Exception.Message)"
     }
+}
+
+if ($Compare) {
+    $other = $null
+    try {
+        $other = Resolve-CompareRoot $Compare
+        New-Item -ItemType Directory -Force -Path $compareDir | Out-Null
+        $otherDump = Invoke-SurfaceDump $other.Root $compareDir
+        Import-DevkitImageEngine
+    } catch {
+        Write-Host "dump-surface: FAILED - could not compare with ${Compare}: $($_.Exception.Message)"
+        exit 1
+    } finally {
+        if ($other -and $other.Temporary) { Remove-Item -LiteralPath $other.Root -Recurse -Force -ErrorAction SilentlyContinue }
+    }
+    Write-Host "compare: $($other.Label) -> now (images of $($other.Label) in $compareDir)"
+    $counts = @{ Same = 0; Changed = 0; New = 0; Gone = 0 }
+    foreach ($item in $written) {
+        $name = Split-Path -Leaf $item.Path
+        $label = if ($item.Number -eq [int]::MaxValue) { [IO.Path]::GetFileNameWithoutExtension($name) } else { [string]$item.Number }
+        if ($otherDump.Names -notcontains $name) {
+            Write-Host "  ${label}: new (not in $($other.Label))"
+            $counts.New++
+            continue
+        }
+        $different = $false
+        $line = [GhostDevkit.Imaging.Commands]::Compare((Join-Path $compareDir $name), $item.Path, $other.Label, 'now', (Join-Path $OutDir ('compare-' + $name)), [ref]$different)
+        if ($different) { $counts.Changed++ } else { $counts.Same++ }
+        Write-Host "  ${label}: $line"
+    }
+    foreach ($name in $otherDump.Names) {
+        if ($written | Where-Object { (Split-Path -Leaf $_.Path) -eq $name }) { continue }
+        Write-Host "  $([IO.Path]::GetFileNameWithoutExtension($name)): gone (only in $($other.Label))"
+        $counts.Gone++
+    }
+    Write-Host "compare: $($counts.Changed) changed, $($counts.Same) identical, $($counts.New) new, $($counts.Gone) gone"
 }
 
 $summary = "$($written.Count) image(s) in $OutDir"
