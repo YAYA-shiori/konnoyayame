@@ -2,7 +2,7 @@
 
 ## 使うとき
 
-作者が「YAYA を更新して」「YAYA を新しくして」「yaya.dll を更新して」「システム辞書を更新して」「yaya-dic を更新して」「SHIORI を最新に」と言ったとき。
+作者が「YAYA を更新して」「YAYA を新しくして」「yaya.dll を更新して」「システム辞書を更新して」「yaya-dic を更新して」「SHIORI を最新に」「YAYA のベータ版（600 系）にして」と言ったとき。
 
 **作者にはっきり頼まれたときだけ行う。自分から始めない。** GitHub からのダウンロードと、yaya.dll やシステム辞書のファイルの置き換えを伴う。
 
@@ -17,6 +17,8 @@ yaya.dll（YAYA 本体）とシステム辞書（[yaya-dic](https://github.com/Y
 ## tools/update-yaya.ps1 がすること
 
 - yaya.dll: yaya-shiori のリリースの `yaya.zip` から取る（最新リリース、または `-Tag`）。
+  - YAYA は 500 系を正式版、600 系をベータ版（pre-release）として並行してリリースしている。最新リリースは 500 系になる。`-Prerelease` を付けると、最新の正式版と最新のベータ版のうち、版の新しいほう（今は 600 系）を取る。
+  - 手元の yaya.dll より古い版は、`-Tag` か `-Force` を付けないかぎり入れない。600 系を使っているゴーストで `-Prerelease` を付け忘れても、500 系に戻らない（`the release is older than the current yaya.dll` と出て、yaya.dll はそのまま）。
 - システム辞書: yaya-dic にはリリースもタグも無いので、既定のブランチの最新のコミットを取る。`ghost/master/dic/system/`、`ghost/master/system/` の順に、今の yaya-dic の構成（`yaya_base/shiori3.dic` がある）のフォルダを探し、その形によって次のように動く。
 
 | システム辞書のフォルダ | 動作 |
@@ -31,7 +33,7 @@ yaya.dll（YAYA 本体）とシステム辞書（[yaya-dic](https://github.com/Y
 
 ## 手順
 
-1. 確認だけを行う（GitHub からダウンロードすることを一言伝える。作者が YAYA のタグを指定したときだけ `-Tag <タグ>` を付ける）:
+1. 確認だけを行う（GitHub からダウンロードすることを一言伝える。作者が YAYA のタグを指定したときだけ `-Tag <タグ>` を付ける。作者がベータ版や 600 系を望んだとき、または `the release is older than the current yaya.dll` と出たとき（今の yaya.dll がベータ版）は `-Prerelease` を付ける）:
    `powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-yaya.ps1 -DryRun`
    次を短くまとめて伝える。
    - yaya.dll: 今の版（`current`）と更新先（`release`）
@@ -55,7 +57,7 @@ yaya.dll（YAYA 本体）とシステム辞書（[yaya-dic](https://github.com/Y
    - `tools/check-dic.ps1` はスクリプトが実行済み。加えて `tools/shiori.ps1 -Eval '1+2'` が `3` を返すことを確かめる（システム辞書の `??` の処理を通る）。
    - 作者が SSP で試したいと言えば、`docs/agents/workflows/try-in-ssp.md` の手順で起動する。
 8. 変わったことを伝える。
-   - yaya.dll: 出力の `notes` のリリースノートを読み、互換性に関わる変更があれば要約する。
+   - yaya.dll: 出力の `notes` のリリースノートを読み、互換性に関わる変更があれば要約する。ベータ版（`release` に `(pre-release)` と出る）を入れたときは、そのことも伝える。
    - システム辞書: git なら出力の `changes` の URL、普通のファイルなら `history` の URL のコミット一覧（手元がどの版だったかは分からないので、`update` になったファイルに関わる最近のもの）を読み、主な変更を要約する。
 9. git の作業コピーなら、変更をコミットするか聞く（勝手にコミットしない）。submodule を更新したときは、ゴーストのリポジトリで submodule のフォルダ（例: `ghost/master/dic/system`）の変更をコミットしないと、新しい版が記録されない。
 

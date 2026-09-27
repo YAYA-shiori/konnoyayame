@@ -25,7 +25,7 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 | 「SSP で試して」「動かして見せて」「このトークを再生して」 | `docs/agents/workflows/try-in-ssp.md` |
 | 「シェルの画像を直して」「画像を編集して」「表情のパーツを作って」「32bit PNG にして」 | `docs/agents/workflows/edit-shell-image.md` |
 | 「nar を作って」「配布用のファイルを作って」「リリースしたい」「更新ファイルを作って」 | `docs/agents/workflows/build-nar.md` |
-| 「YAYA を更新して」「yaya.dll を更新して」「システム辞書を更新して」「yaya-dic を更新して」 | `docs/agents/workflows/update-yaya.md` |
+| 「YAYA を更新して」「yaya.dll を更新して」「システム辞書を更新して」「yaya-dic を更新して」「YAYA のベータ版（600 系）にして」 | `docs/agents/workflows/update-yaya.md` |
 | 「開発キットを更新して」「別のゴーストにキットを入れて」 | `docs/agents/workflows/update-devkit.md` |
 | 「自分のゴーストを作りたい」「テンプレートから独立させたい」 | `docs/agents/workflows/new-ghost.md` |
 

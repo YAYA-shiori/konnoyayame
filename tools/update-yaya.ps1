@@ -3,6 +3,10 @@
     Updates YAYA: ghost/master/yaya.dll and the system dictionary (yaya-dic), and verifies them with check-dic.
 .DESCRIPTION
     yaya.dll comes from yaya.zip of https://github.com/YAYA-shiori/yaya-shiori/releases (latest, or -Tag).
+    -Prerelease also considers pre-releases (the 600 series is released as pre-releases, side by side with the
+    500 series): the newest stable release and the newest pre-release are compared, and the higher version wins.
+    yaya.dll is not replaced with an older version than the current one, unless -Tag or -Force is given (so that a
+    ghost that uses a pre-release is not taken back to the stable release by an update without -Prerelease).
     The system dictionary comes from https://github.com/YAYA-shiori/yaya-dic, which has no releases: the latest
     commit of its default branch is used. It is looked for in ghost/master/dic/system, then ghost/master/system:
       - a git checkout (such as a submodule): fetched and switched to the latest commit. Nothing is done when the
@@ -22,12 +26,16 @@
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-yaya.ps1 -Tag Tc573-6 -SkipSystemDic
 .EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-yaya.ps1 -Prerelease -DryRun
+.EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-yaya.ps1 -SkipDll -SystemDicDir dic/system
 #>
 [CmdletBinding()]
 param(
     # Release tag of yaya-shiori for yaya.dll (default: the latest release).
     [string]$Tag,
+    # Consider pre-releases of yaya-shiori too (the higher version of the latest release and the newest pre-release).
+    [switch]$Prerelease,
     # Folder that contains yaya.dll (default: ghost/master).
     [string]$GhostDir,
     # Folder of the system dictionary, relative to ghost/master (default: the one that has yaya-dic).
@@ -36,7 +44,7 @@ param(
     [switch]$SkipDll,
     [switch]$SkipSystemDic,
     [switch]$DryRun,
-    # Replace yaya.dll even when it is the same file.
+    # Replace yaya.dll even when it is the same file or an older version.
     [switch]$Force
 )
 $ErrorActionPreference = 'Stop'
@@ -49,6 +57,10 @@ Add-Type -AssemblyName System.IO.Compression.FileSystem
 
 if ($SkipDll -and $SkipSystemDic) {
     Write-Host 'update-yaya: FAILED - -SkipDll and -SkipSystemDic leave nothing to update'
+    exit 1
+}
+if ($Tag -and $Prerelease) {
+    Write-Host 'update-yaya: FAILED - -Tag already chooses the release; do not give -Prerelease with it'
     exit 1
 }
 if (-not $GhostDir) { $GhostDir = Join-Path $DevkitRoot 'ghost/master' }
@@ -109,6 +121,48 @@ function Restore-DicFolder([string]$Folder, [string]$Backup, [bool]$Existed) {
     if ($Existed) { Copy-Item -LiteralPath $Backup -Destination $Folder -Recurse -Force }
 }
 
+# Version of a yaya-shiori release tag such as Tc602-4 ($null for a tag in another form).
+function Get-YayaTagVersion([string]$TagName) {
+    if ($TagName -match '^Tc(\d+)-(\d+)$') { return New-Object Version -ArgumentList @([int]$matches[1], [int]$matches[2]) }
+    return $null
+}
+
+# Version of yaya.dll from its file version such as "6, 02, 4, 0" ($null when it cannot be read).
+function ConvertTo-YayaFileVersion([string]$Text) {
+    $numbers = @([regex]::Matches([string]$Text, '\d+') | ForEach-Object { [int]$_.Value })
+    if ($numbers.Count -lt 3) { return $null }
+    return New-Object Version -ArgumentList @($numbers[0], $numbers[1], $numbers[2])
+}
+
+# The release of yaya-shiori to take yaya.dll from.
+function Get-YayaRelease {
+    $api = 'https://api.github.com/repos/YAYA-shiori/yaya-shiori/releases'
+    if ($Tag) { return Invoke-RestMethod -UseBasicParsing -Uri ($api + '/tags/' + [uri]::EscapeDataString($Tag)) -Headers $headers }
+    if (-not $Prerelease) { return Invoke-RestMethod -UseBasicParsing -Uri ($api + '/latest') -Headers $headers }
+
+    # The list is newest first. foreach unrolls the JSON array (Windows PowerShell 5.1 returns it as one object).
+    $stable = $null
+    $pre = $null
+    foreach ($release in (Invoke-RestMethod -UseBasicParsing -Uri ($api + '?per_page=50') -Headers $headers)) {
+        if ($release.draft -or -not @($release.assets | Where-Object { $_.name -eq 'yaya.zip' }).Count) { continue }
+        if ($release.prerelease) {
+            if (-not $pre) { $pre = $release }
+        } elseif (-not $stable) {
+            $stable = $release
+        }
+    }
+    if (-not $pre) { return $stable }
+    if (-not $stable) { return $pre }
+    # The 500 series (stable) and the 600 series (pre-release) are released side by side, so the newest by date is
+    # not always the newest version. Compare the versions of the tags; fall back to the dates.
+    $stableVersion = Get-YayaTagVersion ([string]$stable.tag_name)
+    $preVersion = Get-YayaTagVersion ([string]$pre.tag_name)
+    if ($stableVersion -and $preVersion) {
+        if ($preVersion -gt $stableVersion) { return $pre } else { return $stable }
+    }
+    if ([datetime]$pre.published_at -gt [datetime]$stable.published_at) { return $pre } else { return $stable }
+}
+
 $work = Join-Path ([IO.Path]::GetTempPath()) ('devkit-yaya-' + [guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Path $work | Out-Null
 try {
@@ -116,9 +170,8 @@ try {
     $dllPlan = $null
     if (-not $SkipDll) {
         Write-Host '[yaya.dll]'
-        $api = 'https://api.github.com/repos/YAYA-shiori/yaya-shiori/releases/latest'
-        if ($Tag) { $api = 'https://api.github.com/repos/YAYA-shiori/yaya-shiori/releases/tags/' + [uri]::EscapeDataString($Tag) }
-        $release = Invoke-RestMethod -UseBasicParsing -Uri $api -Headers $headers
+        $release = Get-YayaRelease
+        if (-not $release) { throw 'no release of yaya-shiori has yaya.zip' }
         $asset = @($release.assets | Where-Object { $_.name -eq 'yaya.zip' }) | Select-Object -First 1
         if (-not $asset) { throw "yaya.zip was not found in release $($release.tag_name)" }
         $zipPath = Join-Path $work 'yaya.zip'
@@ -139,10 +192,14 @@ try {
         $newVersion = (Get-Item -LiteralPath $newDll).VersionInfo.FileVersion
         $newHash = (Get-FileHash -LiteralPath $newDll -Algorithm SHA256).Hash
         Write-Host "current : $oldVersion"
-        Write-Host "release : $($release.tag_name) (file version $newVersion)"
+        Write-Host "release : $($release.tag_name)$(if ($release.prerelease) { ' (pre-release)' }) (file version $newVersion)"
         Write-Host "notes   : $($release.html_url)"
+        $oldParsed = ConvertTo-YayaFileVersion $oldVersion
+        $newParsed = ConvertTo-YayaFileVersion $newVersion
         if ($oldHash -eq $newHash -and -not $Force) {
             Write-Host 'update-yaya: yaya.dll is already up to date'
+        } elseif ($oldParsed -and $newParsed -and $newParsed -lt $oldParsed -and -not $Tag -and -not $Force) {
+            Write-Host "update-yaya: the release is older than the current yaya.dll, so yaya.dll was kept. The current one is probably a pre-release: -Prerelease also considers pre-releases, and -Tag takes a given version"
         } else {
             $dllPlan = [pscustomobject]@{ NewDll = $newDll; HasOld = $hasOld; OldVersion = $oldVersion; NewVersion = $newVersion; Tag = [string]$release.tag_name }
         }
