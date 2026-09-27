@@ -4,7 +4,7 @@
 
 - SSTP: `tools/sstp.ps1` は、`EXECUTE GetFMO` で調べたゴーストの識別 ID を `ID` ヘッダに付けて送る（Owned SSTP）。付けないと SSP は外部のプログラムからの要求として扱い、`\![reload,ghost]` などを黙って無視する（応答は 200 のまま）。
 - SSP のログ: プロパティシステムの `developer.log.*` を `EXECUTE GetProperty` で読む。ログは種類ごとに新しいものから 50 件ほどしか残らず、発信元の名前は descript.txt の `name`（`sakura.name` ではない）になる。
-- SSP の版: 各スクリプトは `tools/lib/common.ps1` の `$DevkitSspRecommendedVersion`（今は 2.9.02）以降を前提にし、版による分岐はしない。版を見るのは doctor だけで、それより古い版を recommended の不足として知らせる。版は `ssp.exe` のファイルバージョン（`2, 9, 1, 3000`）の上 3 つで比べる（`Get-DevkitSspVersion`）。新しい SSP の機能を使い始めたら、分岐を足さずに `$DevkitSspRecommendedVersion` を上げる。使っている機能は次のとおり。
+- SSP の版: 各スクリプトは `tools/lib/common.ps1` の `$DevkitSspRecommendedVersion`（今は 2.9.05）以降を前提にし、版による分岐はしない。版を見るのは doctor だけで、それより古い版を recommended の不足として知らせる。版は `ssp.exe` のファイルバージョン（`2, 9, 1, 3000`）の上 3 つで比べる（`Get-DevkitSspVersion`）。新しい SSP の機能を使い始めたら、分岐を足さずに `$DevkitSspRecommendedVersion` を上げる。使っている機能は次のとおり。
   - `EXECUTE GetStatus`（`Get-DevkitSspStatus`）: SEND と NOTIFY は、スクリプトを再生する前に応答する。再生中は `talking` が付くので、`Wait-DevkitSspTalkEnd` でそれが消えるまで待ってからエラーログを読む。ゴーストの読み込み中は 400 が返り、`\![reload,ghost]` の後は `talking` → 400 → 200 と変わる（`Wait-DevkitSspReload`）。`tools/sstp.ps1` は要求を送る前に 1 回呼び、200 が返らなければ（読み込み中など）決まった時間だけ待つ。
   - `Option: strict`: `tools/sstp.ps1` の `-Script` と `-Event` に付ける。解釈に失敗したタグは、再生がその位置に来たときに、Error として `[GHOST/Script] 理由 (詳細) at position 位置 : 抜粋` の形で記録される（位置はスクリプトの先頭を 0 とした文字数）。
   - `\![execute,dumpballoon,フォルダ,スコープ]`（2.9.02。`tools/sstp.ps1 -Balloon`）: その時点でバルーンに描かれている内容を `balloon<スコープ>.png` に書く。キットはこう使っている（2.9.02 で確認）。

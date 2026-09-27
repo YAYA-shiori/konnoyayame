@@ -11,8 +11,14 @@
     -Backlog writes the area around the face (the backlog image, about 80x80) instead of the whole surface.
     -Collision draws the collision areas (their shapes and names) on the images, for checking where
     the Head, Bust and other areas of surfaces.txt are.
+    -Animation plays one animation of surfaces.txt as \i[ID] does and also writes the image of every pattern it
+    advances, as <prefix><id>_0000.png, _0001.png, ... after <prefix><id>.png. Use it to
+    look at the frames of an animation (blinking, lip-sync) one by one.
+    -Bind sets the dressing-up state: "category,part" to turn a part on, "category,part,0" to turn it off,
+    separated by ";" (the part may be empty or __ALL__ for the whole category). The other parts keep the
+    defaults of the shell's descript.txt, not the state the user last chose.
     -Sheet also writes sheet.png, which puts every image in one picture with its number, for comparing
-    expressions at a glance (needs System.Drawing, which Windows has).
+    expressions or the frames of an animation at a glance (needs System.Drawing, which Windows has).
     -Compare renders the same surfaces from a git revision (HEAD, a commit, a tag) or from another folder of
     the ghost, and compares each pair pixel by pixel: how many pixels differ, where, and by how much. For each
     surface that changed it writes compare-<name>.png, a magnified view of the changed area (before, after
@@ -20,8 +26,8 @@
     Use it to confirm that an edit changed only what was meant, down to a single pixel.
     Messages of SSP at Warning or above are shown; use tools/check-shell.ps1 to check the shell itself.
     Exit codes: 0 = every image was written, 1 = failed (no image, bad arguments, ssp.exe failed),
-    2 = some images were written, but a surface number was not found or SSP logged an Error or Critical,
-    3 = ssp.exe was not found.
+    2 = some images were written, but a surface number was not found, no frame of -Animation was written,
+    or SSP logged an Error or Critical, 3 = ssp.exe was not found.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0,5,10
 .EXAMPLE
@@ -30,6 +36,10 @@
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0,10 -Collision
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0-30 -Compare HEAD
+.EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0 -Animation 0 -Backlog -Sheet
+.EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0 -Bind 'Head,Hat;Accessory,,0'
 #>
 [CmdletBinding()]
 param(
@@ -44,6 +54,10 @@ param(
     [switch]$Backlog,
     # Draw the collision areas with their names (--dump-surface-option collision).
     [switch]$Collision,
+    # One animation ID (a number or the name given in surfaces.txt) whose frames are also written (--dump-animation).
+    [string]$Animation,
+    # Dressing-up state: "category,part[,1|0]" items separated by ";" (--dump-bind).
+    [string[]]$Bind,
     # Also write sheet.png with every image and its number.
     [switch]$Sheet,
     # Output folder (default: a folder in the temp folder). Existing files with the same names are replaced.
@@ -67,6 +81,16 @@ $ids = @($Surface | ForEach-Object { $_ -split ',' } | ForEach-Object { $_.Trim(
 if ($ids.Count -eq 0) {
     Write-Host 'dump-surface: FAILED - no surface ID was given'
     exit 1
+}
+$Animation = $Animation.Trim()
+if ($Animation -match ',') {
+    Write-Host 'dump-surface: FAILED - -Animation takes only one animation ID'
+    exit 1
+}
+# SSP does not trim the names, so the spaces around the separators are removed here.
+$bindSpec = ''
+if ($Bind) {
+    $bindSpec = @($Bind | ForEach-Object { $_ -split ';' } | ForEach-Object { (@($_ -split ',') | ForEach-Object { $_.Trim() }) -join ',' } | Where-Object { $_ }) -join ';'
 }
 
 # SSP falls back to the default shell when --dump-shell names no shell, so check it here.
@@ -121,6 +145,8 @@ function Invoke-SurfaceDump([string]$DumpRoot, [string]$Destination) {
     $arguments = @('--offline-dump', $DumpRoot, '--dump-surface-list', ($ids -join ','), '--dump-scope', [string]$Scope,
         '--dump-output-dir', $work, '--dump-output-prefix', $prefix, '--dump-error-log', $log)
     if ($Shell) { $arguments += @('--dump-shell', $Shell) }
+    if ($Animation) { $arguments += @('--dump-animation', $Animation) }
+    if ($bindSpec) { $arguments += @('--dump-bind', $bindSpec) }
     # SSP reads only the last --dump-surface-option, so the options are given as one comma-separated value.
     $options = @()
     if ($Backlog) { $options += 'backlog' }
@@ -193,12 +219,24 @@ foreach ($row in $rows) {
     Write-Host "[$level] $(ConvertTo-DevkitRelativeText ([string]$row.Message) -Base $Root)"
 }
 
-# Sort by the surface number in the file name.
-$pattern = '^' + [regex]::Escape($prefix) + '(\d+)\.png$'
+# Returns the surface number, the frame of -Animation (-1 for the surface itself) and the label ("0", "0_0003")
+# of an image written by SSP: <prefix><id>.png, or <prefix><id>_0000.png and so on for the frames.
+$pattern = '^' + [regex]::Escape($prefix) + '(\d+)(?:_(\d+))?\.png$'
+function Get-DumpImageInfo([string]$Name) {
+    if ($Name -match $pattern) {
+        if ($matches[2]) {
+            return [pscustomobject]@{ Number = [int]$matches[1]; Frame = [int]$matches[2]; Label = ($matches[1] + '_' + $matches[2]) }
+        }
+        return [pscustomobject]@{ Number = [int]$matches[1]; Frame = -1; Label = $matches[1] }
+    }
+    return [pscustomobject]@{ Number = [int]::MaxValue; Frame = -1; Label = [IO.Path]::GetFileNameWithoutExtension($Name) }
+}
+
+# Sort by the surface number in the file name, then by the frame.
 $written = @($images | ForEach-Object {
-    $number = if ($_.Name -match $pattern) { [int]$matches[1] } else { [int]::MaxValue }
-    [pscustomobject]@{ Number = $number; Path = (Join-Path $OutDir $_.Name) }
-} | Sort-Object Number, Path)
+    $info = Get-DumpImageInfo $_.Name
+    [pscustomobject]@{ Number = $info.Number; Frame = $info.Frame; Label = $info.Label; Path = (Join-Path $OutDir $_.Name) }
+} | Sort-Object Number, Frame, Path)
 foreach ($item in $written) { Write-Host $item.Path }
 
 # Only plain numbers can be checked; the extended forms may name surfaces that do not exist on purpose.
@@ -206,11 +244,25 @@ $missing = @()
 foreach ($id in $ids) {
     if ($id -match '^(\d+)$') {
         $number = [int]$matches[1]
-        if (-not ($written | Where-Object { $_.Number -eq $number })) { $missing += $number }
+        if (-not ($written | Where-Object { $_.Number -eq $number -and $_.Frame -lt 0 })) { $missing += $number }
     }
 }
 if ($missing.Count -gt 0) {
     Write-Host "dump-surface: not written (no such surface in the shell?): $($missing -join ', ')"
+}
+
+# SSP logs a Warning for each surface that does not have the animation and writes only its usual image.
+$noFrames = $false
+if ($Animation) {
+    $frames = @($written | Where-Object { $_.Frame -ge 0 })
+    if ($frames.Count -eq 0) {
+        $noFrames = $true
+        Write-Host "dump-surface: no frame of animation '$Animation' was written (no surface has it, or it cannot be played)"
+    } else {
+        foreach ($group in @($frames | Group-Object Number | Sort-Object { [int]$_.Name })) {
+            Write-Host "animation ${Animation}: surface $($group.Name): $($group.Count) frame(s)"
+        }
+    }
 }
 
 if ($written.Count -eq 0) {
@@ -240,8 +292,7 @@ if ($Sheet) {
                     $y = $gap + [int][Math]::Floor($i / $columns) * ($imageHeight + $labelHeight + $gap)
                     $graphics.DrawRectangle($border, $x - 1, $y - 1, $cellWidth + 1, $imageHeight + 1)
                     $graphics.DrawImage($bitmaps[$i], $x, $y, $bitmaps[$i].Width, $bitmaps[$i].Height)
-                    $label = if ($written[$i].Number -eq [int]::MaxValue) { [IO.Path]::GetFileNameWithoutExtension($written[$i].Path) } else { [string]$written[$i].Number }
-                    $graphics.DrawString($label, $font, [System.Drawing.Brushes]::Black, $x, $y + $imageHeight + 3)
+                    $graphics.DrawString($written[$i].Label,$font, [System.Drawing.Brushes]::Black, $x, $y + $imageHeight + 3)
                 }
                 $font.Dispose()
                 $border.Dispose()
@@ -277,7 +328,7 @@ if ($Compare) {
     $counts = @{ Same = 0; Changed = 0; New = 0; Gone = 0 }
     foreach ($item in $written) {
         $name = Split-Path -Leaf $item.Path
-        $label = if ($item.Number -eq [int]::MaxValue) { [IO.Path]::GetFileNameWithoutExtension($name) } else { [string]$item.Number }
+        $label = $item.Label
         if ($otherDump.Names -notcontains $name) {
             Write-Host "  ${label}: new (not in $($other.Label))"
             $counts.New++
@@ -290,15 +341,17 @@ if ($Compare) {
     }
     foreach ($name in $otherDump.Names) {
         if ($written | Where-Object { (Split-Path -Leaf $_.Path) -eq $name }) { continue }
-        Write-Host "  $([IO.Path]::GetFileNameWithoutExtension($name)): gone (only in $($other.Label))"
+        Write-Host "  $((Get-DumpImageInfo $name).Label): gone (only in $($other.Label))"
         $counts.Gone++
     }
     Write-Host "compare: $($counts.Changed) changed, $($counts.Same) identical, $($counts.New) new, $($counts.Gone) gone"
 }
 
 $summary = "$($written.Count) image(s) in $OutDir"
-if ($missing.Count -gt 0 -or $errors -gt 0) {
-    Write-Host "dump-surface: WARNING ($summary; not found: $($missing.Count), errors: $errors)"
+if ($missing.Count -gt 0 -or $errors -gt 0 -or $noFrames) {
+    $details = "not found: $($missing.Count), errors: $errors"
+    if ($noFrames) { $details += ', no frame of the animation' }
+    Write-Host "dump-surface: WARNING ($summary; $details)"
     exit 2
 }
 Write-Host "dump-surface: OK ($summary)"
