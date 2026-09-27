@@ -235,7 +235,7 @@ function Resolve-SspPath([string]$Explicit) {
     return $null
 }
 
-# Returns the version of ssp.exe as major.minor.build (for example 2.8.94), or $null when it cannot be read.
+# Returns the version of ssp.exe as major.minor.build (for example 2.9.5), or $null when it cannot be read.
 function Get-DevkitSspVersion([string]$Path) {
     try {
         $info = (Get-Item -LiteralPath $Path).VersionInfo

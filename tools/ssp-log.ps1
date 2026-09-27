@@ -13,8 +13,9 @@
       script  : the scripts that were played (type: the event or SSTP request that caused it)
       network : HTTP and SSL messages (mostly [SYSTEM])
       update  : network update messages
-    Exit codes: 0 = read, and no Error or Critical entry was shown, 1 = this SSP has no developer.log
-    properties, 2 = an Error or Critical entry was shown, 3 = could not connect (SSP is not running).
+    Exit codes: 0 = read, and no Error or Critical entry was shown, 1 = the log could not be read
+    (SSP did not answer the developer.log properties), 2 = an Error or Critical entry was shown,
+    3 = could not connect (SSP is not running).
     While the isolated SSP started by tools/run-ssp.ps1 runs, its logs are read unless -Port is given.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/ssp-log.ps1
@@ -55,8 +56,8 @@ if ($log.State -eq 'offline') {
     Write-Host "ssp-log: could not connect to 127.0.0.1:$Port. Is SSP running? (start it with tools/run-ssp.ps1)"
     exit 3
 }
-if ($log.State -eq 'unsupported') {
-    Write-Host 'ssp-log: this SSP has no developer.log properties. Update SSP.'
+if ($log.State -eq 'unreadable') {
+    Write-Host 'ssp-log: the log could not be read (SSP did not answer the developer.log properties)'
     exit 1
 }
 

@@ -8,8 +8,7 @@
 
 ## 前提
 
-- SSP 2.9.01 以降が要る。`tools/build-nar.ps1` は `ssp.exe --offline-tool` で作る。ゴーストは起動せず、SSP が動いていてもいなくても同じように作れる。
-- SSP が古いと失敗する（終了コード 1）。SSP の更新を作者に勧める。
+- `tools/build-nar.ps1` は `ssp.exe --offline-tool` で作る。ゴーストは起動せず、SSP が動いていてもいなくても同じように作れる。
 - GitHub Actions（`GITHUB_ACTIONS=true`）と `-Builtin` のときだけは、SSP を使わずにスクリプト自身が nar を作る（更新ファイルは作れない）。
 
 ## 手順

@@ -147,7 +147,7 @@ Write-Host "run-ssp: the ghost is running (SSTP port $Port)"
 
 # Give the ghost time to boot and finish its first talk, so that errors reported on its first events are in the log.
 $wait = Wait-DevkitSspTalkEnd -StartSeconds 2 -TimeoutSeconds 60 -Port $Port
-if ($wait -eq 'unsupported') {
+if ($wait -eq 'nostatus') {
     Start-Sleep -Milliseconds 2000
 } else {
     if ($wait -eq 'timeout') { Write-Host 'run-ssp: the ghost is still talking after 60 seconds; reading the log anyway' }
@@ -156,7 +156,7 @@ if ($wait -eq 'unsupported') {
 $max = 30
 $log = Get-DevkitSspLog -Kind 'error' -Since $marker -Max $max -Port $Port
 if ($log.State -ne 'ok') {
-    Write-Host 'run-ssp: the SSP error log cannot be read (this SSP has no developer.log properties; update SSP to see it)'
+    Write-Host 'run-ssp: the SSP error log could not be read'
     exit 0
 }
 if (Write-DevkitSspLogSummary 'run-ssp' $log $max -Base $Root) { exit 2 }

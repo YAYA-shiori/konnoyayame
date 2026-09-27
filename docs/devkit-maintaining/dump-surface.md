@@ -4,7 +4,7 @@
   - 出力のファイル名は `<--dump-output-prefix><番号>.png`。プレフィックスを省くと `surface` になる。スクリプトは通常 `surface`、`-Backlog` では `backlog` を明示して渡す。
   - 無い番号は黙って飛ばされ、終了コードは 0 のまま。空のフォルダに出してから移し、`-Surface` の単純な番号と出たファイルを突き合わせて知らせる。範囲などの拡張形式は突き合わせない。
   - `--dump-shell` に無いシェルを渡すと、黙って既定のシェルになる。スクリプトが先に `shell/` のフォルダ名と descript.txt の `name` で確かめる。
-  - `--dump-surface-list` の `surface10` の形は、2.8.97 では出力されなかった。スクリプトが番号だけにして渡す。
+  - `--dump-surface-list` の `surface10` の形は、スクリプトが番号だけにして渡す（無い番号の突き合わせを番号で行うため）。
   - `-Collision` は `--dump-surface-option collision`（当たり判定の形と名前を描き込む。2.8.98 の 2026-09-19 のビルドで確認）。`--dump-surface-option` は最後の 1 つだけが効くので、`-Backlog` と合わせるときは `backlog,collision` とカンマでつないで 1 つで渡す。
   - `--dump-scope` は、別のスコープの番号（スコープ 1 で 0 など）でもそのまま出力する。
   - `-Animation` は `--dump-animation`（2.9.05）。各サーフェスについて、通常の `<prefix><番号>.png` に続けて、指定したアニメーションのパターンが進むたびに `<prefix><番号>_0000.png` から 4 桁の連番を書く（2.9.05 で、ややめの surface0 の animation0 が 6 コマになることを確認）。ID は 1 つだけなので、カンマを含む値はスクリプトが先に断る。

@@ -5,8 +5,8 @@
     By default the request is addressed to this ghost (ReceiverGhostName = sakura.name in
     ghost/master/descript.txt). Use -Ghost to address another ghost, or -AnyGhost for the active one.
     For -Script, -Event and -Reload, the entries that SSP added to its error log in the meantime
-    (dictionary errors reported by YAYA, script errors, ...) are shown afterwards. This needs an SSP
-    that has the developer.log properties; -NoLog skips it. See also tools/ssp-log.ps1.
+    (dictionary errors reported by YAYA, script errors, ...) are shown afterwards. -NoLog skips
+    it. See also tools/ssp-log.ps1.
     -Script and -Event send "Option: strict", so SSP logs each tag of the played script that
     it could not interpret as "[GHOST/Script] reason (detail) at position n : excerpt".
     SSP answers before the script is played. The log is read after the ghost has stopped talking
@@ -167,7 +167,7 @@ if ($response.TimedOut) {
 
 $talkWait = $null
 if ($watchLog -and -not $marker) {
-    Write-Host 'sstp: the SSP error log cannot be read (this SSP has no developer.log properties; update SSP to see it)'
+    Write-Host 'sstp: the SSP error log could not be read'
 } elseif ($watchLog) {
     if ($statusAvailable -and $exitCode -eq 0) {
         # Wait for the reload and for the talk, so that every error of the script is in the log.
@@ -205,7 +205,7 @@ if ($Balloon -and $response.TimedOut) {
     if ($ghostEntry) { $ghostPath = [string]$ghostEntry.Fields['ghostpath'] }
     if (-not $talkWait) {
         $talkWait = Wait-DevkitSspTalkEnd -TimeoutSeconds $TimeoutSeconds -Port $Port
-        if ($talkWait -eq 'unsupported') { Start-Sleep -Milliseconds 500 }
+        if ($talkWait -eq 'nostatus') { Start-Sleep -Milliseconds 500 }
     }
     if (-not $ghostPath) {
         Write-Host "sstp: the balloons were not written - the folder of '$Ghost' was not found with GetFMO"
@@ -272,7 +272,7 @@ if ($Balloon -and $response.TimedOut) {
     }
     foreach ($image in $images) { Write-Host "balloon: $image" }
     if ($images.Count -eq 0) {
-        Write-Host 'sstp: no balloon image was written (SSP 2.9.02 or later is needed for \![execute,dumpballoon])'
+        Write-Host "sstp: no balloon image was written (no balloon was shown for scope $($BalloonScope -join ', '))"
         if ($exitCode -eq 0) { $exitCode = 2 }
     }
 }

@@ -2,7 +2,7 @@
 .SYNOPSIS
     Builds a distributable .nar archive of the ghost, and the network update files, with SSP.
 .DESCRIPTION
-    By default, SSP builds everything with "ssp.exe --offline-tool updatedata|nar" (SSP 2.9.01 or later), which
+    By default, SSP builds everything with "ssp.exe --offline-tool updatedata|nar", which
     writes the files and exits without starting the ghost or talking to a running SSP.
     SSP packs the folder as it is, so untracked files of a git working copy are shipped too, and it reads
     .narignore / .updateignore (and .narinclude) itself.
@@ -213,11 +213,8 @@ foreach ($job in $jobs) {
         break
     }
     if ($result.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $job.Path -PathType Leaf)) {
-        # ssp.exe --offline-tool: 1 = bad arguments (or an SSP without the option), 2 = could not be written.
+        # ssp.exe --offline-tool: 1 = bad arguments, 2 = could not be written.
         Write-Host "build-nar: FAILED - SSP could not write $($job.Path) (ssp.exe exit code $($result.ExitCode))"
-        if ($result.ExitCode -eq 1) {
-            Write-Host "build-nar: --offline-tool needs SSP $(Format-DevkitSspVersion $DevkitSspRecommendedVersion) or later ($($ssp.Path))"
-        }
         $exitCode = 1
         break
     }
