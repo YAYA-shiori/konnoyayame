@@ -27,7 +27,7 @@
     Messages of SSP at Warning or above are shown; use tools/check-shell.ps1 to check the shell itself.
     Exit codes: 0 = every image was written, 1 = failed (no image, bad arguments, ssp.exe failed),
     2 = some images were written, but a surface number was not found, no frame of -Animation was written,
-    or SSP logged an Error or Critical, 3 = ssp.exe was not found.
+    a category or part of -Bind was not found, or SSP logged an Error or Critical, 3 = ssp.exe was not found.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/dump-surface.ps1 -Surface 0,5,10
 .EXAMPLE
@@ -265,6 +265,29 @@ if ($Animation) {
     }
 }
 
+# SSP logs a Warning "[DUMP] bind <category>,<part> <not found>" for each item of -Bind that the shell does not have,
+# ignores that item and dresses the others. The text after the names depends on the language of SSP, so the names
+# are matched with the items that were passed.
+$bindMissing = @()
+if ($bindSpec) {
+    foreach ($row in $rows) {
+        $message = [string]$row.Message
+        if ([string]$row.Level -ne 'warning' -or -not $message.StartsWith('[DUMP] bind ', [StringComparison]::Ordinal)) { continue }
+        $rest = $message.Substring('[DUMP] bind '.Length)
+        $name = $rest
+        foreach ($item in $bindSpec -split ';') {
+            $fields = @($item -split ',')
+            $key = $fields[0] + ','
+            if ($fields.Count -gt 1) { $key += $fields[1] }
+            if ($rest.StartsWith($key + ' ', [StringComparison]::Ordinal)) { $name = $key; break }
+        }
+        $bindMissing += $name
+    }
+    if ($bindMissing.Count -gt 0) {
+        Write-Host "dump-surface: bind part not found (the image is not dressed with it): $($bindMissing -join '; ')"
+    }
+}
+
 if ($written.Count -eq 0) {
     Write-Host "dump-surface: FAILED - no image was written (ssp.exe exited with code $($result.ExitCode))"
     exit 1
@@ -348,9 +371,10 @@ if ($Compare) {
 }
 
 $summary = "$($written.Count) image(s) in $OutDir"
-if ($missing.Count -gt 0 -or $errors -gt 0 -or $noFrames) {
+if ($missing.Count -gt 0 -or $errors -gt 0 -or $noFrames -or $bindMissing.Count -gt 0) {
     $details = "not found: $($missing.Count), errors: $errors"
     if ($noFrames) { $details += ', no frame of the animation' }
+    if ($bindMissing.Count -gt 0) { $details += ", bind not found: $($bindMissing.Count)" }
     Write-Host "dump-surface: WARNING ($summary; $details)"
     exit 2
 }
