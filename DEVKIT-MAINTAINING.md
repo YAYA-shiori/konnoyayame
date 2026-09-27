@@ -84,7 +84,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 | `dump-surface.md` | `tools/dump-surface.ps1` と `--offline-dump` の `--dump-surface-list` |
 | `image.md` | `tools/image.ps1` と `tools/lib/image.cs`、`tools/lib/image-engine.ps1`（コンパイルとキャッシュ、自前の PNG の読み書き、SSP の透過の扱い） |
 | `tamac.md` | tamac.exe の `-r` と `tools/shiori.ps1` |
-| `update-yaya.md` | `tools/update-yaya.ps1` のシステム辞書（yaya-dic）の取得と置き換え、yaya.dll の版の選び方（`-Prerelease`、古い版を入れない） |
+| `update-yaya.md` | `tools/update-yaya.ps1` のシステム辞書（yaya-dic）の取得と置き換え、yaya.dll の版の選び方（系列と `-Series`、古い版を入れない） |
 | `ignore.md` | `.narignore` / `.updateignore` の解釈（`tools/lib/ignore.ps1`） |
 
 どのスクリプトにも関わる短いものは、ここに書く。

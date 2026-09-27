@@ -23,7 +23,7 @@
       "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File tools/ssp-log.ps1*)",
       "PowerShell(powershell -NoProfile -ExecutionPolicy Bypass -File tools/shiori.ps1*)",
       "WebFetch(domain:ssp.shillest.net)",
-      "WebFetch(domain:emily.shillest.net)",
+      "WebFetch(domain:yaya-shiori.github.io)",
       "WebFetch(domain:ukagakadreamteam.github.io)",
       "mcp__ukagaka-doc__search_docs",
       "mcp__ukagaka-doc__get_doc",

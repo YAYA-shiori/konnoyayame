@@ -16,9 +16,11 @@ yaya.dll（YAYA 本体）とシステム辞書（[yaya-dic](https://github.com/Y
 
 ## tools/update-yaya.ps1 がすること
 
-- yaya.dll: yaya-shiori のリリースの `yaya.zip` から取る（最新リリース、または `-Tag`）。
-  - YAYA は 500 系を正式版、600 系をベータ版（pre-release）として並行してリリースしている。最新リリースは 500 系になる。`-Prerelease` を付けると、最新の正式版と最新のベータ版のうち、版の新しいほう（今は 600 系）を取る。
-  - 手元の yaya.dll より古い版は、`-Tag` か `-Force` を付けないかぎり入れない。600 系を使っているゴーストで `-Prerelease` を付け忘れても、500 系に戻らない（`the release is older than the current yaya.dll` と出て、yaya.dll はそのまま）。
+- yaya.dll: yaya-shiori のリリースの `yaya.zip` から取る（または `-Tag` で指定した版）。
+  - YAYA は 500 系と 600 系を並行してリリースしている（今は 500 系が正式版、600 系がベータ版（pre-release））。正式版かベータ版かに関わらず、**手元の yaya.dll と同じ系列**の、いちばん新しい版を取る（出力の `series`）。500 系のゴーストは 500 系のまま、600 系のゴーストは 600 系のまま更新される。
+  - 手元より新しい系列が出ていれば、`newer` の行で知らせるだけで、上げない。系列を切り替えるのは `-Series 6`（600 系へ）や `-Series 5`（500 系へ）を付けたときだけ。
+  - yaya.dll が無いとき（または、手元の系列のリリースが見つからないとき）は、最新の正式版の系列を取る。
+  - 手元の yaya.dll より古い版は、`-Tag`、`-Series`、`-Force` のどれかを付けないかぎり入れない（`the release is older than the current yaya.dll` と出て、yaya.dll はそのまま）。
 - システム辞書: yaya-dic にはリリースもタグも無いので、既定のブランチの最新のコミットを取る。`ghost/master/dic/system/`、`ghost/master/system/` の順に、今の yaya-dic の構成（`yaya_base/shiori3.dic` がある）のフォルダを探し、その形によって次のように動く。
 
 | システム辞書のフォルダ | 動作 |
@@ -33,10 +35,10 @@ yaya.dll（YAYA 本体）とシステム辞書（[yaya-dic](https://github.com/Y
 
 ## 手順
 
-1. 確認だけを行う（GitHub からダウンロードすることを一言伝える。作者が YAYA のタグを指定したときだけ `-Tag <タグ>` を付ける。作者がベータ版や 600 系を望んだとき、または `the release is older than the current yaya.dll` と出たとき（今の yaya.dll がベータ版）は `-Prerelease` を付ける）:
+1. 確認だけを行う（GitHub からダウンロードすることを一言伝える。作者が YAYA のタグを指定したときだけ `-Tag <タグ>` を付ける。作者が系列の切り替えを望んだとき（「600 系にして」「ベータ版にして」なら `-Series 6`、「500 系に戻して」「正式版に戻して」なら `-Series 5`）だけ `-Series` を付ける）:
    `powershell -NoProfile -ExecutionPolicy Bypass -File tools/update-yaya.ps1 -DryRun`
    次を短くまとめて伝える。
-   - yaya.dll: 今の版（`current`）と更新先（`release`）
+   - yaya.dll: 今の版（`current`）と更新先（`release`）。`newer` の行があれば、新しい系列が出ていること（切り替えるかは作者が決める。600 系はベータ版なので、互換性に関わる変更があるかもしれない）
    - システム辞書: 場所、形（`kind`）、今の版と最新（`current` / `latest`）。普通のファイルなら `update` / `create` / `CONFLICT` / `extra` の行
 2. 終了コードが 2 なら、出力に応じて先に片付ける。
    - `another layout than yaya-dic`: 古い構成。下の「古い構成のシステム辞書を再編する」へ進む。

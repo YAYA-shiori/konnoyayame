@@ -69,7 +69,7 @@ AI コーディングエージェント（Claude Code、Codex、GitHub Copilot�
 - コメントは `//` と `/* */`。
 - チェイントーク: トークの最後に `\e:chain=ラベル` と書くと、その後のランダムトークが `ラベル {{CHAIN ... }}CHAIN` に並べたトークから順に選ばれる。`{ }` で囲んだ部分はその中からランダムに選ばれる。
 - 新しいイベントに反応させるには、イベント名と同じ名前の関数を書く。どの辞書ファイルに書くかは `GHOST.md` の「イベントと辞書ファイルの対応」を見る。`yaya.txt` が読み込むフォルダに新しい `.dic` ファイルを置いた場合も自動で読み込まれる。
-- 関数の一覧や細かい文法は YAYA Wiki で確かめる。
+- 関数の一覧や細かい文法は yaya-docs で確かめる。
 
 ## トーク（さくらスクリプト）の書き方
 
@@ -103,7 +103,7 @@ AI がやりがちな失敗:
    - SSTP: https://ssp.shillest.net/ukadoc/manual/spec_sstp.html
    - install.txt / .narignore / .updateignore / delete.txt: https://ssp.shillest.net/ukadoc/manual/descript_install.html
    - ネットワーク更新: https://ssp.shillest.net/ukadoc/manual/dev_update.html
-   - YAYA Wiki（文法と関数）: https://emily.shillest.net/ayaya/
+   - yaya-docs（旧 YAYA Wiki。文法と関数）: https://yaya-shiori.github.io/yaya-docs/
    - システム辞書 yaya-dic: https://github.com/YAYA-shiori/yaya-dic
 3. それでもわからなければ Web 検索する。
 

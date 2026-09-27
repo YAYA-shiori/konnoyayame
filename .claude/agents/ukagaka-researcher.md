@@ -12,7 +12,7 @@ model: haiku
 1. MCP サーバー `ukagaka-doc`: `search_docs` で探し、`get_doc` で本文を読む。UKADOC・YAYA Wiki・里々 Wiki・蒼空 Wiki を検索できる（オンラインのサーバー）。
 2. MCP が使えない、または見つからないときは Web の一次資料を WebFetch で読む。
    - UKADOC（SSP、さくらスクリプト、SHIORI イベント、SSTP、descript.txt / surfaces.txt）: https://ssp.shillest.net/ukadoc/manual/
-   - YAYA Wiki（YAYA の文法と関数）: https://emily.shillest.net/ayaya/
+   - yaya-docs（旧 YAYA Wiki。YAYA の文法と関数）: https://yaya-shiori.github.io/yaya-docs/
    - YAYA 本体: https://github.com/YAYA-shiori/yaya-shiori 、システム辞書: https://github.com/YAYA-shiori/yaya-dic
 3. それでも足りなければ WebSearch を使う。
 4. このリポジトリの実例（`ghost/master/dic/`、`shell/master/`）を Grep で確認してもよい。
