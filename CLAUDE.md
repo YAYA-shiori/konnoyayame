@@ -26,3 +26,4 @@
 
 - `tools/*.ps1` は、Bash ツールからでも PowerShell ツールからでも `powershell -NoProfile -ExecutionPolicy Bypass -File tools/<name>.ps1 ...` の形で呼ぶ。この形のチェック用スクリプトは `.claude/settings.json` で許可済み。
 - さくらスクリプトを引数で渡すときは、`\` が解釈されないようにシングルクォートで囲む。
+- Windows の Bash ツールでは、コマンドの中の `\\` が bash に届く前に `\` 1 つになる（シングルクォートの中でも、`<<'EOF'` のヒアドキュメントでも）。`\\` を含むもの（JSON のエスケープ、正規表現、辞書の文字列）は、Write / Edit ツールでファイルに書くか、PowerShell ツールから渡す。思いがけない結果が出たら、まず書いたファイルのバイトを確かめる。
