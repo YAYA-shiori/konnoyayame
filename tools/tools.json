@@ -4,7 +4,7 @@
     "version": "latest",
     "repository": "YAYA-shiori/tama",
     "asset": "tamac.exe",
-    "minimumVersion": "1.0.3.25",
+    "minimumVersion": "1.0.3.26",
     "type": "exe",
     "exe": "tamac.exe"
   }

@@ -32,6 +32,14 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 - `docs/agents/workflows/` に手順書を足したら、`AGENTS.md` の「こう頼まれたら」の表にも行を足す。作者の言い回しは、その文書の「使うとき」とそろえる。スラッシュコマンドは使わない前提で書く（想定している作者は、コーディングエージェントに不慣れで、自然な言葉で頼む）。
 - 手順書のパスは `tools/doctor.ps1` の `fix` と `tools/hooks/session-start.ps1` の出力にも書かれている。パスを変えるときは両方直す。
 
+## 里々版キット（POST_and_KOMAINU）との共用
+
+このキットを移植した里々版の開発キット（里々バイブコーディングツールキット）が、兄弟リポジトリ `../POST_and_KOMAINU`（https://github.com/ukatech/POST_and_KOMAINU ）にある。SSP、シェル、nar、キットの更新まわりなど、SHIORI に依存しない部分は両方のキットで同じものを使っている（例: `tools/run-ssp.ps1`、`tools/sstp.ps1`、`tools/ssp-log.ps1`、`tools/check-shell.ps1`、`tools/dump-surface.ps1`、`tools/image.ps1`、`tools/build-nar.ps1`、`tools/update-devkit.ps1`、`tools/lib/` の共通部分、対応する `docs/agents/` と `docs/devkit-maintaining/` の文書）。
+
+- **両方のキットで共用しているツールや文書を直すときは、`../konnoyayame` と `../POST_and_KOMAINU` の両方を直す。** 片方だけ直すと、同じ不具合が片方に残ったり、挙動が食い違ったりする。
+- **新しく作るツールや機能が SHIORI に依存せず、もう片方のキットでも役に立つなら、両方に追加する。** YAYA 固有の部分（`check-dic.ps1`、`shiori.ps1`、`update-yaya.ps1`、YAYA 辞書の書き方など）は、里々側の対応するもの（`update-satori.ps1`、里々の辞書の書き方など）に置き換えて持っていく。
+- 両方を直したら、それぞれのリポジトリで `tools/update-devkit.ps1 -WriteLock` を実行し、`tools/check.ps1` が通ることを確かめる。
+
 ## lock ファイル
 
 `tools/devkit.lock.json` は、キットのファイルごとに「導入した版の上流の内容」の SHA256 を記録する（CRLF を LF にそろえて計算）。`tools/update-devkit.ps1` は、lock（B）、手元（L）、新しい版（N）を比べて、作者の変更を見分ける。
