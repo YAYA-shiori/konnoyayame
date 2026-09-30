@@ -9,6 +9,8 @@
     it. See also tools/ssp-log.ps1.
     -Script and -Event send "Option: strict", so SSP logs each tag of the played script that
     it could not interpret as "[GHOST/Script] reason (detail) at position n : excerpt".
+    -Script, -Reload and the -Balloon dump also send "Option: notranslate", so the script is played as sent even
+    by a ghost whose OnTranslate rewrites or refuses SSTP scripts.
     SSP answers before the script is played. The log is read after the ghost has stopped talking
     ("EXECUTE GetStatus"; up to -TimeoutSeconds), so errors late in a long script are included. When GetStatus
     does not answer (for example while the ghost is being loaded), a fixed short wait is used instead.
@@ -120,8 +122,13 @@ $headers.Add('Charset: UTF-8')
 $headers.Add('Sender: ghost-devkit')
 if ($mode -ne 'Execute' -and -not $AnyGhost -and $Ghost) { $headers.Add('ReceiverGhostName: ' + $Ghost) }
 if ($ghostId) { $headers.Add('ID: ' + $ghostId) }
-# SSP logs the places of the script that it could not interpret.
-if ($mode -eq 'Script' -or $mode -eq 'Event') { $headers.Add('Option: strict') }
+# strict: SSP logs the places of the script that it could not interpret.
+# notranslate: SEND scripts skip the ghost's OnTranslate, so a ghost that rewrites or refuses SSTP scripts
+# there still plays them as sent.
+$options = @()
+if ($mode -eq 'Script' -or $mode -eq 'Reload') { $options += 'notranslate' }
+if ($mode -eq 'Script' -or $mode -eq 'Event') { $options += 'strict' }
+if ($options.Count -gt 0) { $headers.Add('Option: ' + ($options -join ',')) }
 switch ($mode) {
     'Execute' { $headers.Add('Command: ' + $Execute) }
     'Event' {
@@ -233,7 +240,7 @@ if ($Balloon -and $response.TimedOut) {
     $work = Join-Path (Join-Path (Join-Path $ghostPath.TrimEnd('\', '/') 'ghost') 'master') $workName
     $dump = '\C'
     foreach ($scope in $BalloonScope) { $dump += '\![execute,dumpballoon,' + $workName + ',' + $scope + ']' }
-    $lines = @('SEND SSTP/1.4', 'Charset: UTF-8', 'Sender: ghost-devkit', ('ReceiverGhostName: ' + $Ghost), ('ID: ' + $ghostId), ('Script: ' + $dump))
+    $lines = @('SEND SSTP/1.4', 'Charset: UTF-8', 'Sender: ghost-devkit', ('ReceiverGhostName: ' + $Ghost), ('ID: ' + $ghostId), 'Option: notranslate', ('Script: ' + $dump))
     $images = @()
     try {
         $dumpResponse = Invoke-DevkitSstp -Lines $lines -Port $Port -TimeoutSeconds $TimeoutSeconds
