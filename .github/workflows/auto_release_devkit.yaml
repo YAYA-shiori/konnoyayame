@@ -1,0 +1,40 @@
+name: auto release devkit
+
+# Adds the nar with the development kit to the release made by "auto release" (auto_release.yml).
+# The nar without the kit is built there. To stop shipping the kit, delete this file.
+
+on:
+  workflow_run:
+    workflows: ["auto release"]
+    types:
+      - completed
+    branches:
+      - main
+      - master
+
+jobs:
+  build:
+    name: auto release devkit
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: write
+    env:
+      NAR_NAME: ${{ github.event.repository.name }}_devkit.nar
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          submodules: recursive
+
+      - name: build nar
+        # Everything except the files listed in .narignore, including the development kit
+        shell: pwsh
+        run: ./tools/build-nar.ps1 -OutFile $env:NAR_NAME
+
+      - name: Upload to the release
+        # auto release uses its run id as the tag name
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload ${{ github.event.workflow_run.id }} "$NAR_NAME" --repo ${{ github.repository }}

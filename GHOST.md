@@ -73,7 +73,7 @@
 - [ ] シェル: `shell/master/` は SATO M 氏の CC BY-NC-ND シェルなので、改変した画像は配布できない
 - [ ] 辞書に直接書かれたゴースト名: `yaya_menu.dic` の `OnStampInfo`（スタンプ帳で自分のスタンプを見分けるための `'はろーYAYAわーるど'` / `'紺野ややめ'`）
 - [ ] ややめとマック朗に固有の台詞（`OnFirstBoot` の自己紹介、ランダムトーク、マウスへの反応など）
-- [ ] `.github/workflows/auto_release.yml` の nar ファイル名（`yayame.nar`）とリリースの説明文。このワークフローは push のたびに**既存のリリースとタグをすべて削除して**作り直すので、残したいリリースがあるリポジトリでは書き換える
+- [ ] `.github/workflows/auto_release.yml` の nar ファイル名（`yayame.nar`）とリリースの説明文。このワークフローは push のたびに**既存のリリースとタグをすべて削除して**作り直すので、残したいリリースがあるリポジトリでは書き換える。ここで作る nar は開発キットなし版で、キットあり版（`<リポジトリ名>_devkit.nar`）は `auto_release_devkit.yaml` が同じリリースに追加する。キットあり版が要らなければ `auto_release_devkit.yaml` を消し、リリースの説明文のその行も消す
 - [ ] リポジトリを clone して始めた場合、`DEVKIT-MAINTAINING.md` と `docs/devkit-maintaining/` を消す（開発キットの配布元のための文書で、残っているとエージェントが配布元のリポジトリだと思ってしまう。nar には入っていない）
 - [ ] nar をインストールしたフォルダから始めた場合、`ghost/master/dic/system/` は submodule ではなく普通のフォルダとしてコミットしてよい
 - [ ] クレジットの例:「紺野ややめ（https://github.com/YAYA-shiori/konnoyayame）をもとに作成」

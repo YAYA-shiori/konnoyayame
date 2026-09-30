@@ -44,6 +44,23 @@ jobs:
             gh api -X DELETE repos/${{ github.repository }}/git/refs/tags/$tag
           done
       
+      - name: exclude development kit
+        # This nar is the version without the development kit (auto_release_devkit.yaml builds the one with it)
+        run: |
+          cat >> .narignore <<'EOF'
+
+          # development kit (added by auto_release.yml)
+          /AGENTS.md
+          /CLAUDE.md
+          /DEVKIT-GUIDE.md
+          /GHOST.md
+          /docs/agents/
+          /.mcp.json
+          /.claude/
+          /.github/
+          /tools/
+          EOF
+
       - name: build nar
         # Files to exclude are listed in .narignore
         shell: pwsh
@@ -58,7 +75,9 @@ jobs:
           name: 自動リリース
           body: |
             - エラーチェックで引っかからなかった時の最新版の自動リリースです
-            - 下記のうち **${{ env.NAR_NAME }}** のみをダウンロードしてください。Source Codeは不要です。
+            - 下記のうち、使う方の nar だけをダウンロードしてください。Source Codeは不要です。
+              - **${{ env.NAR_NAME }}** : 開発キットなし
+              - **${{ github.event.repository.name }}_devkit.nar** : 開発キットあり（AI エージェントで開発するための `tools/` や `AGENTS.md` などが入っています）
           draft: false
           prerelease: false
           files: |
