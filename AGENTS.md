@@ -124,5 +124,5 @@ YAYA の関数の戻り値や細かい挙動は、調べたうえで、`tools/sh
 ## ツールごとの補足
 
 - この指示書、`GHOST.md`、`docs/agents/` 以下の文書は、どのエージェントでも同じように読める素のテキストにしてある。ツール固有の設定は、それだけでは足りないものを補うためだけに置いている。
-- Claude Code: `CLAUDE.md` がこのファイルと `GHOST.md` を読み込む。加えて、編集後の自動チェックと起動時の診断（hooks、`.claude/settings.json`）、仕様調査用のサブエージェント（`.claude/agents/`）、仕様検索 MCP（`.mcp.json`）が使える。
-- それ以外のツール: `GHOST.md` を自分で読む。編集後の自動チェックがないので、辞書やシェルを変更するたびに `tools/check-dic.ps1` や `tools/check-shell.ps1` を自分で実行する。`.mcp.json` と同じ MCP サーバーは、そのツールの設定に登録すれば使える（「仕様の調べ方」）。
+- Claude Code: `CLAUDE.md` がこのファイルと `GHOST.md` を読み込む。加えて、起動時の診断（hooks、`.claude/settings.json`）、仕様調査用のサブエージェント（`.claude/agents/`）、仕様検索 MCP（`.mcp.json`）が使える。
+- それ以外のツール: `GHOST.md` を自分で読む。自動チェックは置いていないので、辞書やシェルを変更したら `tools/check-dic.ps1` や `tools/check-shell.ps1` を自分で実行する。`.mcp.json` と同じ MCP サーバーは、そのツールの設定に登録すれば使える（「仕様の調べ方」）。

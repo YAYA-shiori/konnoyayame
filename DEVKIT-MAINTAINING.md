@@ -100,7 +100,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 
 - hooks: `.claude/settings.json` に書いている。
   - SessionStart: `tools/hooks/session-start.ps1` が、doctor の recommended 以上の不足と直し方を Claude に伝える。
-  - PostToolUse: `tools/hooks/post-edit.ps1` が、`ghost/` と `shell/` の編集後にチェックを走らせる。
+  - 編集後に走る PostToolUse hook は置かない（出力がコンテキストを膨らませるため。チェックは `AGENTS.md` のルールで手動で走らせる）。
   - hook のコマンドは `${CLAUDE_PROJECT_DIR}` を使い、ゴーストのフォルダ名に依存させない。
 - doctor に項目を足すときは `Add-DoctorItem` を使う。`level` が recommended 以上なら、起動時に Claude Code へ伝わる。
 

@@ -3,11 +3,9 @@
 
 # Claude Code 向けの補足
 
-## 編集後の自動チェック（hooks）
+## 起動時の診断（hooks）
 
-- `.claude/settings.json` の PostToolUse hook（`tools/hooks/post-edit.ps1`）により、`ghost/` の `.dic` / `.txt` を編集すると `tools/check-dic.ps1` が、`shell/` の `.txt` を編集すると `tools/check-shell.ps1` が自動で実行される。
-- チェックに失敗すると、その出力が返ってくる。次の作業に進む前に直すこと。
-- ツールが入っていない、または SSP が見つからない場合は、何も言わずにスキップされる。自動チェックが動いていないようなら `tools/setup.ps1` を実行する（ダウンロードを伴うので、ユーザーに一言断る）。
+- 編集のたびに走る自動チェックは置いていない（コンテキストを無駄に消費するため）。辞書やシェルを編集したら、一区切りついたところで `tools/check-dic.ps1` や `tools/check-shell.ps1` を自分で実行する（`AGENTS.md` の作業のルート 1）。
 - 起動時には SessionStart hook（`tools/hooks/session-start.ps1`）が `tools/doctor.ps1` で環境を診断し、必須または推奨のものが足りないときだけ、その項目と直し方が伝えられる。そのときは、ほかの作業に入る前に対応をユーザーに提案する。
   - セットアップの不足、`GHOST.md` の未記入: `docs/agents/workflows/setup.md` の手順で対応する
   - `.devkit-new` の残り: `docs/agents/workflows/update-devkit.md` の手順でマージする
