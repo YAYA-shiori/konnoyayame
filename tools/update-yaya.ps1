@@ -83,7 +83,7 @@ function Set-UpdateExitCode([int]$Code) {
     if ($Code -eq 1 -or $script:exitCode -eq 0) { $script:exitCode = $Code }
 }
 
-# Runs check-dic on the ghost and returns its exit code (1 = errors, 3 = tamac.exe is not installed).
+# Runs check-dic on the ghost and returns its exit code (1 = errors, 3 = not checked: tamacs.exe is not available).
 function Invoke-DictionaryCheck {
     $powershell = (Get-Process -Id $PID).Path
     $ErrorActionPreference = 'Continue'
@@ -387,7 +387,7 @@ try {
                     $continue = $false
                     Set-UpdateExitCode 1
                 } else {
-                    if ($checkCode -eq 3) { Write-Host 'update-yaya: WARNING - tamac.exe is not installed, so the new yaya.dll was not verified' }
+                    if ($checkCode -eq 3) { Write-Host 'update-yaya: WARNING - the dictionaries could not be checked (tamacs.exe), so the new yaya.dll was not verified' }
                     Write-Host "update-yaya: updated yaya.dll $($dllPlan.OldVersion) -> $($dllPlan.NewVersion) ($($dllPlan.Tag))"
                 }
             }
@@ -403,7 +403,7 @@ try {
                 Write-Host "update-yaya: the dictionary check failed with the new system dictionary; restored $($dicPlan.OldCommit.Substring(0, 7))"
                 Set-UpdateExitCode 1
             } else {
-                if ($checkCode -eq 3) { Write-Host 'update-yaya: WARNING - tamac.exe is not installed, so the new system dictionary was not verified' }
+                if ($checkCode -eq 3) { Write-Host 'update-yaya: WARNING - the dictionaries could not be checked (tamacs.exe), so the new system dictionary was not verified' }
                 Write-Host "update-yaya: updated the system dictionary in ghost/master/$($dicPlan.Dir) $($dicPlan.OldCommit.Substring(0, 7)) -> $($dicPlan.NewCommit.Substring(0, 7))"
                 if ($dicPlan.Submodule) { Write-Host "update-yaya: ghost/master/$($dicPlan.Dir) is a git submodule; commit it in the ghost repository to record the new commit" }
             }
@@ -431,7 +431,7 @@ try {
                 Write-Host 'update-yaya: the dictionary check failed with the new system dictionary; restored the previous files'
                 Set-UpdateExitCode 1
             } else {
-                if ($checkCode -eq 3) { Write-Host 'update-yaya: WARNING - tamac.exe is not installed, so the new system dictionary was not verified' }
+                if ($checkCode -eq 3) { Write-Host 'update-yaya: WARNING - the dictionaries could not be checked (tamacs.exe), so the new system dictionary was not verified' }
                 Write-Host "update-yaya: updated the system dictionary in ghost/master/$($dicPlan.Dir) to $dicRepository @ $($dicPlan.NewCommit.Substring(0, 7))"
                 if ($conflicts.Count -gt 0) {
                     Write-Host "update-yaya: merge each <file>$dicNewSuffix into <file>, then delete it: $(($conflicts | ForEach-Object { "ghost/master/$($dicPlan.Dir)/$_" }) -join ', ')"

@@ -34,7 +34,7 @@ $isGitWorkingCopy = Test-Path -LiteralPath (Join-Path $DevkitRoot '.git')
 # --- Windows ---------------------------------------------------------------------------
 $isWindowsOs = [Environment]::OSVersion.Platform -eq [PlatformID]::Win32NT
 Add-DoctorItem -Id 'windows' -Name 'Windows' -Level 'required' -Ok $isWindowsOs `
-    -Purpose 'SSP, YAYA and tamac.exe run only on Windows' `
+    -Purpose 'SSP, YAYA and tamacs.exe run only on Windows' `
     -Detail ([Environment]::OSVersion.VersionString) `
     -Fix 'Use a Windows PC.'
 
@@ -93,22 +93,14 @@ Add-DoctorItem -Id 'devkit-conflicts' -Name 'development kit merges' -Level 'rec
     -Detail $(if ($conflicts.Count -eq 0) { 'nothing to merge' } else { 'waiting to be merged: ' + ($conflicts -join ', ') }) `
     -Fix $('Merge each <file>.devkit-new into <file>, then delete the .devkit-new file (docs/agents/workflows/update-devkit.md).' + $(if ($conflicts -contains 'AGENTS.md.devkit-new') { ' Start with AGENTS.md.devkit-new.' } else { '' }))
 
-# --- downloaded tools ------------------------------------------------------------------
-$manifest = Get-DevkitToolManifest
-$tamacPath = Get-DevkitToolPath 'tamac'
-$tamacCurrent = Test-DevkitToolCurrent 'tamac'
-$tamacVersion = if ($null -ne $tamacCurrent) { Get-DevkitFileVersion $tamacPath } else { $null }
-Add-DoctorItem -Id 'tamac' -Name 'tamac.exe' -Level 'required' -Ok ($null -ne $tamacCurrent) `
-    -Purpose 'Dictionary check (tools/check-dic.ps1 and the check after each edit)' `
-    -Detail $(if ($null -eq $tamacCurrent) { 'not installed' } elseif ($tamacVersion) { "v$tamacVersion in tools/bin" } else { 'in tools/bin (version unknown)' }) `
-    -Fix "Run: $ps tools/setup.ps1"
-
-# An older tamac.exe still checks the dictionaries, so being out of date is only recommended.
-$tamacMinimum = $manifest.tamac.minimumVersion
-Add-DoctorItem -Id 'tamac-version' -Name "tamac.exe $tamacMinimum or later" -Level 'recommended' -Ok ($tamacCurrent -ne $false) `
-    -Purpose 'SHIORI requests without SSP (tools/shiori.ps1)' `
-    -Detail $(if ($null -eq $tamacCurrent) { 'not installed (see tamac.exe)' } elseif ($tamacCurrent) { 'ok' } else { "v$tamacVersion is older than $tamacMinimum" }) `
-    -Fix "Run: $ps tools/setup.ps1 -Tool tamac (downloads the latest release)"
+# --- tamacs.exe (built from tools/lib/tamacs.cs on first use; doctor does not build it) ----
+$tamacsExe = Get-DevkitTamacsExpectedPath
+$tamacsBuilt = Test-Path -LiteralPath $tamacsExe -PathType Leaf
+$csc = Get-DevkitCscPath
+Add-DoctorItem -Id 'tamacs' -Name 'tamacs.exe' -Level 'required' -Ok ($tamacsBuilt -or [bool]$csc) `
+    -Purpose 'Loads yaya.dll without SSP: dictionary check (tools/check-dic.ps1 and the check after each edit), tools/shiori.ps1, tools/lint.ps1' `
+    -Detail $(if ($tamacsBuilt) { 'built in tools/bin' } elseif ($csc) { "built from tools/lib/tamacs.cs on first use with $csc" } else { 'not built, and csc.exe of the .NET Framework 4 was not found' }) `
+    -Fix 'csc.exe comes with the .NET Framework 4.8, which is part of Windows. Turn it on in "Turn Windows features on or off" if it has been turned off.'
 
 # --- SSP -------------------------------------------------------------------------------
 $ssp = Resolve-SspPath

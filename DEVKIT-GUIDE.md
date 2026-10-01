@@ -14,7 +14,7 @@ git で管理しているフォルダでも、nar を SSP にインストール�
 - `docs/agents/` : `AGENTS.md` から分けた資料（開発コマンドの一覧、ディレクトリ構成、キットのファイルの持ち主、独立ゴーストにするときのチェックリスト）と、`workflows/` の作業手順書。エージェントは必要になったときに読みます
 - `GHOST.md` : このゴーストに固有の情報（キャラクター、サーフェス、ライセンス、辞書の構成）。エージェントは作業の前に必ず読みます
 - `CLAUDE.md` / `.claude/` / `.mcp.json` : Claude Code 用の設定（編集後の自動チェック、起動時の診断、仕様調査用サブエージェント、ドキュメント検索 MCP）
-- `tools/` : 辞書チェック（tamac）、シェルチェック（SSP）、エージェントが表情を目で確かめるためのサーフェスの画像化（SSP）、シェル画像の編集（32bit PNG で書き出す）、辞書の lint（システム辞書の `SHIORI3FW.Lint` を tamac で実行）、SSP を使わない SHIORI リクエストの送信と YAYA のコードの評価（tamac）、SSTP での実機確認（エージェントがトークの吹き出しを画像で確かめる機能つき）と SSP のログ取得、nar とネットワーク更新ファイルの作成（SSP）、yaya.dll・システム辞書と開発キットの更新のスクリプト
+- `tools/` : 辞書チェック（tamacs）、シェルチェック（SSP）、エージェントが表情を目で確かめるためのサーフェスの画像化（SSP）、シェル画像の編集（32bit PNG で書き出す）、辞書の lint（システム辞書の `SHIORI3FW.Lint` を tamacs で実行）、SSP を使わない SHIORI リクエストの送信と YAYA のコードの評価（tamacs）、SSTP での実機確認（エージェントがトークの吹き出しを画像で確かめる機能つき）と SSP のログ取得、nar とネットワーク更新ファイルの作成（SSP）、yaya.dll・システム辞書と開発キットの更新のスクリプト
 
 AI エージェントを使わずに、`tools/` のスクリプトだけを使うこともできます。
 
@@ -22,7 +22,7 @@ AI エージェントを使わずに、`tools/` のスクリプトだけを使�
 
 ## あらかじめ入れておくもの
 
-開発キットは Windows を前提にしています（YAYA、SSP、辞書チェックに使う tamac.exe が Windows 用のため）。
+開発キットは Windows を前提にしています（YAYA、SSP、辞書チェックに使う tamacs.exe が Windows 用のため）。
 
 | もの | 必要か | 用途 | 入手先 |
 |---|---|---|---|
@@ -60,7 +60,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/check.ps1
 ```
 
 - `tools/doctor.ps1` は、必要なものがそろっているかと、足りないものの入手方法を表示します（何も変更しません）。
-- `tools/setup.ps1` は、git clone したフォルダなら submodule を取得し、チェック用ツール（tamac）をダウンロードします。
+- `tools/setup.ps1` は、git clone したフォルダなら submodule を取得し、チェック用ツール（tamacs）をビルドします。tamacs は Windows に入っている .NET Framework のコンパイラでビルドするので、ダウンロードはありません。setup を実行しなくても、初めて使うときに自動でビルドされます。
 - `tools/check.ps1` は、辞書のチェック、シェルのチェック、辞書の lint（未定義・未使用の変数と関数の検出。yaya.dll Tc574-1 以降と、`yaya_base/lint.dic` のあるシステム辞書が必要）を順に実行します。
 - SSP の場所は `.nar` の関連付けなどから自動で探します。見つからない場合は環境変数 `SSP_PATH` か `tools/local.json`（`tools/local.example.json` を複製）で指定してください。
 - ドキュメント検索 MCP（ukagaka-doc）は、オンラインのサーバー `https://ssp.shillest.net/ukadoc/mcp` に接続します。インストールするものはありません。

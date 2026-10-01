@@ -34,7 +34,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 
 ## 里々版キット（POST_and_KOMAINU）との共用
 
-このキットを移植した里々版の開発キット（里々バイブコーディングツールキット）が、兄弟リポジトリ `../POST_and_KOMAINU`（https://github.com/ukatech/POST_and_KOMAINU ）にある。SSP、シェル、nar、キットの更新まわりなど、SHIORI に依存しない部分は両方のキットで同じものを使っている（例: `tools/run-ssp.ps1`、`tools/sstp.ps1`、`tools/ssp-log.ps1`、`tools/check-shell.ps1`、`tools/dump-surface.ps1`、`tools/image.ps1`、`tools/build-nar.ps1`、`tools/update-devkit.ps1`、`tools/lib/` の共通部分、対応する `docs/agents/` と `docs/devkit-maintaining/` の文書）。
+このキットを移植した里々版の開発キット（里々バイブコーディングツールキット）が、兄弟リポジトリ `../POST_and_KOMAINU`（https://github.com/ukatech/POST_and_KOMAINU ）にある。SSP、シェル、nar、キットの更新まわりなど、SHIORI に依存しない部分は両方のキットで同じものを使っている（例: `tools/run-ssp.ps1`、`tools/sstp.ps1`、`tools/ssp-log.ps1`、`tools/check-shell.ps1`、`tools/dump-surface.ps1`、`tools/image.ps1`、`tools/lib/tamacs.cs`（とそれをビルドする `tools/lib/common.ps1` の `Get-DevkitTamacs`）、`tools/build-nar.ps1`、`tools/update-devkit.ps1`、`tools/lib/` の共通部分、対応する `docs/agents/` と `docs/devkit-maintaining/` の文書）。
 
 - **両方のキットで共用しているツールや文書を直すときは、`../konnoyayame` と `../POST_and_KOMAINU` の両方を直す。** 片方だけ直すと、同じ不具合が片方に残ったり、挙動が食い違ったりする。
 - **新しく作るツールや機能が SHIORI に依存せず、もう片方のキットでも役に立つなら、両方に追加する。** YAYA 固有の部分（`check-dic.ps1`、`shiori.ps1`、`update-yaya.ps1`、YAYA 辞書の書き方など）は、里々側の対応するもの（`update-satori.ps1`、里々の辞書の書き方など）に置き換えて持っていく。
@@ -75,12 +75,13 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 - システム辞書は `ghost/master/dic/system` と決め打ちしない。`ghost/master/system` に置くゴーストもあるので、`tools/lib/common.ps1` の `$DevkitSystemDicDirs`（探す順）、`Get-DevkitSystemDicDir`、`Test-DevkitSystemDicPath` を使う。
 - 終了コードをそろえる: 0 OK / 1 失敗・エラー / 2 注意が要る（SSP のエラーログの Error、`.devkit-new` の残りなど）/ 3 ツールや SSP が無くて確かめられない。
 - 冒頭のコメントヘルプ（`.SYNOPSIS`、`.DESCRIPTION`、終了コード、`.EXAMPLE`）を書き、`docs/agents/commands.md` のコマンド表も直す。
-- ダウンロードして使うツールは `tools/tools.json` に書く。書き方は 2 通りある。
+- yaya.dll を読み込むのは tamacs.exe（`tools/lib/tamacs.cs`）。キットが自分でビルドするので、`tools/tools.json` には書かない（`docs/devkit-maintaining/tamacs.md`）。
+- ダウンロードして使うツールは `tools/tools.json` に書く（今は無い）。書き方は 2 通りある。
   - 版を固定する（今は使っているツールが無い。以前は yayalint）: `version`、`url`、`sha256` を書く。上げるときは 3 つとも書き換え（SHA256 は `Get-FileHash -Algorithm SHA256`）、`tools/setup.ps1 -Tool <名前>` で取り直せることを確かめる（取得済みの exe の SHA256 が違えば取り直す）。
-  - 最新リリースを使う（tamac。YAYA のプロジェクトが出しているツールで、新しい機能をキットの更新を待たずに使えるようにするため）: `version` を `latest` にし、`repository`、`asset`（リリースのファイル名）、`minimumVersion` を書く。1 つの exe のツールだけに使う（zip では、取得済みのものが最新か見分けられない）。
+  - 最新リリースを使う（以前は tamac。YAYA のプロジェクトが出しているツールで、新しい機能をキットの更新を待たずに使えるようにするため）: `version` を `latest` にし、`repository`、`asset`（リリースのファイル名）、`minimumVersion` を書く。1 つの exe のツールだけに使う（zip では、取得済みのものが最新か見分けられない）。
     - `tools/setup.ps1` は GitHub API で最新リリースを調べ、GitHub が各ファイルに付けている SHA256（`digest`）で照合する。`digest` が無ければ失敗させる。GitHub Actions では、匿名の API 呼び出しの回数制限を避けるため、`auto_check.yml` から `GITHUB_TOKEN` を渡している（`Get-DevkitLatestReleaseAsset` は、トークンが拒否されたら付けずにやり直す）。
     - `doctor.ps1` と `tools/shiori.ps1` はネットワークに出ずに、exe のファイルバージョンが `minimumVersion` 以上かを見る（`Test-DevkitToolCurrent`）。キットのスクリプトが新しいオプションを使い始めたら `minimumVersion` を上げる。
-    - 新しいリリースで挙動が変わると、すべてのゴーストの auto check に影響する。tamac のリリースの前に、このリポジトリで `tools/check.ps1` と `tools/shiori.ps1` を試す。
+    - 新しいリリースで挙動が変わると、すべてのゴーストの auto check に影響する。リリースの前に、そのツールを使うリポジトリで `tools/check.ps1` を試す。
 
 ## 実装メモ
 
@@ -91,7 +92,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 | `ssp.md` | SSTP（Owned SSTP）、SSP のログ、SSP の版の扱い、使っている機能（`GetStatus`、`Option: strict`、`dumpballoon`、`--dump-error-log`、`--offline-tool`）、試験用 SSP（`tools/run-ssp.ps1`） |
 | `dump-surface.md` | `tools/dump-surface.ps1` と `--offline-dump` の `--dump-surface-list`、`--dump-animation`、`--dump-bind` |
 | `image.md` | `tools/image.ps1` と `tools/lib/image.cs`、`tools/lib/image-engine.ps1`（コンパイルとキャッシュ、自前の PNG の読み書き、SSP の透過の扱い） |
-| `tamac.md` | tamac.exe の `-r` と `tools/shiori.ps1` |
+| `tamacs.md` | tamacs.exe（`tools/lib/tamacs.cs`）のビルドと、tamac との違い、`-r` と `tools/shiori.ps1` |
 | `update-yaya.md` | `tools/update-yaya.ps1` のシステム辞書（yaya-dic）の取得と置き換え、yaya.dll の版の選び方（系列と `-Series`、古い版を入れない） |
 | `ignore.md` | `.narignore` / `.updateignore` の解釈（`tools/lib/ignore.ps1`） |
 

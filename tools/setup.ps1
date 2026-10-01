@@ -1,17 +1,16 @@
 <#
 .SYNOPSIS
-    Prepares the development environment: the git submodule and the pinned tools in tools/bin/.
+    Prepares the development environment: the git submodule and the tools in tools/bin/.
 .DESCRIPTION
     - In a git clone, fetches the system dictionary (git submodule update --init) when neither
       ghost/master/dic/system nor ghost/master/system has .dic files.
-    - Downloads the tools pinned in tools/tools.json (version, URL and SHA256) into tools/bin/.
+    - Builds tamacs.exe from tools/lib/tamacs.cs into tools/bin/ (the scripts also build it on first use).
+    - Downloads the tools listed in tools/tools.json into tools/bin/ (none at present).
     - Finally prints the result of tools/doctor.ps1.
     Applications such as Git or SSP are not installed; doctor.ps1 tells how to get them.
     Exit codes: 0 = OK, 1 = a step failed or a required item is still missing.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup.ps1
-.EXAMPLE
-    powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup.ps1 -Tool tamac -Force
 #>
 [CmdletBinding()]
 param(
@@ -46,9 +45,19 @@ if (-not (Get-DevkitSystemDicDir) -and (Test-Path -LiteralPath (Join-Path $Devki
     }
 }
 
-# --- pinned tools ----------------------------------------------------------------------
+# --- tamacs.exe ------------------------------------------------------------------------
+$tamacs = Get-DevkitTamacs
+if ($tamacs.Path) {
+    Write-Host "[ok] tamacs.exe -> $($tamacs.Path)"
+} else {
+    $failed++
+    Write-Host "[error] $($tamacs.Error)"
+}
+
+# --- downloaded tools ------------------------------------------------------------------
 $manifest = Get-DevkitToolManifest
-$names = @($manifest.PSObject.Properties.Name)
+# Not @($manifest.PSObject.Properties.Name): for an empty manifest it would hold one $null.
+$names = @($manifest.PSObject.Properties | ForEach-Object { $_.Name })
 if ($Tool) {
     foreach ($name in $Tool) {
         if ($names -notcontains $name) { throw "Unknown tool '$name'. Available: $($names -join ', ')" }

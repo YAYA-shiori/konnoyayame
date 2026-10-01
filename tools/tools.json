@@ -1,11 +1,2 @@
 {
-  "tamac": {
-    "description": "YAYA dictionary load checker and SHIORI request sender (https://github.com/YAYA-shiori/tama)",
-    "version": "latest",
-    "repository": "YAYA-shiori/tama",
-    "asset": "tamac.exe",
-    "minimumVersion": "1.0.3.26",
-    "type": "exe",
-    "exe": "tamac.exe"
-  }
 }

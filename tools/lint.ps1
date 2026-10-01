@@ -2,7 +2,7 @@
 .SYNOPSIS
     Looks for undefined / unused variables and functions with the lint of the system dictionary (SHIORI3FW.Lint).
 .DESCRIPTION
-    tamac.exe loads the ghost and evaluates SHIORI3FW.Lint.Run of yaya-dic (yaya_base/lint.dic), which reads the
+    tamacs.exe loads the ghost and evaluates SHIORI3FW.Lint.Run of yaya-dic (yaya_base/lint.dic), which reads the
     loaded dictionaries with the LINT.* functions of yaya.dll (Tc574-1 or later). SSP is not needed, and
     ghost/master/yaya_variable.cfg is put back afterwards.
 
@@ -17,8 +17,8 @@
 
     Findings in the system dictionary are hidden unless -IncludeSystem is given.
     Exit codes: 0 = done (findings are advisory), 1 = failed (load errors, no answer) or undefined names found with
-    -Strict, 3 = not available (tamac.exe is missing or old, yaya.dll is older than Tc574-1, or the system dictionary
-    has no yaya_base/lint.dic).
+    -Strict, 3 = not available (tamacs.exe could not be built, yaya.dll is older than Tc574-1, or the system
+    dictionary has no yaya_base/lint.dic).
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/lint.ps1
 .EXAMPLE
@@ -43,13 +43,9 @@ if (-not (Test-Path -LiteralPath (Join-Path $GhostDir 'yaya.dll'))) {
     exit 1
 }
 
-$tamac = Get-DevkitToolPath 'tamac'
-if (-not (Test-Path -LiteralPath $tamac)) {
-    Write-Host 'lint: SKIPPED - tamac.exe is not installed. Run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup.ps1'
-    exit 3
-}
-if ((Test-DevkitToolCurrent 'tamac') -eq $false) {
-    Write-Host 'lint: SKIPPED - this tamac.exe is too old. Run: powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup.ps1 -Tool tamac'
+$tamacs = Get-DevkitTamacs
+if (-not $tamacs.Path) {
+    Write-Host "lint: SKIPPED - $($tamacs.Error)"
     exit 3
 }
 
@@ -62,10 +58,14 @@ if ($GhostDir.StartsWith($rootWithSeparator, [StringComparison]::OrdinalIgnoreCa
 $code = 'SHIORI3FW.Lint.Run'
 if ($IncludeSystem) { $code = "SHIORI3FW.Lint.Run('system')" }
 $requestText = '?? ' + $code
-$result = Invoke-DevkitTamac -GhostDir $GhostDir -Arguments @('-r') -InputText $requestText -UnsetEnvironment @('GITHUB_ACTIONS') -TimeoutSeconds $TimeoutSeconds
+$result = Invoke-DevkitTamacs -GhostDir $GhostDir -Arguments @('-r') -InputText $requestText -UnsetEnvironment @('GITHUB_ACTIONS') -TimeoutSeconds $TimeoutSeconds
 if ($result.TimedOut) {
-    Write-Host "lint: FAILED - tamac.exe did not finish within $TimeoutSeconds seconds"
+    Write-Host "lint: FAILED - tamacs.exe did not finish within $TimeoutSeconds seconds"
     exit 1
+}
+if ($result.ExitCode -eq 3) {
+    Write-Host 'lint: SKIPPED - yaya.dll has no Set_loghandler, which tamacs.exe needs. Update yaya.dll: docs/agents/workflows/update-yaya.md'
+    exit 3
 }
 
 # Errors logged before this request come from loading the dictionaries (see tools/shiori.ps1).
@@ -97,7 +97,7 @@ if ($loadErrors.Count -gt 0) {
 $response = $result.StdOut -replace "\r\n", "`n"
 if (-not $response.StartsWith('!! ')) {
     if ($response.Trim() -ne '') { Write-Host $response.TrimEnd() }
-    Write-Host "lint: FAILED - no answer to '$code' (tamac.exe exit code $($result.ExitCode))"
+    Write-Host "lint: FAILED - no answer to '$code' (tamacs.exe exit code $($result.ExitCode))"
     exit 1
 }
 $lines = @($response.Substring(3).TrimEnd("`n") -split "`n")

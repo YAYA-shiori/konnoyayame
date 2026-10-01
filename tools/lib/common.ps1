@@ -85,10 +85,65 @@ function Get-DevkitLatestReleaseAsset([string]$Repository, [string]$AssetName) {
     return [pscustomobject]@{ Tag = [string]$release.tag_name; Url = [string]$asset.browser_download_url; Sha256 = $sha256 }
 }
 
-# Runs tamac.exe on the yaya.dll in $GhostDir (a full path: tamac.exe looks for yaya.txt in the folder part of the
-# dll path it is given). YAYA saves yaya_variable.cfg when it unloads, so the file is put back afterwards (or removed
-# when there was none) and running the ghost this way leaves nothing behind.
-function Invoke-DevkitTamac {
+# Returns csc.exe of the .NET Framework 4 (part of Windows), or $null when there is none.
+function Get-DevkitCscPath {
+    if ([Environment]::OSVersion.Platform -ne [PlatformID]::Win32NT -or -not $env:windir) { return $null }
+    foreach ($framework in @('Framework', 'Framework64')) {
+        $csc = Join-Path $env:windir "Microsoft.NET\$framework\v4.0.30319\csc.exe"
+        if (Test-Path -LiteralPath $csc -PathType Leaf) { return $csc }
+    }
+    return $null
+}
+
+# Returns the path that tamacs.exe (built from tools/lib/tamacs.cs) has for the current source:
+# tools/bin/tamacs-<hash of the source>.exe.
+function Get-DevkitTamacsExpectedPath {
+    $source = Join-Path $PSScriptRoot 'tamacs.cs'
+    $sha = [Security.Cryptography.SHA256]::Create()
+    try {
+        $bytes = $sha.ComputeHash([IO.File]::ReadAllBytes($source))
+    } finally {
+        $sha.Dispose()
+    }
+    $hash = -join ($bytes[0..7] | ForEach-Object { $_.ToString('x2') })
+    return (Join-Path $DevkitBinDir "tamacs-$hash.exe")
+}
+
+# Builds tamacs.exe from tools/lib/tamacs.cs when the current source has not been built yet, with csc.exe of the
+# .NET Framework, as a 32-bit exe (yaya.dll is 32-bit). Returns Path (the exe, or $null) and Error (why it is not
+# available). The exes built from older sources are removed.
+function Get-DevkitTamacs {
+    $exe = Get-DevkitTamacsExpectedPath
+    if (Test-Path -LiteralPath $exe -PathType Leaf) { return [pscustomobject]@{ Path = $exe; Error = $null } }
+    $csc = Get-DevkitCscPath
+    if (-not $csc) {
+        return [pscustomobject]@{ Path = $null; Error = 'tamacs.exe cannot be built: csc.exe of the .NET Framework 4 was not found (it is part of Windows; see tools/doctor.ps1)' }
+    }
+    New-Item -ItemType Directory -Force -Path $DevkitBinDir | Out-Null
+    $temp = Join-Path $DevkitBinDir ('tamacs-build-' + [guid]::NewGuid().ToString('N') + '.exe')
+    try {
+        $result = Invoke-DevkitProcess -FilePath $csc -Arguments @('/nologo', '/target:exe', '/platform:x86', '/optimize+', "/out:$temp", (Join-Path $PSScriptRoot 'tamacs.cs')) -TimeoutSeconds 120
+        if ($result.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $temp)) {
+            return [pscustomobject]@{ Path = $null; Error = 'tamacs.exe could not be built: ' + ($result.StdOut + $result.StdErr).Trim() }
+        }
+        # Another process may have built it at the same time.
+        if (-not (Test-Path -LiteralPath $exe)) {
+            try { Move-Item -LiteralPath $temp -Destination $exe } catch { if (-not (Test-Path -LiteralPath $exe)) { throw } }
+        }
+    } finally {
+        Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue
+    }
+    # An exe that is running cannot be removed; it stays until the next build.
+    Get-ChildItem -LiteralPath $DevkitBinDir -Filter 'tamacs-*.exe' -File | Where-Object { $_.FullName -ne $exe } |
+        Remove-Item -Force -ErrorAction SilentlyContinue
+    return [pscustomobject]@{ Path = $exe; Error = $null }
+}
+
+# Runs tamacs.exe on the yaya.dll in $GhostDir (a full path: YAYA looks for yaya.txt in the folder of the dll).
+# Call Get-DevkitTamacs first to tell the user when it is not available. YAYA saves yaya_variable.cfg when it
+# unloads, so the file is put back afterwards (or removed when there was none) and running the ghost this way
+# leaves nothing behind.
+function Invoke-DevkitTamacs {
     param(
         [string]$GhostDir,
         [string[]]$Arguments = @(),
@@ -96,8 +151,10 @@ function Invoke-DevkitTamac {
         [string[]]$UnsetEnvironment = @(),
         [int]$TimeoutSeconds = 120
     )
+    $tamacs = Get-DevkitTamacs
+    if (-not $tamacs.Path) { throw $tamacs.Error }
     $processArgs = @{
-        FilePath         = (Get-DevkitToolPath 'tamac')
+        FilePath         = $tamacs.Path
         Arguments        = @(Join-Path $GhostDir 'yaya.dll') + @($Arguments)
         WorkingDirectory = $GhostDir
         UnsetEnvironment = $UnsetEnvironment

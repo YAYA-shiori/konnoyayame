@@ -15,7 +15,7 @@
    - 出力の各行: `create`（新しく作る）、`update`（新しい版に置き換える）、`seed`（無かったので作る）、`delete`（キットから外れたので消す）、`keep`（手元の変更を残す）、`skip`（作者が消したので作らない）、`CONFLICT`（手元と上流の両方が変わった）。
    - 何が変わるかを短くまとめて伝える。`CONFLICT` と `keep` は、どのファイルかも伝える。
 2. 了承を得てから、`-DryRun` を外して実行する。最後に doctor の結果が表示される。
-   - `tools/tools.json` が `update` になったとき、または doctor が tamac.exe の版の不足を知らせたときは、`powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup.ps1` でツールを取り直す（ダウンロードを伴うことを一言伝える）。
+   - `tools/tools.json` が `update` になったときは、`powershell -NoProfile -ExecutionPolicy Bypass -File tools/setup.ps1` でツールを取り直す（ダウンロードを伴うことを一言伝える）。`tools/lib/tamacs.cs` が変わったときは何もしなくてよい（次に使うときに作り直される）。
 3. 終了コードが 2 なら、`<ファイル>.devkit-new` が残っている。1 つずつ次のように片付ける。`AGENTS.md.devkit-new` があれば、それを最初に片付ける（手順書の索引が `AGENTS.md` にあるため）。
    1. 手元のファイルと `.devkit-new` の差分を読む（git があれば `git diff --no-index <ファイル> <ファイル>.devkit-new`）。
    2. 新しい版を土台に、手元で加えられていた変更を活かしたマージ案を作り、差分を見せる。
