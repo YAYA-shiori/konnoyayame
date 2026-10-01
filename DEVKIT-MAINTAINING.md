@@ -34,7 +34,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 
 ## 里々版キット（POST_and_KOMAINU）との共用
 
-このキットを移植した里々版の開発キット（里々バイブコーディングツールキット）が、兄弟リポジトリ `../POST_and_KOMAINU`（https://github.com/ukatech/POST_and_KOMAINU ）にある。SSP、シェル、nar、キットの更新まわりなど、SHIORI に依存しない部分は両方のキットで同じものを使っている（例: `tools/run-ssp.ps1`、`tools/sstp.ps1`、`tools/ssp-log.ps1`、`tools/check-shell.ps1`、`tools/dump-surface.ps1`、`tools/image.ps1`、`tools/lib/tamacs.cs`（とそれをビルドする `tools/lib/common.ps1` の `Get-DevkitTamacs`）、`tools/build-nar.ps1`、`tools/update-devkit.ps1`、`tools/lib/` の共通部分、対応する `docs/agents/` と `docs/devkit-maintaining/` の文書）。
+このキットを移植した里々版の開発キット（里々バイブコーディングツールキット）が、兄弟リポジトリ `../POST_and_KOMAINU`（https://github.com/ukatech/POST_and_KOMAINU ）にある。SSP、シェル、nar、キットの更新まわりなど、SHIORI に依存しない部分は両方のキットで同じものを使っている（例: `tools/run-ssp.ps1`、`tools/sstp.ps1`、`tools/ssp-log.ps1`、`tools/check-shell.ps1`、`tools/dump-surface.ps1`、`tools/image.ps1`、`tools/lib/tamacs.cs` と `tools/lib/tamacsw.cs`（とそれらをビルドする `tools/lib/common.ps1` の `Get-DevkitCsTool`、`Get-DevkitTamacs`、`Get-DevkitTamacsw`。ログ受信ウインドウを開く `ghost/master/receiver.*` は里々版だけ）、`tools/build-nar.ps1`、`tools/update-devkit.ps1`、`tools/lib/` の共通部分、対応する `docs/agents/` と `docs/devkit-maintaining/` の文書）。
 
 - **両方のキットで共用しているツールや文書を直すときは、`../konnoyayame` と `../POST_and_KOMAINU` の両方を直す。** 片方だけ直すと、同じ不具合が片方に残ったり、挙動が食い違ったりする。
 - **新しく作るツールや機能が SHIORI に依存せず、もう片方のキットでも役に立つなら、両方に追加する。** YAYA 固有の部分（`check-dic.ps1`、`shiori.ps1`、`update-yaya.ps1`、YAYA 辞書の書き方など）は、里々側の対応するもの（`update-satori.ps1`、里々の辞書の書き方など）に置き換えて持っていく。
@@ -92,7 +92,7 @@ AI 開発キットそのもの（`AGENTS.md`、`CLAUDE.md`、`DEVKIT-GUIDE.md`�
 | `ssp.md` | SSTP（Owned SSTP）、SSP のログ、SSP の版の扱い、使っている機能（`GetStatus`、`Option: strict`、`dumpballoon`、`--dump-error-log`、`--offline-tool`）、試験用 SSP（`tools/run-ssp.ps1`） |
 | `dump-surface.md` | `tools/dump-surface.ps1` と `--offline-dump` の `--dump-surface-list`、`--dump-animation`、`--dump-bind` |
 | `image.md` | `tools/image.ps1` と `tools/lib/image.cs`、`tools/lib/image-engine.ps1`（コンパイルとキャッシュ、自前の PNG の読み書き、SSP の透過の扱い） |
-| `tamacs.md` | tamacs.exe（`tools/lib/tamacs.cs`）のビルドと、tamac との違い、`-r` と `tools/shiori.ps1` |
+| `tamacs.md` | tamacs.exe（`tools/lib/tamacs.cs`）のビルドと、tamac との違い、`-r` と `tools/shiori.ps1`、共用のログ受信ウインドウ tamacsw.exe（`tools/lib/tamacsw.cs`。使うのは里々版だけ） |
 | `update-yaya.md` | `tools/update-yaya.ps1` のシステム辞書（yaya-dic）の取得と置き換え、yaya.dll の版の選び方（系列と `-Series`、古い版を入れない） |
 | `ignore.md` | `.narignore` / `.updateignore` の解釈（`tools/lib/ignore.ps1`） |
 

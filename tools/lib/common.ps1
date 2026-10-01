@@ -95,10 +95,10 @@ function Get-DevkitCscPath {
     return $null
 }
 
-# Returns the path that tamacs.exe (built from tools/lib/tamacs.cs) has for the current source:
-# tools/bin/tamacs-<hash of the source>.exe.
-function Get-DevkitTamacsExpectedPath {
-    $source = Join-Path $PSScriptRoot 'tamacs.cs'
+# Returns the path that the exe built from tools/lib/<Name>.cs has for the current source:
+# tools/bin/<Name>-<hash of the source>.exe.
+function Get-DevkitCsToolExpectedPath([string]$Name) {
+    $source = Join-Path $PSScriptRoot "$Name.cs"
     $sha = [Security.Cryptography.SHA256]::Create()
     try {
         $bytes = $sha.ComputeHash([IO.File]::ReadAllBytes($source))
@@ -106,25 +106,26 @@ function Get-DevkitTamacsExpectedPath {
         $sha.Dispose()
     }
     $hash = -join ($bytes[0..7] | ForEach-Object { $_.ToString('x2') })
-    return (Join-Path $DevkitBinDir "tamacs-$hash.exe")
+    return (Join-Path $DevkitBinDir "$Name-$hash.exe")
 }
 
-# Builds tamacs.exe from tools/lib/tamacs.cs when the current source has not been built yet, with csc.exe of the
-# .NET Framework, as a 32-bit exe (yaya.dll is 32-bit). Returns Path (the exe, or $null) and Error (why it is not
-# available). The exes built from older sources are removed.
-function Get-DevkitTamacs {
-    $exe = Get-DevkitTamacsExpectedPath
+# Builds <Name>.exe from tools/lib/<Name>.cs when the current source has not been built yet, with csc.exe of the
+# .NET Framework and the given options (/target:..., /platform:..., /reference:...). Returns Path (the exe, or
+# $null) and Error (why it is not available). The exes built from older sources are removed.
+function Get-DevkitCsTool([string]$Name, [string[]]$Options) {
+    $exe = Get-DevkitCsToolExpectedPath $Name
     if (Test-Path -LiteralPath $exe -PathType Leaf) { return [pscustomobject]@{ Path = $exe; Error = $null } }
     $csc = Get-DevkitCscPath
     if (-not $csc) {
-        return [pscustomobject]@{ Path = $null; Error = 'tamacs.exe cannot be built: csc.exe of the .NET Framework 4 was not found (it is part of Windows; see tools/doctor.ps1)' }
+        return [pscustomobject]@{ Path = $null; Error = "$Name.exe cannot be built: csc.exe of the .NET Framework 4 was not found (it is part of Windows; see tools/doctor.ps1)" }
     }
     New-Item -ItemType Directory -Force -Path $DevkitBinDir | Out-Null
-    $temp = Join-Path $DevkitBinDir ('tamacs-build-' + [guid]::NewGuid().ToString('N') + '.exe')
+    $temp = Join-Path $DevkitBinDir ("$Name-build-" + [guid]::NewGuid().ToString('N') + '.exe')
     try {
-        $result = Invoke-DevkitProcess -FilePath $csc -Arguments @('/nologo', '/target:exe', '/platform:x86', '/optimize+', "/out:$temp", (Join-Path $PSScriptRoot 'tamacs.cs')) -TimeoutSeconds 120
+        $arguments = @('/nologo') + $Options + @('/optimize+', "/out:$temp", (Join-Path $PSScriptRoot "$Name.cs"))
+        $result = Invoke-DevkitProcess -FilePath $csc -Arguments $arguments -TimeoutSeconds 120
         if ($result.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $temp)) {
-            return [pscustomobject]@{ Path = $null; Error = 'tamacs.exe could not be built: ' + ($result.StdOut + $result.StdErr).Trim() }
+            return [pscustomobject]@{ Path = $null; Error = "$Name.exe could not be built: " + ($result.StdOut + $result.StdErr).Trim() }
         }
         # Another process may have built it at the same time.
         if (-not (Test-Path -LiteralPath $exe)) {
@@ -134,9 +135,25 @@ function Get-DevkitTamacs {
         Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue
     }
     # An exe that is running cannot be removed; it stays until the next build.
-    Get-ChildItem -LiteralPath $DevkitBinDir -Filter 'tamacs-*.exe' -File | Where-Object { $_.FullName -ne $exe } |
+    Get-ChildItem -LiteralPath $DevkitBinDir -Filter "$Name-*.exe" -File | Where-Object { $_.FullName -ne $exe } |
         Remove-Item -Force -ErrorAction SilentlyContinue
     return [pscustomobject]@{ Path = $exe; Error = $null }
+}
+
+# Returns the path that tamacs.exe (built from tools/lib/tamacs.cs) has for the current source.
+function Get-DevkitTamacsExpectedPath {
+    return (Get-DevkitCsToolExpectedPath 'tamacs')
+}
+
+# Builds tamacs.exe from tools/lib/tamacs.cs as a 32-bit console exe (yaya.dll and satori.dll are 32-bit).
+function Get-DevkitTamacs {
+    return (Get-DevkitCsTool 'tamacs' @('/target:exe', '/platform:x86'))
+}
+
+# Builds tamacsw.exe from tools/lib/tamacsw.cs: the window that receives the log of the SHIORI running in SSP.
+# It loads no dll, so it is built for any CPU.
+function Get-DevkitTamacsw {
+    return (Get-DevkitCsTool 'tamacsw' @('/target:winexe', '/platform:anycpu', '/reference:System.Windows.Forms.dll', '/reference:System.Drawing.dll'))
 }
 
 # Runs tamacs.exe on the yaya.dll in $GhostDir (a full path: YAYA looks for yaya.txt in the folder of the dll).

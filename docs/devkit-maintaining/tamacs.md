@@ -10,6 +10,13 @@ yaya.dll を SSP なしで読み込むツール。`tools/check-dic.ps1`、`tools
 - yaya.dll は 32bit なので `/platform:x86` でビルドする。呼び出す PowerShell が 64bit でも pwsh 7 でも、子プロセスとして 32bit で動く。`Add-Type` で PowerShell のプロセスに読み込む方法は、PowerShell のビット数に縛られるので使わない。
 - 出力は `tools/bin/tamacs-<ソースの SHA256 の先頭 16 桁>.exe`。ソースが変わると名前が変わってビルドし直し、古いものを消す（実行中のものは消せずに残り、次のビルドで消える）。同時に 2 つのプロセスがビルドしても壊れないよう、一時ファイルに書いてから移す。ビルドは 0.5 秒ほど。
 - `tools/doctor.ps1` はビルドしない（何も変えないため）。ビルド済みか、`csc.exe` があれば ok にする。
+- ビルドの処理は `Get-DevkitCsTool`（`tools/bin/<名前>-<ハッシュ>.exe`）にまとめてあり、`Get-DevkitTamacs` と `Get-DevkitTamacsw` はそれを呼ぶだけ。
+
+## tamacsw（ログ受信ウインドウ）
+
+- `tools/lib/tamacsw.cs` は、SSP で動いている SHIORI のログを `WM_COPYDATA` で受け取って表示する GUI（`Get-DevkitTamacsw` が `/target:winexe` でビルドする）。tama と同じ `TamaWndClass` のウインドウを作るので、tama と同時には開けない。
+- tamacs と同じく両方のキットで共用するが、使うのは里々版だけ（POST_and_KOMAINU の `ghost/master/receiver.bat` → `receiver.ps1`。里々は読み込まれたあと自分で `TamaWndClass` を探してログを送る）。YAYA のゴーストは tama をそのまま使うので、このキットには起動用のファイルを置かない。
+- 詳しくは、POST_and_KOMAINU の `docs/devkit-maintaining/tamacs.md` の「tamacsw.exe（ログ受信ウインドウ）」。
 
 ## tamac との違い
 

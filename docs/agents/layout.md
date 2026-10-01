@@ -25,4 +25,4 @@
 | `CLAUDE.md`, `.claude/`, `.mcp.json` | Claude Code 用の設定（編集後の自動チェックと起動時の診断、調査用サブエージェント、仕様検索 MCP） |
 | `.github/workflows/auto_check.yml` | push ごとに辞書チェック（tamacs）する |
 
-実行時に作られるもの（編集もコミットもしない）: `ghost/master/yaya_variable.cfg`（グローバル変数の保存先）、`ghost/master/profile/`、`shell/master/profile/`、`tools/bin/`（ビルドした tamacs.exe と、ダウンロードしたツール）、`tools/local.json`（各自の設定）、`build/`。
+実行時に作られるもの（編集もコミットもしない）: `ghost/master/yaya_variable.cfg`（グローバル変数の保存先）、`ghost/master/profile/`、`shell/master/profile/`、`tools/bin/`（ビルドした tamacs.exe、tamacsw.exe と、ダウンロードしたツール）、`tools/local.json`（各自の設定）、`build/`。
