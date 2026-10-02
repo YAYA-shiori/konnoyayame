@@ -17,12 +17,18 @@
     (SSP did not answer the developer.log properties), 2 = an Error or Critical entry was shown,
     3 = could not connect (SSP is not running).
     While the isolated SSP started by tools/run-ssp.ps1 runs, its logs are read unless -Port is given.
+    -Type shows only the entries whose type contains the text (for example OnSecondChange in the script log).
+    -Wait N waits up to N seconds for a new entry (one that matches -Type, if given) and prints only the new
+    entries: use it to see what the ghost says by itself, such as a timer or a random talk. When nothing new
+    comes, the exit code is 1.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/ssp-log.ps1
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/ssp-log.ps1 -Kind script -Max 5
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/ssp-log.ps1 -All -Json
+.EXAMPLE
+    powershell -NoProfile -ExecutionPolicy Bypass -File tools/ssp-log.ps1 -Kind script -Type OnSecondChange -Wait 90
 #>
 [CmdletBinding()]
 param(
@@ -36,6 +42,10 @@ param(
     [int]$Max = 50,
     # Print the result as JSON (for agents).
     [switch]$Json,
+    # Show only the entries whose type contains this text.
+    [string]$Type,
+    # Wait up to this many seconds for a new entry and show only the new entries.
+    [int]$Wait = 0,
     # SSTP port (default: the isolated SSP started by tools/run-ssp.ps1 while it runs, otherwise 9801).
     [int]$Port = 0
 )
@@ -51,7 +61,43 @@ if ($All) {
     $Name = Get-DevkitDescriptValue (Join-Path $DevkitRoot 'ghost/master/descript.txt') 'name'
 }
 
-$log = Get-DevkitSspLog -Kind $Kind -Name $Name -Max $Max -Port $Port
+function Select-LogEntries([object[]]$Entries) {
+    if (-not $Type) { return @($Entries) }
+    return @($Entries | Where-Object { ([string]$_.type).IndexOf($Type, [StringComparison]::OrdinalIgnoreCase) -ge 0 })
+}
+
+if ($Wait -gt 0) {
+    $marker = New-DevkitSspLogMarker -Kind $Kind -Name $Name -Port $Port
+    if (-not $marker) {
+        $probe = Get-DevkitSspLog -Kind $Kind -Name $Name -Max 1 -Port $Port
+        if ($probe.State -eq 'offline') {
+            Write-Host "ssp-log: could not connect to 127.0.0.1:$Port. Is SSP running? (start it with tools/run-ssp.ps1)"
+            exit 3
+        }
+        Write-Host 'ssp-log: the log could not be read (SSP did not answer the developer.log properties)'
+        exit 1
+    }
+    $deadline = (Get-Date).AddSeconds($Wait)
+    $log = $null
+    while ($true) {
+        Start-Sleep -Milliseconds 1000
+        $current = Get-DevkitSspLog -Kind $Kind -Name $Name -Max $Max -Since $marker -Port $Port
+        if ($current.State -ne 'ok') {
+            Write-Host 'ssp-log: SSP stopped answering while waiting'
+            exit 3
+        }
+        if (@(Select-LogEntries $current.Entries).Count -gt 0) { $log = $current; break }
+        if ((Get-Date) -ge $deadline) { break }
+    }
+    if (-not $log) {
+        $what = if ($Type) { "$Kind log entry of type '$Type'" } else { "$Kind log entry" }
+        Write-Host "ssp-log: no new $what within $Wait seconds"
+        exit 1
+    }
+} else {
+    $log = Get-DevkitSspLog -Kind $Kind -Name $Name -Max $Max -Port $Port
+}
+$log.Entries = @(Select-LogEntries $log.Entries)
 if ($log.State -eq 'offline') {
     Write-Host "ssp-log: could not connect to 127.0.0.1:$Port. Is SSP running? (start it with tools/run-ssp.ps1)"
     exit 3
