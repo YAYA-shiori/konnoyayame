@@ -8,7 +8,9 @@
     -Eval evaluates YAYA code through the system dictionary (yaya-dic answers "?? code" with "!! result").
     Give a function name to see what it returns (a talk, for example), or a built-in function to see how it
     behaves with this yaya.dll. Array results are joined with commas. Several lines are evaluated one by one
-    and their results are joined; local variables (_name) do not carry over to the next line.
+    and their results are joined; local variables (_name) do not carry over to the next line, and here-documents
+    cannot be used. Within one line, statements separated by ";" and if / foreach work as in a function body
+    (yaya.dll Tc574-6 / Tc602-9 or later).
 
     -Event sends "GET SHIORI/3.0" (NOTIFY with -Notify) with ID and References, as SSP does for an event or a
     resource. Sender is SSP, SecurityLevel is local, and Charset is charset.output of ghost/master/yaya.txt
