@@ -22,7 +22,9 @@
     looked at. After the ghost has stopped talking, it sends "\C\![execute,dumpballoon,...]" (\C keeps the
     balloons as they are). SSP writes the images only under the folders it manages, so they are written to a
     temporary folder under ghost/master of the running ghost first, then moved to ghost-devkit/balloons-<hash> in the
-    temp folder (its PNG files are removed before each run). A scope without a balloon writes no image.
+    temp folder (its PNG files are removed before each run). The SSTP marker ("from ghost-devkit (local)") and the
+    balloonnum display are left out of the images (--hide, SSP 2.9.08 or later). A scope without a balloon writes
+    no image.
     When -Balloon writes no image, the exit code is 2.
 .EXAMPLE
     powershell -NoProfile -ExecutionPolicy Bypass -File tools/sstp.ps1 -Reload ghost
@@ -239,7 +241,8 @@ if ($Balloon -and $response.TimedOut) {
     $workName = 'devkit-balloon-' + [guid]::NewGuid().ToString('N')
     $work = Join-Path (Join-Path (Join-Path $ghostPath.TrimEnd('\', '/') 'ghost') 'master') $workName
     $dump = '\C'
-    foreach ($scope in $BalloonScope) { $dump += '\![execute,dumpballoon,' + $workName + ',' + $scope + ']' }
+    # --hide redraws the balloon without the SSTP marker ("from ...") and the balloonnum display (SSP 2.9.08).
+    foreach ($scope in $BalloonScope) { $dump += '\![execute,dumpballoon,--dir=' + $workName + ',--scope=' + $scope + ',"--hide=balloonmarker,balloonnum"]' }
     $lines = @('SEND SSTP/1.4', 'Charset: UTF-8', 'Sender: ghost-devkit', ('ReceiverGhostName: ' + $Ghost), ('ID: ' + $ghostId), 'Option: notranslate', ('Script: ' + $dump))
     $images = @()
     try {
