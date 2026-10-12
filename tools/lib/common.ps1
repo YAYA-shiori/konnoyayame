@@ -2,6 +2,17 @@
 # Dot-source it from a script: . (Join-Path $PSScriptRoot 'lib/common.ps1')
 # Keep every tools/*.ps1 file ASCII-only and compatible with Windows PowerShell 5.1.
 
+# pwsh 7 puts its own module folders at the head of PSModulePath. It drops them again when it starts
+# powershell.exe directly, but not when another program is in between (an agent started from a pwsh
+# terminal that runs the scripts from its shell tool, or cmd.exe). Windows PowerShell 5.1 then loads
+# the pwsh build of Microsoft.PowerShell.Utility, which it cannot use, and Get-FileHash and the like
+# are not found. Drop those folders before any module is loaded.
+if ($PSVersionTable.PSEdition -eq 'Desktop' -and $env:PSModulePath) {
+    $env:PSModulePath = (@($env:PSModulePath -split ';') | Where-Object {
+        $_ -and $_ -notmatch '\\PowerShell\\([0-9][^\\]*\\)?Modules\\?$'
+    }) -join ';'
+}
+
 $DevkitRoot = [IO.Path]::GetFullPath((Join-Path (Join-Path $PSScriptRoot '..') '..')).TrimEnd('\', '/')
 $DevkitToolsDir = Join-Path $DevkitRoot 'tools'
 $DevkitBinDir = Join-Path $DevkitToolsDir 'bin'
