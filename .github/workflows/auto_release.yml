@@ -23,49 +23,45 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
-      
+      - name: get ukagaka-developer
+        # The script that builds the nar (see references/workflows/ci.md of ukagaka-developer)
+        shell: pwsh
+        run: git clone --depth 1 https://github.com/ukatech/ukagaka-developer.git "$env:RUNNER_TEMP/ukagaka-developer"
+
+      - name: exclude files that are not for users
+        run: |
+          cat >> .narignore <<'EOF'
+
+          # added by auto_release.yml
+          /.github/
+          EOF
+
+      - name: build nar
+        # On GitHub Actions the nar is written by the script itself (git ls-files); .narignore decides what is left out
+        shell: pwsh
+        run: '& "$env:RUNNER_TEMP/ukagaka-developer/skills/ukagaka-developer/scripts/build-nar.ps1" -OutFile $env:NAR_NAME -GhostRoot $env:GITHUB_WORKSPACE'
+
       - name: Delete all releases
+        # After the nar was built, so that the old releases are kept when the build fails
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Get all release IDs
           releases=$(gh api repos/${{ github.repository }}/releases | jq -r '.[].id')
-          
+
           # Delete each release
           for release_id in $releases; do
             gh api -X DELETE repos/${{ github.repository }}/releases/$release_id
           done
-          
+
           # Get all tags
           tags=$(gh api repos/${{ github.repository }}/tags | jq -r '.[].name')
-          
+
           # Delete each tag
           for tag in $tags; do
             gh api -X DELETE repos/${{ github.repository }}/git/refs/tags/$tag
           done
-      
-      - name: exclude development kit
-        # This nar is the version without the development kit (auto_release_devkit.yaml builds the one with it)
-        run: |
-          cat >> .narignore <<'EOF'
 
-          # development kit (added by auto_release.yml)
-          /AGENTS.md
-          /CLAUDE.md
-          /DEVKIT-GUIDE.md
-          /GHOST.md
-          /docs/agents/
-          /.mcp.json
-          /.claude/
-          /.github/
-          /tools/
-          EOF
-
-      - name: build nar
-        # Files to exclude are listed in .narignore
-        shell: pwsh
-        run: ./tools/build-nar.ps1 -OutFile $env:NAR_NAME
-      
       - name: Create and upload release
         uses: softprops/action-gh-release@v2
         env:
@@ -75,9 +71,7 @@ jobs:
           name: 自動リリース
           body: |
             - エラーチェックで引っかからなかった時の最新版の自動リリースです
-            - 下記のうち、使う方の nar だけをダウンロードしてください。Source Codeは不要です。
-              - **${{ env.NAR_NAME }}** : 開発キットなし
-              - **${{ github.event.repository.name }}_devkit.nar** : 開発キットあり（AI エージェントで開発するための `tools/` や `AGENTS.md` などが入っています）
+            - **${{ env.NAR_NAME }}** をダウンロードしてください。Source Codeは不要です。
           draft: false
           prerelease: false
           files: |

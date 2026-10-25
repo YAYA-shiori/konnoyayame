@@ -1,8 +1,0 @@
-{
-  "mcpServers": {
-    "ukagaka-doc": {
-      "type": "http",
-      "url": "https://ssp.shillest.net/ukadoc/mcp"
-    }
-  }
-}

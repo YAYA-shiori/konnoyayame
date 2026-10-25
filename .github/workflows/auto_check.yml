@@ -15,11 +15,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: recursive
+      - name: get ukagaka-developer
+        # The scripts of the skill. To pin a version, add "--branch <tag or branch>" (see references/workflows/ci.md).
+        shell: pwsh
+        run: git clone --depth 1 https://github.com/ukatech/ukagaka-developer.git "$env:RUNNER_TEMP/ukagaka-developer"
       - name: dictionary check
-        # Builds tamacs.exe from tools/lib/tamacs.cs with csc.exe of the .NET Framework on the runner
+        # Builds tamacs.exe with csc.exe of the .NET Framework on the runner, loads the SHIORI dll with it and reads
+        # its log (YAYA or SATORI, found from ghost/master)
         shell: pwsh
-        run: ./tools/check-dic.ps1 -Ci
-      - name: development kit lock check
-        # Runs only in the repository that distributes the kit (source in tools/devkit.json)
-        shell: pwsh
-        run: ./tools/update-devkit.ps1 -VerifyLock
+        run: '& "$env:RUNNER_TEMP/ukagaka-developer/skills/ukagaka-developer/scripts/check-dic.ps1" -Ci -GhostRoot $env:GITHUB_WORKSPACE'

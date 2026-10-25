@@ -1,13 +1,12 @@
 # GHOST.md
 
-「紺野ややめ」に固有の情報です。AI エージェントは、作業の前に `AGENTS.md` とあわせて読みます。
-作者が自由に書き換えるファイルで、開発キットの更新（`tools/update-devkit.ps1`）で上書きされることはありません。
+「紺野ややめ」に固有の情報です。AI エージェントは、作業の前に読みます。
+作者が自由に書き換えるファイルです。
 
 ## このゴーストについて
 
 - 伺か（ukagaka）のゴースト「紺野ややめ」（`name` は「はろーYAYAワールド」）。SHIORI「YAYA」の**テンプレートゴースト**で、これを土台にして自分のゴーストを作ってもらうためのもの。
 - 配布元: https://github.com/YAYA-shiori/konnoyayame （nar は Releases から）
-- このリポジトリは、AI 開発キットの配布元も兼ねている。キットそのものを変えるときは `DEVKIT-MAINTAINING.md` を読む（リポジトリにだけあり、nar には入らない）。
 
 ## ライセンス
 
@@ -67,14 +66,13 @@
 
 ## テンプレートから独立させるときの追加項目
 
-`docs/agents/standalone.md` に加えて、このテンプレートでは次も変える。
+自分のゴーストとして配布するときは、名前、作者、インストール先、シェルのライセンス、ネットワーク更新の URL などのほかに、このテンプレートでは次も変える。
 
 - [ ] ネットワーク更新の URL は 2 か所ある: `ghost/master/dic/normal/yaya_homeurl.dic` と `ghost/master/dic/emerg/yaya_homeurl.dic` の `On_homeurl`
 - [ ] シェル: `shell/master/` は SATO M 氏の CC BY-NC-ND シェルなので、改変した画像は配布できない
 - [ ] 辞書に直接書かれたゴースト名: `yaya_menu.dic` の `OnStampInfo`（スタンプ帳で自分のスタンプを見分けるための `'はろーYAYAわーるど'` / `'紺野ややめ'`）
 - [ ] ややめとマック朗に固有の台詞（`OnFirstBoot` の自己紹介、ランダムトーク、マウスへの反応など）
-- [ ] `.github/workflows/auto_release.yml` の nar ファイル名（`yayame.nar`）とリリースの説明文。このワークフローは push のたびに**既存のリリースとタグをすべて削除して**作り直すので、残したいリリースがあるリポジトリでは書き換える。ここで作る nar は開発キットなし版で、キットあり版（`<リポジトリ名>_devkit.nar`）は `auto_release_devkit.yaml` が同じリリースに追加する。キットあり版が要らなければ `auto_release_devkit.yaml` を消し、リリースの説明文のその行も消す
-- [ ] リポジトリを clone して始めた場合、`DEVKIT-MAINTAINING.md` と `docs/devkit-maintaining/` を消す（開発キットの配布元のための文書で、残っているとエージェントが配布元のリポジトリだと思ってしまう。nar には入っていない）
+- [ ] `.github/workflows/auto_release.yml` の nar ファイル名（`yayame.nar`）とリリースの説明文。このワークフローは push のたびに**既存のリリースとタグをすべて削除して**作り直すので、残したいリリースがあるリポジトリでは書き換える。
 - [ ] nar をインストールしたフォルダから始めた場合、`ghost/master/dic/system/` は submodule ではなく普通のフォルダとしてコミットしてよい
 - [ ] クレジットの例:「紺野ややめ（https://github.com/YAYA-shiori/konnoyayame）をもとに作成」
 - [ ] この `GHOST.md` を新しいゴーストの内容に書き直し、この節は済んだら消す
