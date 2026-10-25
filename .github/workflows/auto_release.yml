@@ -28,14 +28,6 @@ jobs:
         shell: pwsh
         run: git clone --depth 1 https://github.com/ukatech/ukagaka-developer.git "$env:RUNNER_TEMP/ukagaka-developer"
 
-      - name: exclude files that are not for users
-        run: |
-          cat >> .narignore <<'EOF'
-
-          # added by auto_release.yml
-          /.github/
-          EOF
-
       - name: build nar
         # On GitHub Actions the nar is written by the script itself (git ls-files); .narignore decides what is left out
         shell: pwsh

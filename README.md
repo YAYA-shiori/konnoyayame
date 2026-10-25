@@ -31,6 +31,19 @@ https://github.com/YAYA-shiori/konnoyayame
 - シェル（`shell/master/`）は SATO M 氏の作品で、CC BY-NC-ND 2.1 JP です。画像を改変したものは配布できません。
 - 自分のゴーストとして配布するときに変えるところ（名前、作者、インストール先、ネットワーク更新の URL など）は、[GHOST.md](GHOST.md) の「テンプレートから独立させるときの追加項目」にチェックリストがあります。
 
+## AI エージェントで開発する
+
+AI コーディングエージェント（Claude Code、Codex など）で開発するときは、スキル [ukagaka-developer](https://github.com/ukatech/ukagaka-developer) が使えます。このゴーストの SHIORI（YAYA）に合わせて、辞書の書き方、エラーのチェック、SSP での動作確認、シェル画像の編集、nar の作成、SHIORI の更新を手伝ってくれます。スキルは、このフォルダの外に入ります。
+
+Claude Code の場合は、このフォルダで次を実行して、Claude Code を開き直します。
+
+```
+claude plugin marketplace add ukatech/ukagaka-developer
+claude plugin install ukagaka-developer --scope project
+```
+
+Codex など、ほかのエージェントでの入れ方と、使い方は、[ukagaka-developer の README](https://github.com/ukatech/ukagaka-developer#readme) にあります。入れたら、「セットアップして」と頼んでください。ゴーストに固有の情報は、リポジトリの [GHOST.md](GHOST.md) にまとめてあります。
+
 # ライセンス
 
 Public Domain (Unlicense)
